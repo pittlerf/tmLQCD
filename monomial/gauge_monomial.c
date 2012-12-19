@@ -114,16 +114,18 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
     double* xm;
     su3* link;
 
-    stout_control* control = construct_stout_control(0,1,0.18);
+    stout_control* control = construct_stout_control(1,1,0.18);
 
     for(int x = 0; x < VOLUME; ++x)
     {
       for(int mu = 0; mu < 4; ++mu)
       {
         xm=(double*)&hf->derivative[x][mu];
+        control->smearing_performed = 0;
         for (int component = 0; component < 8; ++component)
         {
           double h_rotated[2] = {0.0,0.0};
+          //printf("Rotating at %d %d in component %d\n",x,mu,component);
           for(int direction = 0; direction < 2; ++direction) 
           {
             link=&rotated[direction][x][mu];
@@ -139,7 +141,14 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
             //  print_su3(&rotated[0][0][0]);
               
             stout_smear(control, rotated[direction]);
-  
+ 
+            //if(x == 1 && mu == 1 && direction == 1 && component == 1 ) {
+            //  stout_smear_forces(control,df);
+            //  fprintf(stderr, "[DEBUG] Comparison of force calculation at [1][1]!\n");
+            //  fprintf(stderr, "   smear forces <-> numerical total force\n");
+            //  fprintf(stderr, "    [%d]  %+14.12f <-> ", component, control->force_result[1][1].d1); //*/
+            //}
+
             //if(x == 0 && mu == 0 && direction == 0 && component == 0)
             //  print_su3(&control->result[0][0]);
 
@@ -152,12 +161,14 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
             // compute gauge action
             g_update_gauge_energy = 1;
             g_update_rectangle_energy = 1;
-            h_rotated[direction] = -g_beta*(mnl->c0 * measure_gauge_action(control->result)); //rotated[direction]));
+            h_rotated[direction] = -1.0*g_beta*measure_gauge_action(&control->result[0][0]);
             // reset modified part of gauge field
             memmove(link,&old_value, sizeof(su3));
           } // direction
           // calculate force contribution from gauge field due to rotation
           xm[component] += (h_rotated[1]-h_rotated[0])/(2*eps);
+          //if( x == 1 && mu == 1 && component == 1 )
+          //  fprintf(stderr, "%+14.12f\n", df[1][1].d1); //*/
         } // component
       } // mu
     } // x
