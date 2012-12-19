@@ -151,7 +151,6 @@ int main(int argc,char *argv[])
   g_proc_id = 0;
 #endif
 
-
   while ((c = getopt(argc, argv, "h?vVf:o:")) != -1)
   {
     switch (c) {

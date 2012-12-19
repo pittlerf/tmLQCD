@@ -247,7 +247,9 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       /*apply_inv_gtrafo(g_gauge_field, g_trafo);*/
       /* copy back the saved original field located in g_tempgauge_field -> update necessary*/
       copy_gauge_field(g_gauge_field, g_tempgauge_field);
+#ifdef _GAUGE_COPY
       g_update_gauge_copy = 1;
+#endif
     
     
       plaquette = measure_gauge_action(_AS_GAUGE_FIELD_T(g_gauge_field));

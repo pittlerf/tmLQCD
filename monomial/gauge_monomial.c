@@ -43,56 +43,135 @@
 #include "monomial/monomial.h"
 #include "hamiltonian_field.h"
 #include "gauge_monomial.h"
+#include "dirty_shameful_business.h"
+#include "expo.h"
 
 /* this function calculates the derivative of the momenta: equation 13 of Gottlieb */
 void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
-  monomial * mnl = &monomial_list[id];
-  double atime, etime;
-  atime = gettime();
-#ifdef OMP
-#pragma omp parallel
-  {
-#endif
+    monomial * mnl = &monomial_list[id];
+  if(0) {
+    double atime, etime;
+    atime = gettime();
+  #ifdef OMP
+  #pragma omp parallel
+    {
+  #endif
 
-  su3 ALIGN v, w;
-  int i, mu;
-  su3 *z;
-  su3adj *xm;
-  monomial * mnl = &monomial_list[id];
-  double factor = -1. * g_beta/3.0;
+    su3 ALIGN v, w;
+    int i, mu;
+    su3 *z;
+    su3adj *xm;
+    double factor = -1. * g_beta/3.0;
 
-  if(mnl->use_rectangles) {
-    mnl->forcefactor = 1.;
-    factor = -mnl->c0 * g_beta/3.0;
-  }
-  
-#ifdef OMP
-#pragma omp for
-#endif
-  for(i = 0; i < VOLUME; i++) { 
-    for(mu=0;mu<4;mu++) {
-      z=&hf->gaugefield[i][mu];
-      xm=&hf->derivative[i][mu];
-      get_staples(&v,i,mu, (const su3**) hf->gaugefield); 
-      _su3_times_su3d(w,*z,v);
-      _trace_lambda_mul_add_assign((*xm), factor, w);
-      
-      if(mnl->use_rectangles) {
-	get_rectangle_staples(&v, i, mu);
-	_su3_times_su3d(w, *z, v);
-	_trace_lambda_mul_add_assign((*xm), factor*mnl->c1/mnl->c0, w);
+    if(mnl->use_rectangles) {
+      mnl->forcefactor = 1.;
+      factor = -mnl->c0 * g_beta/3.0;
+    }
+    
+  #ifdef OMP
+  #pragma omp for
+  #endif
+    for(i = 0; i < VOLUME; i++) { 
+      for(mu=0;mu<4;mu++) {
+        z=&hf->gaugefield[i][mu];
+        xm=&hf->derivative[i][mu];
+        get_staples(&v,i,mu, (const su3**) hf->gaugefield); 
+        _su3_times_su3d(w,*z,v);
+        _trace_lambda_mul_add_assign((*xm), factor, w);
+        
+        if(mnl->use_rectangles) {
+	  get_rectangle_staples(&v, i, mu);
+	  _su3_times_su3d(w, *z, v);
+	  _trace_lambda_mul_add_assign((*xm), factor*mnl->c1/mnl->c0, w);
+        }
       }
     }
-  }
 
-#ifdef OMP
-  } /* OpenMP closing brace */
-#endif
-  etime = gettime();
-  if(g_debug_level > 1 && g_proc_id == 0) {
-    printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
+  #ifdef OMP
+    } /* OpenMP closing brace */
+  #endif
+    etime = gettime();
+    if(g_debug_level > 1 && g_proc_id == 0) {
+      printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
+    }
+    return;
+  } else {
+    double atime = gettime();
+    /* Get some memory set aside for gauge fields and copy our current field */
+    gauge_field_t rotated[2];
+    rotated[0] = get_gauge_field();
+    rotated[1] = get_gauge_field();
+
+    memmove(rotated[0], g_gf, sizeof(su3_tuple) * (VOLUMEPLUSRAND + g_dbw2rand) + 1);
+    memmove(rotated[1], g_gf, sizeof(su3_tuple) * (VOLUMEPLUSRAND + g_dbw2rand) + 1);
+
+    su3adj rotation;
+    double *ar_rotation = (double*)&rotation;
+    double const eps = 5e-6;
+    double const epsilon[2] = {-eps,eps};
+    su3 old_value;
+    su3 mat_rotation;
+    double* xm;
+    su3* link;
+
+    stout_control* control = construct_stout_control(0,1,0.18);
+
+    for(int x = 0; x < VOLUME; ++x)
+    {
+      for(int mu = 0; mu < 4; ++mu)
+      {
+        xm=(double*)&hf->derivative[x][mu];
+        for (int component = 0; component < 8; ++component)
+        {
+          double h_rotated[2] = {0.0,0.0};
+          for(int direction = 0; direction < 2; ++direction) 
+          {
+            link=&rotated[direction][x][mu];
+            // save current value of gauge field
+            memmove(&old_value, link, sizeof(su3));
+            /* Introduce a rotation along one of the components */
+            memset(ar_rotation, 0, sizeof(su3adj));
+            ar_rotation[component] = epsilon[direction];
+            exposu3(&mat_rotation, &rotation);
+            _su3_times_su3(rotated[direction][x][mu], mat_rotation, old_value);
+
+            //if(x == 0 && mu == 0 && direction == 0 && component == 0)
+            //  print_su3(&rotated[0][0][0]);
+              
+            stout_smear(control, rotated[direction]);
+  
+            //if(x == 0 && mu == 0 && direction == 0 && component == 0)
+            //  print_su3(&control->result[0][0]);
+
+            //su3 test;
+            //if(x == 0 && mu == 0 && direction == 0 && component == 0) {
+            //  restoresu3(&test,&control->result[0][0]);
+            //  print_su3(&test);
+            //}
+ 
+            // compute gauge action
+            g_update_gauge_energy = 1;
+            g_update_rectangle_energy = 1;
+            h_rotated[direction] = -g_beta*(mnl->c0 * measure_gauge_action(control->result)); //rotated[direction]));
+            // reset modified part of gauge field
+            memmove(link,&old_value, sizeof(su3));
+          } // direction
+          // calculate force contribution from gauge field due to rotation
+          xm[component] += (h_rotated[1]-h_rotated[0])/(2*eps);
+        } // component
+      } // mu
+    } // x
+    free_stout_control(control);
+    return_gauge_field(&rotated[0]);
+    return_gauge_field(&rotated[1]);
+    double etime = gettime();
+    if(g_debug_level > 1 && g_proc_id == 0) {
+      printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
+    }
+    g_update_gauge_energy = 1;
+    g_update_rectangle_energy = 1;
+    return;
   }
-  return;
 }
 
 void gauge_heatbath(const int id, hamiltonian_field_t * const hf) {
@@ -106,7 +185,7 @@ void gauge_heatbath(const int id, hamiltonian_field_t * const hf) {
     mnl->energy0 += g_beta*(mnl->c1 * measure_rectangles( (const su3**) hf->gaugefield));
   }
   if(g_proc_id == 0 && g_debug_level > 3) {
-    printf("called gauge_heatbath for id %d %d\n", id, mnl->even_odd_flag);
+    printf("called gauge_heatbath for id %d %d energy0 = %lf\n", id, mnl->even_odd_flag, mnl->energy0);
   }
 }
 

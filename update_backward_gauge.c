@@ -132,6 +132,7 @@ void update_backward_gauge(gauge_field_t const gf) {
 
 
 void update_backward_gauge(gauge_field_t const gf) {
+  printf("G_UPDATE_GAUGE_COPY %d\n",g_update_gauge_copy); 
 #ifdef OMP
 #pragma omp parallel
   {

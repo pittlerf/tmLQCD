@@ -96,8 +96,10 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
    * The backward copy of the gauge field
    * is not updated here!
    */
+#ifdef _GAUGE_COPY
   hf->update_gauge_copy = 1;
   g_update_gauge_copy = 1;
+#endif
   hf->update_gauge_energy = 1;
   g_update_gauge_energy = 1;
   hf->update_rectangle_energy = 1;

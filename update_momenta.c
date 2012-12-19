@@ -65,7 +65,7 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
   
   zero_adjoint_field(&df);
 
-  ohnohack_remap_df0(tmp_derivative); /* FIXME Such that we can aggregate results per smearing type. */
+  //ohnohack_remap_df0(tmp_derivative); /* FIXME Such that we can aggregate results per smearing type. */
   for (int s_ctr = 0; s_ctr < no_relevant_smearings; ++s_ctr)
   {
     int s_type = relevant_smearings[s_ctr];
@@ -73,7 +73,9 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
     smear(smearing_control_monomial[s_type], g_gf);
     zero_adjoint_field(&tmp_derivative);
     ohnohack_remap_g_gauge_field(smearing_control_monomial[s_type]->result);
-    
+    g_update_gauge_energy=1;
+    g_update_rectangle_energy=1;
+
     for(int k = 0; k < no; k++)
     {
       if (monomial_list[ mnllist[k] ].smearing == s_type)
@@ -86,7 +88,6 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
 #else
           atime = (double)clock()/(double)(CLOCKS_PER_SEC);
 #endif
-
           monomial_list[ mnllist[k] ].derivativefunction(mnllist[k], hf);
 
 #ifdef MPI
@@ -97,17 +98,17 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
         }
       }
     }
-    smear_forces(smearing_control_monomial[s_type], tmp_derivative);
+    //smear_forces(smearing_control_monomial[s_type], tmp_derivative);
 
-    for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand); ++i)
-    { 
-      for(int mu = 0; mu < 4; ++mu)
-      {
-        _add_su3adj(df[i][mu], smearing_control_monomial[s_type]->force_result[i][mu]);
-      }
-    }
+    //for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand); ++i)
+    //{ 
+    //  for(int mu = 0; mu < 4; ++mu)
+    //  {
+    //    _add_su3adj(df[i][mu], smearing_control_monomial[s_type]->force_result[i][mu]);
+    //  }
+    //}
   }
-  ohnohack_remap_df0(df);
+  //ohnohack_remap_df0(df);
   ohnohack_remap_g_gauge_field(g_gf);
 
 #ifdef MPI
@@ -126,7 +127,9 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
   fprintf(stderr, "\n");
   fprintf(stderr, "        Analytical vs. numerical\n");
   for (int component = 0; component < 8; ++component)
-    fprintf(stderr, "    [%d]  %+6.4f <-> %+6.4f\n", component, ar_df[component], ar_ne[component]);
+    fprintf(stderr, "    [%d]  %+14.12f <-> %+14.12f\n", component, ar_df[component], ar_ne[component]); //*/
+
+  //exit(0);
 
 #ifdef OMP
 #pragma omp parallel for

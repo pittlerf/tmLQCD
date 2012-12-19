@@ -161,7 +161,9 @@ int read_gauge_field(char * filename) {
 
   destruct_reader(reader);
 
+#ifdef _GAUGE_COPY
   g_update_gauge_copy = 1;
+#endif
   g_update_gauge_energy = 1;
 
   return(0);

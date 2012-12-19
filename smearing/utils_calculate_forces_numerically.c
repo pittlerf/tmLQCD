@@ -62,7 +62,7 @@ void calculate_forces_numerically(su3adj *result, int * mnllist, const int no)
       ar_rotation[component] = epsilon[direction];
     
       su3 mat_rotation;
-      exposu3(&mat_rotation, &rotation);
+      exposu3(&mat_rotation, &rotation); 
     
       _su3_times_su3(rotated[direction][0][0], mat_rotation, old_value);
     
@@ -78,6 +78,7 @@ void calculate_forces_numerically(su3adj *result, int * mnllist, const int no)
             g_update_rectangle_energy = 1;
             if( monomial_list[ mnllist[i] ].c_sw > 0 )
               sw_term((const su3**)g_gauge_field,monomial_list[mnllist[i]].kappa,monomial_list[mnllist[i]].c_sw);
+            //printf("Calling accfunction for monomial %s for direction %d and component %d.\n",monomial_list[mnllist[i]].name,direction,component);
             h_rotated[direction] += monomial_list[ mnllist[i] ].accfunction(mnllist[i], &hf);
           }
       }

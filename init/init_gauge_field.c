@@ -149,7 +149,9 @@ int init_gauge_field(const int V, const int back) {
     }
   }
 #  endif
+#ifdef _GAUGE_COPY
   g_update_gauge_copy = 1;
+#endif
   g_update_gauge_energy = 1;
   g_update_rectangle_energy = 1;
   return(0);

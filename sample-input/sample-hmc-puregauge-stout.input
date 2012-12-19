@@ -1,0 +1,38 @@
+# pure gauge stout smeared
+
+L=2
+T=2
+Measurements = 100
+StartCondition = hot
+2KappaMu = 0.177
+kappa = 0.177
+NSave = 500000
+ThetaT = 1
+UseEvenOdd = yes
+ReversibilityCheck = yes
+ReversibilityCheckIntervall = 100
+InitialStoreCounter = 0
+DebugLevel = 4
+ompnumthreads=8
+
+BeginSmearing STOUT
+  id = 1
+  rho = 0.18
+  iterations = 1
+EndSmearing
+
+BeginMonomial GAUGE
+  Type = Wilson
+  beta = 5.3
+  Timescale = 0
+  Smearing = 1
+EndMonomial
+
+BeginIntegrator 
+  Type0 = 2MN
+  IntegrationSteps0 = 20
+#  IntegrationSteps1 = 6
+  Tau = 0.5
+  Lambda0 = 0.19
+  NumberOfTimescales = 1
+EndIntegrator

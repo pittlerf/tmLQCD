@@ -457,9 +457,13 @@ void unit_g_gauge_field(void)
   for (ix=0;ix<VOLUME;ix++) {
     for (mu=0;mu<4;mu++) {
       g_gauge_field[ix][mu]=unit_su3();
+//      if( ix == 0 && mu == 0 )
+//        g_gauge_field[ix][mu].c00=1.001;
     }
   }
+#ifdef _GAUGE_COPY 
   g_update_gauge_copy = 1;
+#endif
   g_update_gauge_energy = 1;
   g_update_rectangle_energy = 1;
   return;
@@ -529,7 +533,9 @@ void random_gauge_field(const int repro) {
     }
   }
 
+#ifdef _GAUGE_COPY
   g_update_gauge_copy = 1;
+#endif
   g_update_gauge_energy = 1;
   g_update_rectangle_energy = 1;
   return;
@@ -727,7 +733,9 @@ void set_gauge_field(const double c)
       g_gauge_field[ix][mu]=set_su3(c);
     }
   }
+#ifdef _GAUGE_COPY
   g_update_gauge_copy = 1;
+#endif
   g_update_gauge_energy = 1;
   g_update_rectangle_energy = 1;
   return;
