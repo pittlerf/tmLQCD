@@ -124,7 +124,7 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
   fprintf(stderr, "[DEBUG] Comparison of force calculation at [%d][%d]!\n",x,mu);
   fprintf(stderr, "         numerical force <-> analytical force <-> analytical force + smeared \n");
   for (int component = 0; component < 8; ++component)
-    fprintf(stderr, "    [%d]  %+14.12f <-> %+14.12f <-> %14.12f\n", component, ar_num[component], ar_an[component], ar_an_sm[component]); //*/
+    fprintf(stderr, "    [%d]  %+14.12f <-> %+14.12f <-> %+14.12f\n", component, ar_num[component], ar_an[component], ar_an_sm[component]); //*/
 
 
 #ifdef MPI
