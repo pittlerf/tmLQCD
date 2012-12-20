@@ -90,7 +90,7 @@ void gauge_derivative_analytical(const int id, hamiltonian_field_t * const hf) {
   #endif
     etime = gettime();
     if(g_debug_level > 1 && g_proc_id == 0) {
-      printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
+      printf("# Time for analytical %s monomial derivative: %e s\n", mnl->name, etime-atime);
     }
     return;
 }
@@ -163,7 +163,7 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
     double* xm;
     su3* link;
 
-    stout_control* control = construct_stout_control(1,1,0.05);
+    stout_control* control = construct_stout_control(1,1,0.18);
 
     for(int x = 0; x < VOLUME; ++x)
     {
@@ -226,7 +226,7 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
     return_gauge_field(&rotated[1]);
     double etime = gettime();
     if(g_debug_level > 1 && g_proc_id == 0) {
-      printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
+      printf("# Time for numerical %s monomial derivative: %e s\n", mnl->name, etime-atime);
     }
     g_update_gauge_energy = 1;
     g_update_rectangle_energy = 1;
