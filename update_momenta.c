@@ -61,10 +61,10 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
     }
   }
   
-  //adjoint_field_t tmp_derivative = get_adjoint_field();
+  adjoint_field_t tmp_derivative = get_adjoint_field();
   
   zero_adjoint_field(&df);
-  //zero_adjoint_field(&tmp_derivative);
+  zero_adjoint_field(&tmp_derivative);
 
   //ohnohack_remap_df0(tmp_derivative); /* FIXME Such that we can aggregate results per smearing type. */
   for (int s_ctr = 0; s_ctr < no_relevant_smearings; ++s_ctr)
@@ -98,20 +98,6 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
         }
       }
     }
-    smear_forces(smearing_control_monomial[s_type], df);
-  
-    int x = 1, mu = 1;
-    double *ar_df = (double*)&df[x][mu];
-    double *ar_ne = (double*)&(smearing_control_monomial[s_type]->force_result[x][mu]);
-    fprintf(stderr, "[DEBUG] Comparison of force calculation at [%d][%d]!\n",x,mu);
-    fprintf(stderr, "        Involves monomials: ");
-    for (int monnum = 0; monnum < no; ++monnum)
-      fprintf(stderr, "%s ", monomial_list[ mnllist[monnum] ].name);
-    fprintf(stderr, "\n");
-    fprintf(stderr, "   Numerical total force <-> smear forces\n");
-    for (int component = 0; component < 8; ++component)
-      fprintf(stderr, "    [%d]  %+14.12f <-> %+14.12f\n", component, ar_df[component], ar_ne[component]); //*/
-
 
     //for(int i = 0; i < (VOLUMEPLUSRAND + g_dbw2rand); ++i)
     //{ 
@@ -122,27 +108,28 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
     //}
   }
   //ohnohack_remap_df0(df);
+
+  // compute the analytical derivative as a comparison (gauge field is still mapped to the smeared one)
+  ohnohack_remap_df0(tmp_derivative);
+  gauge_derivative_analytical(0,hf);
+  // add the smeared force terms
+  smear_forces(smearing_control_monomial[0],tmp_derivative);
+  ohnohack_remap_df0(df);
   ohnohack_remap_g_gauge_field(g_gf);
+
+  int x = 1, mu = 1;
+  double *ar_num = (double*)&df[x][mu];
+  double *ar_an = (double*)&tmp_derivative[x][mu];
+  double *ar_an_sm = (double*)&(smearing_control_monomial[0]->force_result[x][mu]);
+  fprintf(stderr, "[DEBUG] Comparison of force calculation at [%d][%d]!\n",x,mu);
+  fprintf(stderr, "         numerical force <-> analytical force <-> analytical force + smeared \n");
+  for (int component = 0; component < 8; ++component)
+    fprintf(stderr, "    [%d]  %+14.12f <-> %+14.12f <-> %14.12f\n", component, ar_num[component], ar_an[component], ar_an_sm[component]); //*/
+
 
 #ifdef MPI
   xchange_deri(hf->derivative);
 #endif
-
-  /* Debugging code inserted here 
-//  su3adj num_eval;
-//  calculate_forces_numerically(&num_eval, mnllist, no);
-  double *ar_df = (double*)&df[0][0];
-  double *ar_ne = (double*)&(smearing_control_monomial[s_type]->force_result[0][0]);
-//  fprintf(stderr, "[DEBUG] Comparison of force calculation!\n");
-//  fprintf(stderr, "        Involves monomial types: ");
-  for (int monnum = 0; monnum < no; ++monnum)
-    fprintf(stderr, "%d ", monomial_list[ mnllist[monnum] ].name);
-  fprintf(stderr, "\n");
-//  fprintf(stderr, "        Analytical vs. numerical\n");
-  for (int component = 0; component < 8; ++component)
-    fprintf(stderr, "    [%d]  %+14.12f <-> %+14.12f\n", component, ar_df[component], ar_ne[component]); //*/
-
-  //exit(0);
 
 #ifdef OMP
 #pragma omp parallel for
@@ -153,7 +140,7 @@ void update_momenta(int * mnllist, double step, const int no, hamiltonian_field_
       _su3adj_minus_const_times_su3adj(hf->momenta[i][mu], step, hf->derivative[i][mu]); 
     }
   }
-  //return_adjoint_field(&tmp_derivative);
+  return_adjoint_field(&tmp_derivative);
   free(relevant_smearings);
   return;
 }

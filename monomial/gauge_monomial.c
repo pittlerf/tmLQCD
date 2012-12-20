@@ -46,6 +46,55 @@
 #include "dirty_shameful_business.h"
 #include "expo.h"
 
+void gauge_derivative_analytical(const int id, hamiltonian_field_t * const hf) {
+  monomial * mnl = &monomial_list[id];
+    double atime, etime;
+    atime = gettime();
+  #ifdef OMP
+  #pragma omp parallel
+    {
+  #endif
+
+    su3 ALIGN v, w;
+    int i, mu;
+    su3 *z;
+    su3adj *xm;
+    double factor = -1. * g_beta/3.0;
+
+    if(mnl->use_rectangles) {
+      mnl->forcefactor = 1.;
+      factor = -mnl->c0 * g_beta/3.0;
+    }
+    
+  #ifdef OMP
+  #pragma omp for
+  #endif
+    for(i = 0; i < VOLUME; i++) { 
+      for(mu=0;mu<4;mu++) {
+        z=&hf->gaugefield[i][mu];
+        xm=&hf->derivative[i][mu];
+        get_staples(&v,i,mu, (const su3**) hf->gaugefield); 
+        _su3_times_su3d(w,*z,v);
+        _trace_lambda_mul_add_assign((*xm), factor, w);
+        
+        if(mnl->use_rectangles) {
+	  get_rectangle_staples(&v, i, mu);
+	  _su3_times_su3d(w, *z, v);
+	  _trace_lambda_mul_add_assign((*xm), factor*mnl->c1/mnl->c0, w);
+        }
+      }
+    }
+
+  #ifdef OMP
+    } /* OpenMP closing brace */
+  #endif
+    etime = gettime();
+    if(g_debug_level > 1 && g_proc_id == 0) {
+      printf("# Time for %s monomial derivative: %e s\n", mnl->name, etime-atime);
+    }
+    return;
+}
+
 /* this function calculates the derivative of the momenta: equation 13 of Gottlieb */
 void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
     monomial * mnl = &monomial_list[id];
@@ -114,7 +163,7 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
     double* xm;
     su3* link;
 
-    stout_control* control = construct_stout_control(1,1,0.18);
+    stout_control* control = construct_stout_control(1,1,0.05);
 
     for(int x = 0; x < VOLUME; ++x)
     {
