@@ -3,7 +3,7 @@
 L=2
 T=2
 Measurements = 100
-StartCondition = hot
+StartCondition = cold
 2KappaMu = 0.177
 kappa = 0.177
 NSave = 500000
@@ -12,8 +12,8 @@ UseEvenOdd = yes
 ReversibilityCheck = yes
 ReversibilityCheckIntervall = 100
 InitialStoreCounter = 0
-DebugLevel = 4
-ompnumthreads=8
+DebugLevel = 2
+ompnumthreads=4
 
 BeginSmearing STOUT
   id = 1

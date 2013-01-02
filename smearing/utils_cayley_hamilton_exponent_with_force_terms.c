@@ -21,12 +21,12 @@ void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Com
   /* NOTE The expressions below are adapted from Peardon-Morningstar. Note that there is a factor -I between A and Q! */
   
   /* c0 = det[A] */
-  double c0 = I * (A->c00 * (A->c11 * A->c22 - A->c12 * A->c21) + 
+  double c0 = - (A->c00 * (A->c11 * A->c22 - A->c12 * A->c21) + 
                    A->c01 * (A->c12 * A->c20 - A->c10 * A->c22) +
                    A->c02 * (A->c10 * A->c21 - A->c11 * A->c20)  );
   
   /* c1 = 0.5 * Tr[AA] */
-  double c1 = -0.5 * (A->c00 * A->c00 + A->c01 * A->c10 + A->c02 * A->c20 +
+  double c1 = 0.5 * (A->c00 * A->c00 + A->c01 * A->c10 + A->c02 * A->c20 +
                       A->c10 * A->c01 + A->c11 * A->c11 + A->c12 * A->c21 +
                       A->c20 * A->c02 + A->c21 * A->c12 + A->c22 * A->c22  );
 

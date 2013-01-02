@@ -153,7 +153,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   /* initialize the momenta  */
   enep = random_su3adj_field(reproduce_randomnumber_flag, hf.momenta);
 
-  g_sloppy_precision = 1;
+  g_sloppy_precision = 0;
 
   /* run the trajectory */
   Integrator.integrate[Integrator.no_timescales-1](Integrator.tau, Integrator.no_timescales-1, 1);
@@ -182,11 +182,17 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   enepx = moment_energy(hf.momenta);
 
   if (!bc_flag) { /* if PBC */
+    g_update_gauge_energy = 1;
+    g_update_rectangle_energy = 1;
+    smear(smearing_control_monomial[0], g_gf);
+    ohnohack_remap_g_gauge_field(smearing_control_monomial[0]->result);
     new_plaquette_energy = measure_gauge_action(_AS_GAUGE_FIELD_T(hf.gaugefield));
     if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
       new_rectangle_energy = measure_rectangles( (const su3**) hf.gaugefield);
     }
   }
+  ohnohack_remap_g_gauge_field(g_gf);
+
   if(g_proc_id == 0 && g_debug_level > 3) printf("called moment_energy: dh = %1.10e\n", (enepx - enep));
   /* Compute the energy difference */
   dh += (enepx - enep);

@@ -3,42 +3,44 @@ static void construct_intermediates(stout_notes_tuple *trace, gauge_field_t cons
   _Complex double mat_trace;
   su3 t1;
   su3 t2;
+  su3 t3;
   
   for (unsigned int x = 0; x < VOLUME; ++x)
     for (unsigned int mu = 0; mu < 4; ++mu)
-    {
-      /* Construct the BMW Sigma (V^\dagger * \frac{\partial S}{\partial V} */
-      _su3d_times_su3(trace[x][mu].Sigma, V[x][mu], smeared_force[x][mu]);
+    {      
+      memmove(&trace[x][mu].Sigma, &smeared_force[x][mu], sizeof(su3));
           
-      /* t2 == Tr[U * Sigma * B2] * A */
+      /* t2 == Tr[U * Sigma * B2] * Q */
       _su3_times_su3(t1, trace[x][mu].Sigma, trace[x][mu].B2);
       _trace_su3_times_su3(mat_trace, U[x][mu], t1);
       _complex_times_su3(t2, mat_trace, trace[x][mu].A);
 
-      /* Z == ( Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * A ) * A */
+      /* Z == ( Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * Q ) * Q */
       _su3_times_su3(t1, trace[x][mu].Sigma, trace[x][mu].B1);
       _trace_su3_times_su3(mat_trace, U[x][mu], t1);
       _su3_add_equals_complex_identity(t2, mat_trace);
       _su3_times_su3(trace[x][mu].Z, t2, trace[x][mu].A);
 
-      /* Z == ( Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * A ) * A  + f_1 * U * Sigma */
+      /* Z == ( Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * Q ) * Q  + f_1 * U * Sigma */
       _su3_times_su3(t1, U[x][mu], trace[x][mu].Sigma);
       _complex_times_su3(t2, trace[x][mu].f1, t1);
       _su3_plus_su3(trace[x][mu].Z, t2, trace[x][mu].Z);
 
-      /* Z == ( Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * A ) * A  + f_1 * U * Sigma  + f2 * U * Sigma * A */
+      /* Z == ( Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * Q ) * Q  + f_1 * U * Sigma  + f2 * U * Sigma * Q */
       _su3_times_su3(t2, t1, trace[x][mu].A);
       _complex_times_su3(t2, trace[x][mu].f2, t2);
       _su3_plus_su3(trace[x][mu].Z, t2, trace[x][mu].Z);
 
-      /* t1 == ( Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * A ) * A  + f_1 * U * Sigma + f2 * ( U * Sigma * A + A * U * Sigma ) */
+      /* t1 == ( Tr[U * Sigma * B1] + Tr[U * Sigma * B2] * Q ) * Q  + f_1 * U * Sigma + f2 * ( U * Sigma * Q + Q * U * Sigma ) */
       _su3_times_su3(t2, trace[x][mu].A, t1);
       _complex_times_su3(t2, trace[x][mu].f2, t2);
       _su3_plus_su3(t1, t2, trace[x][mu].Z);
 
-      /* Z = U^\dagger * P_TA(t1) == Z */
-      project_traceless_antiherm(&t1);
-      _su3d_times_su3(trace[x][mu].Z, U[x][mu], t1);
+      _su3_dagger(t3,t1);
+      _su3_plus_su3(t2,t1,t3);
+      mat_trace = (-1.0/3.0) * (t2.c00 + t2.c11 + t2.c22);
+      _su3_add_equals_complex_identity(t2, mat_trace);
+      _real_times_su3(trace[x][mu].Z,0.5,t2);
     }
   generic_exchange(trace, sizeof(stout_notes_tuple));
 }
