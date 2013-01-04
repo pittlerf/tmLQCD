@@ -1,9 +1,9 @@
 static void add_stout_terms_to_forces(gauge_field_t smeared_force, double const rho, stout_notes_tuple *trace, gauge_field_t const V, gauge_field_t const U)
 {
-  su3 t1;
-  su3 t2;
-  su3 t3;
-  su3 C_der;
+  su3 ALIGN t1;
+  su3 ALIGN t2;
+  su3 ALIGN t3;
+  su3 ALIGN C_der;
   
   for (unsigned int x = 0; x < VOLUME; ++x)
     for (unsigned int mu = 0; mu < 4; ++mu)

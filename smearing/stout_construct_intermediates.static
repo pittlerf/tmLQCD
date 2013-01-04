@@ -1,9 +1,9 @@
 static void construct_intermediates(stout_notes_tuple *trace, gauge_field_t const V, gauge_field_t const U, gauge_field_t const smeared_force)
 {
   _Complex double mat_trace;
-  su3 t1;
-  su3 t2;
-  su3 t3;
+  su3 ALIGN t1;
+  su3 ALIGN t2;
+  su3 ALIGN t3;
   
   for (unsigned int x = 0; x < VOLUME; ++x)
     for (unsigned int mu = 0; mu < 4; ++mu)

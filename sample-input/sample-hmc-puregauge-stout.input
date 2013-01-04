@@ -30,9 +30,9 @@ EndMonomial
 
 BeginIntegrator 
   Type0 = 2MN
-  IntegrationSteps0 = 20
+  IntegrationSteps0 = 10
 #  IntegrationSteps1 = 6
-  Tau = 0.5
+  Tau = 1.0
   Lambda0 = 0.19
   NumberOfTimescales = 1
 EndIntegrator
