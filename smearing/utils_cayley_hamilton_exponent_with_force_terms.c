@@ -6,7 +6,7 @@
 void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Complex double *f1, _Complex double *f2, su3 const *A)
 {
   static double const fac_1_3 = 1 / 3.0;
-    
+
   /* The value of f0 is never needed beyond this function, unlike f1 and f2. We make scoped room for all three,
    * in case f1 and f2 are not requested.  NOTE We want to check the performance impact of this -- this function is
    * called on the full volume of a lattice, after all. */
@@ -20,12 +20,12 @@ void cayley_hamilton_exponent_with_force_terms(su3* expA, su3 *B1, su3 *B2, _Com
   
   /* NOTE The expressions below are adapted from Peardon-Morningstar. Note that there is a factor -I between A and Q! */
   
-  /* c0 = det[A] */
-  double c0 = - (A->c00 * (A->c11 * A->c22 - A->c12 * A->c21) + 
+  /* c0 = det[Q] */
+  double c0 = (A->c00 * (A->c11 * A->c22 - A->c12 * A->c21) + 
                    A->c01 * (A->c12 * A->c20 - A->c10 * A->c22) +
                    A->c02 * (A->c10 * A->c21 - A->c11 * A->c20)  );
-  
-  /* c1 = 0.5 * Tr[AA] */
+ 
+  /* c1 = 0.5 * Tr[QQ] */
   double c1 = 0.5 * (A->c00 * A->c00 + A->c01 * A->c10 + A->c02 * A->c20 +
                       A->c10 * A->c01 + A->c11 * A->c11 + A->c12 * A->c21 +
                       A->c20 * A->c02 + A->c21 * A->c12 + A->c22 * A->c22  );
