@@ -457,8 +457,18 @@ void unit_g_gauge_field(void)
   for (ix=0;ix<VOLUME;ix++) {
     for (mu=0;mu<4;mu++) {
       g_gauge_field[ix][mu]=unit_su3();
-//      if( ix == 0 && mu == 0 )
-//        g_gauge_field[ix][mu].c00=1.001;
+      if( ix == 1 && mu == 1 ) {
+        su3 lambda_3_prop;
+        _su3_zero(lambda_3_prop);
+        lambda_3_prop.c00 = 1.55;
+        lambda_3_prop.c11 = -1.55;
+        print_su3(&lambda_3_prop);
+        exposu3_in_place(&lambda_3_prop);
+        //print_su3(&lambda_3_prop);
+        //cayley_hamilton_exponent_with_force_terms(&g_gauge_field[ix][mu], NULL, NULL, NULL, NULL, &lambda_3_prop);
+        _su3_assign(g_gauge_field[ix][mu],lambda_3_prop);
+        print_su3(&g_gauge_field[ix][mu]);
+      }//*/
     }
   }
 #ifdef _GAUGE_COPY 
