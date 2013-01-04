@@ -460,8 +460,8 @@ void unit_g_gauge_field(void)
       if( ix == 1 && mu == 1 ) {
         su3 lambda_3_prop;
         _su3_zero(lambda_3_prop);
-        lambda_3_prop.c00 = 1.55;
-        lambda_3_prop.c11 = -1.55;
+        lambda_3_prop.c00 = I*1.55;
+        lambda_3_prop.c11 = -I*1.55;
         print_su3(&lambda_3_prop);
         exposu3_in_place(&lambda_3_prop);
         //print_su3(&lambda_3_prop);
