@@ -43,6 +43,17 @@
 #ifdef MPI
 # include "xchange/xchange.h"
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
+
+#if (defined BGQ && defined XLC)
+#  include "bgq.h"
+#  include "bgq2.h"
+#  include "xlc_prefetch.h"
+#  include "D_psi_bgq.h"
+#endif
+
 #include "update_backward_gauge.h"
 #include "block.h"
 #include "operator/D_psi.h"
@@ -262,9 +273,7 @@ void local_H(spinor * const rr, spinor * const s, su3 * u, int * _idx) {
 
 }
 
-
 #else
-
 
 static inline void p0add(spinor * restrict const tmpr , spinor const * restrict const s, 
 			 su3 const * restrict const u, const _Complex double phase) {
@@ -932,6 +941,126 @@ void D_psi(spinor * const P, spinor * const Q){
 #ifdef OMP
   } /* OpenMP closing brace */
 #endif
+}
+
+#elif ((defined BGQ) && (defined XLC))
+
+void D_psi(spinor * const P, spinor * const Q) {
+  if(P==Q){
+    printf("Error in D_psi (operator.c):\n");
+    printf("Arguments must be different spinor fields\n");
+    printf("Program aborted\n");
+    exit(1);
+  }
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+      update_backward_gauge(g_gauge_field);
+  }
+#endif
+# if defined MPI
+  xchange_lexicfield(Q);
+# endif
+
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
+  _Complex double rho = 1 + g_mu * I;
+
+  int iy;
+  
+  su3 * restrict up ALIGN;
+  su3 * restrict um ALIGN;
+  spinor * restrict s ALIGN;
+  spinor * restrict sp ALIGN;
+  spinor * restrict sm ALIGN;
+  spinor * restrict rn ALIGN;
+
+  _Complex double rho1, rho2;
+  spinor tmpr;
+
+  rho1 = 1. + g_mu * I;
+  rho2 = conj(rho1);
+
+  _declare_regs();
+
+#ifdef OMP
+#pragma omp for
+#endif
+  for (int ix=0;ix<VOLUME;ix++)
+  {
+    rn  = (spinor *) P +ix;
+    s  = (spinor *) Q +ix;
+    
+    /* temporary until optimized multiplication is done */
+    _complex_times_vector(tmpr.s0, rho1, s->s0);
+    _complex_times_vector(tmpr.s1, rho1, s->s1);
+    _complex_times_vector(tmpr.s2, rho2, s->s2);
+    _complex_times_vector(tmpr.s3, rho2, s->s3);
+
+    /******************************* direction +0 *********************************/
+    iy=g_iup[ix][0];
+    sp = (spinor *) Q +iy;
+    up=&g_gauge_field[ix][0];
+    _p0add()
+
+    /******************************* direction -0 *********************************/
+    iy=g_idn[ix][0];
+    sm  = (spinor *) Q +iy;
+    um=&g_gauge_field[iy][0];
+    _m0add()
+
+    /******************************* direction +1 *********************************/
+    iy=g_iup[ix][1];
+    sp = (spinor *) Q +iy;
+    up=&g_gauge_field[ix][1];
+    _p1add()
+
+    /******************************* direction -1 *********************************/
+    iy=g_idn[ix][1];
+    sm = (spinor *) Q +iy;
+    um=&g_gauge_field[iy][1];
+    _m1add()
+
+    /******************************* direction +2 *********************************/
+    iy=g_iup[ix][2];
+    sp = (spinor *) Q +iy;
+    up=&g_gauge_field[ix][2];
+    _p2add()
+
+    /******************************* direction -2 *********************************/
+    iy=g_idn[ix][2];
+    sm = (spinor *) Q +iy;
+    um=&g_gauge_field[iy][2];
+    _m2add()
+
+    /******************************* direction +3 *********************************/
+    iy=g_iup[ix][3];
+    sp = (spinor *) Q +iy;
+    up=&g_gauge_field[ix][3];
+    _p3add()
+
+    /******************************* direction -3 *********************************/
+    iy=g_idn[ix][3];
+    sm = (spinor *) Q +iy;
+    um=&g_gauge_field[iy][3];
+    _m3add()
+    
+    _store_res()
+    
+    /* add (1 + i gamma5 mu) */
+    //_1_imu()
+    
+    _vector_add(rn->s0,tmpr.s0,rn->s0);
+    _vector_add(rn->s1,tmpr.s1,rn->s1);
+    _vector_add(rn->s2,tmpr.s2,rn->s2);
+    _vector_add(rn->s3,tmpr.s3,rn->s3);
+  }  
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif  
 }
 
 #elif ((defined BGL) && (defined XLC))
