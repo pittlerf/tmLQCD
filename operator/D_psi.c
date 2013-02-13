@@ -59,6 +59,9 @@
 #include "operator/D_psi.h"
 #include "solver/dirac_operator_eigenvectors.h"
 
+#include "start.h"
+
+
 #if (defined SSE23 || defined SSE33)
 
 #elif (defined BGL && defined XLC)
@@ -274,6 +277,220 @@ void local_H(spinor * const rr, spinor * const s, su3 * u, int * _idx) {
 }
 
 #else
+
+static inline void m0push(spinor * restrict const out, spinor const * restrict const in,
+    su3 const * restrict const u, _Complex double const * const phase) {
+#ifdef OMP
+#define static
+#endif
+  static su3_vector chi, psi;
+#ifdef OMP
+#undef static
+#endif
+  
+  _vector_add(psi,in->s0, in->s2);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, *phase, chi);
+  _vector_add_assign_threadsafe(out->s0, psi);
+  _vector_add_assign_threadsafe(out->s2, psi);
+
+  _vector_add(psi, in->s1, in->s3);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, *phase, chi);
+  _vector_add_assign_threadsafe(out->s1, psi);
+  _vector_add_assign_threadsafe(out->s3, psi);
+
+  return;
+  }
+
+static inline void p0push(spinor * restrict const out, spinor const * restrict const in,
+    su3 const * restrict const u, _Complex double const * const phase) {
+#ifdef OMP
+#define static
+#endif
+  static su3_vector chi, psi;
+#ifdef OMP
+#undef static
+#endif
+  
+  _vector_sub(psi, in->s0, in->s2);
+  _su3_inverse_multiply(chi, (*u), psi);
+  _complexcjg_times_vector(psi, *phase, chi);
+  _vector_add_assign_threadsafe(out->s0, psi);
+  _vector_sub_assign_threadsafe(out->s2, psi);
+  
+  _vector_sub(psi, in->s1, in->s3);
+  _su3_inverse_multiply(chi, (*u), psi);
+  _complexcjg_times_vector(psi, *phase, chi);
+  _vector_add_assign_threadsafe(out->s1, psi);
+  _vector_sub_assign_threadsafe(out->s3, psi);
+
+  return;
+  }
+
+static inline void m1push(spinor * restrict const out, spinor const * restrict const in, 
+			 su3 const * restrict const u, _Complex double const * const phase) {
+#ifdef OMP
+#define static
+#endif
+  static su3_vector chi, psi;
+#ifdef OMP
+#undef static
+#endif
+
+  _vector_i_add(psi, in->s0, in->s3);
+  _su3_multiply(chi,(*u),psi);
+
+  _complex_times_vector(psi, *phase, chi);
+  _vector_add_assign_threadsafe(out->s0, psi);
+  _vector_i_sub_assign_threadsafe(out->s3, psi);
+ 
+  _vector_i_add(psi, in->s1, in->s2);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, *phase, chi);
+  _vector_add_assign_threadsafe(out->s1, psi);
+  _vector_i_sub_assign_threadsafe(out->s2, psi);
+
+  return;
+}
+
+static inline void p1push(spinor * restrict const out, spinor const * restrict const in, 
+			 su3 const * restrict const u, _Complex double const * const phase) {
+#ifdef OMP
+#define static
+#endif
+  static su3_vector chi, psi;
+#ifdef OMP
+#undef static
+#endif
+
+  _vector_i_sub(psi,in->s0, in->s3);
+  _su3_inverse_multiply(chi,(*u), psi);
+
+  _complexcjg_times_vector(psi, *phase, chi);
+  _vector_add_assign_threadsafe(out->s0, psi);
+  _vector_i_add_assign_threadsafe(out->s3, psi);
+
+  _vector_i_sub(psi, in->s1, in->s2);
+  _su3_inverse_multiply(chi, (*u), psi);
+
+  _complexcjg_times_vector(psi, *phase, chi);
+  _vector_add_assign_threadsafe(out->s1, psi);
+  _vector_i_add_assign_threadsafe(out->s2, psi);
+
+  return;
+}
+
+static inline void m2push(spinor * restrict const out, spinor const * restrict const in, 
+			 su3 const * restrict const u, _Complex double const * const phase) {
+#ifdef OMP
+#define static
+#endif
+  static su3_vector chi, psi;
+#ifdef OMP
+#undef static
+#endif
+
+  _vector_add(psi,in->s0,in->s3);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, *phase, chi);
+  _vector_add_assign_threadsafe(out->s0, psi);
+  _vector_add_assign_threadsafe(out->s3, psi);
+
+  _vector_sub(psi,in->s1,in->s2);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, *phase, chi);
+  _vector_add_assign_threadsafe(out->s1, psi);
+  _vector_sub_assign_threadsafe(out->s2, psi);
+
+  return;
+}
+
+static inline void p2push(spinor * restrict const out, spinor const * restrict const in, 
+			 su3 const * restrict const u, _Complex double const * const phase) {
+#ifdef OMP
+#define static
+#endif
+  static su3_vector chi, psi;
+#ifdef OMP
+#undef static
+#endif
+
+  _vector_sub(psi, in->s0, in->s3);
+  _su3_inverse_multiply(chi, (*u), psi);
+
+  _complexcjg_times_vector(psi, *phase, chi);
+  _vector_add_assign_threadsafe(out->s0, psi);
+  _vector_sub_assign_threadsafe(out->s3, psi);
+
+  _vector_add(psi, in->s1, in->s2);
+  _su3_inverse_multiply(chi, (*u),psi);
+
+  _complexcjg_times_vector(psi, *phase, chi);
+  _vector_add_assign_threadsafe(out->s1, psi);
+  _vector_add_assign_threadsafe(out->s2, psi);
+
+  return;
+}
+
+static inline void m3push(spinor * restrict const out, spinor const * restrict const in, 
+			 su3 const * restrict const u, _Complex double const * const phase) {
+#ifdef OMP
+#define static
+#endif
+  static su3_vector chi, psi;
+#ifdef OMP
+#undef static
+#endif
+
+  _vector_i_add(psi, in->s0, in->s2);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, *phase, chi);
+  _vector_add_assign_threadsafe(out->s0, psi);
+  _vector_i_sub_assign_threadsafe(out->s2, psi);
+
+  _vector_i_sub(psi,in->s1, in->s3);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, *phase, chi);
+  _vector_add_assign_threadsafe(out->s1, psi);
+  _vector_i_add_assign_threadsafe(out->s3, psi);
+
+  return;
+}
+
+static inline void p3push(spinor * restrict const out, spinor const * restrict const in, 
+				 su3 const * restrict const u, _Complex double const * const phase) {
+#ifdef OMP
+#define static
+#endif
+  static su3_vector chi, psi;
+#ifdef OMP
+#undef static
+#endif
+
+  _vector_i_sub(psi,in->s0, in->s2);
+  _su3_inverse_multiply(chi, (*u), psi);
+
+  _complexcjg_times_vector(psi, *phase, chi);
+  _vector_add_assign_threadsafe(out->s0, psi);
+  _vector_i_add_assign_threadsafe(out->s2, psi);
+
+  _vector_i_add(psi, in->s1, in->s3);
+  _su3_inverse_multiply(chi, (*u), psi);
+
+  _complexcjg_times_vector(psi, *phase, chi);
+  _vector_add_assign_threadsafe(out->s1, psi);
+  _vector_i_sub_assign_threadsafe(out->s3, psi);
+
+  return;
+}
 
 static inline void p0add(spinor * restrict const tmpr , spinor const * restrict const s, 
 			 su3 const * restrict const u, const _Complex double phase) {
@@ -1346,6 +1563,89 @@ void D_psi(spinor * const P, spinor * const Q){
   {
 #endif
 
+#ifdef D_PSI_PUSH
+
+  int ix,iy;
+  spinor * restrict out; 
+  spinor * restrict out_pm;
+  
+  su3 const * restrict u;
+  
+  spinor const * restrict in;
+
+  _Complex double rho1, rho2, tmp;
+
+  rho1 = 1. + g_mu * I;
+  rho2 = conj(rho1);
+
+  /************************ loop over all lattice sites *************************/
+
+  zero_spinor_field(P,VOLUME);
+
+#ifdef OMP
+#pragma omp for
+#endif
+  for (ix=0;ix<VOLUME;ix++)
+  {
+    out  = (spinor *) P +ix;
+    in  = (spinor *) Q +ix;
+
+    _complex_times_vector_add_assign_threadsafe(out->s0, rho1, in->s0);
+    _complex_times_vector_add_assign_threadsafe(out->s1, rho1, in->s1);
+    _complex_times_vector_add_assign_threadsafe(out->s2, rho2, in->s2);
+    _complex_times_vector_add_assign_threadsafe(out->s3, rho2, in->s3);
+    
+    /******************************* direction +0 *********************************/
+    iy=g_iup[ix][0];
+    u = &g_gauge_field[ix][0];
+    out_pm = (spinor *) P +iy;
+    p0push(out_pm, in, u, &phase_0);
+
+    /******************************* direction -0 *********************************/
+    iy=g_idn[ix][0];
+    u = &g_gauge_field[iy][0];
+    out_pm  = (spinor *) P +iy;
+    m0push(out_pm, in, u, &phase_0);
+
+    /******************************* direction +1 *********************************/    
+    iy=g_iup[ix][1];
+    u = &g_gauge_field[ix][1];
+    out_pm = (spinor *) P +iy;
+    p1push(out_pm, in, u, &phase_1);
+
+    /******************************* direction -1 *********************************/
+    iy=g_idn[ix][1];
+    u = &g_gauge_field[iy][1];
+    out_pm = (spinor *) P +iy;
+    m1push(out_pm, in, u, &phase_1);
+
+    /******************************* direction +2 *********************************/
+    iy=g_iup[ix][2];
+    u = &g_gauge_field[ix][2];    
+    out_pm = (spinor *) P +iy;
+    p2push(out_pm, in, u, &phase_2);
+
+    /******************************* direction -2 *********************************/
+    iy=g_idn[ix][2];
+    u = &g_gauge_field[iy][2];    
+    out_pm = (spinor *) P +iy;
+    m2push(out_pm, in, u, &phase_2);
+
+    /******************************* direction +3 *********************************/
+    iy=g_iup[ix][3];
+    u = &g_gauge_field[ix][3];    
+    out_pm = (spinor *) P +iy;
+    p3push(out_pm, in, u, &phase_3);
+
+    /******************************* direction -3 *********************************/
+    iy=g_idn[ix][3];
+    u = &g_gauge_field[iy][3];    
+    out_pm = (spinor *) P +iy;
+    m3push(out_pm, in, u, &phase_3);
+  }
+
+#else /* D_PSI_PUSH */
+
   int ix,iy;
   su3 * restrict up,* restrict um;
   spinor * restrict rr; 
@@ -1421,6 +1721,9 @@ void D_psi(spinor * const P, spinor * const Q){
     um=&g_gauge_field[iy][3];
     m3addandstore(rr, sm, um, phase_3, &tmpr);
   }
+  
+#endif /* D_PSI_PUSH */  
+  
 #ifdef OMP
   } /* OpenMP closing brace */
 #endif

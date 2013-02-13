@@ -240,11 +240,78 @@ _sse_store(r);
   (r).c1 += I * (s).c1;			\
   (r).c2 += I * (s).c2;
 
-
 #define _vector_i_sub_assign(r,s)		\
   (r).c0 -= I * (s).c0;				\
   (r).c1 -= I * (s).c1;				\
   (r).c2 -= I * (s).c2;
+
+#ifndef OMP
+
+#define _vector_add_assign_threadsafe _vector_add_assign
+#define _vector_sub_assign_threadsafe _vector_sub_assign
+#define _vector_i_add_assign_threadsafe _vector_i_add_assign
+#define _vector_i_sub_assign_threadsafe _vector_i_sub_assign
+
+#else
+
+#define _vector_add_assign_threadsafe(r,s)			\
+_Pragma("omp critical (vector_acc_c0)") \
+  { \
+  (r).c0 += (s).c0;				\
+  } \
+_Pragma("omp critical (vector_acc_c1)") \
+  { \
+  (r).c1 += (s).c1;				\
+  } \
+_Pragma("omp critical (vector_acc_c2)") \
+  { \
+  (r).c2 += (s).c2; \
+  }
+  
+
+#define _vector_sub_assign_threadsafe(r,s)			\
+_Pragma("omp critical (vector_acc_c0)") \
+  { \
+  (r).c0 -= (s).c0;				\
+  } \
+_Pragma("omp critical (vector_acc_c1)") \
+  { \
+  (r).c1 -= (s).c1;				\
+  } \
+_Pragma("omp critical (vector_acc_c2)") \
+  { \
+  (r).c2 -= (s).c2; \
+  }
+
+#define _vector_i_add_assign_threadsafe(r,s)		\
+_Pragma("omp critical (vector_acc_c0)") \
+  { \
+  (r).c0 += I * (s).c0;				\
+  } \
+_Pragma("omp critical (vector_acc_c1)") \
+  { \
+  (r).c1 += I * (s).c1;				\
+  } \
+_Pragma("omp critical (vector_acc_c2)") \
+  { \
+  (r).c2 += I * (s).c2; \
+  }
+
+#define _vector_i_sub_assign_threadsafe(r,s)		\
+_Pragma("omp critical (vector_acc_c0)") \
+  { \
+  (r).c0 -= I * (s).c0;				\
+  } \
+_Pragma("omp critical (vector_acc_c1)") \
+  { \
+  (r).c1 -= I * (s).c1;				\
+  } \
+_Pragma("omp critical (vector_acc_c2)") \
+  { \
+  (r).c2 -= I * (s).c2; \
+  }
+
+#endif /* #ifndef OMP */
 
 #define complex_times_vector(r,c,s)		\
   (r).c0 = (c) * (s).c0;			\
@@ -641,7 +708,32 @@ _sse_store_up(r);
    x.c0 = (c) * (y).c0;			\
    x.c1 = (c) * (y).c1;			\
    x.c2 = (c) * (y).c2;
-    
+
+#define _complex_times_vector_add_assign(x,c,y) \
+  x.c0 += (c) * (y).c0;			\
+  x.c1 += (c) * (y).c1;			\
+  x.c2 += (c) * (y).c2;
+
+#ifndef OMP
+#define _complex_times_vector_add_assign_threadsafe _complex_times_vector_add_assign
+#else
+
+#define _complex_times_vector_add_assign_threadsafe(x, c, y)	\
+_Pragma("omp critical (vector_acc_c0)") \
+  { \
+  x.c0 += (c) * (y).c0; \
+  } \
+_Pragma("omp critical (vector_acc_c1)") \
+  { \
+  x.c1 += (c) * (y).c1; \
+  } \
+_Pragma("omp critical (vector_acc_c2)") \
+  { \
+  x.c2 += (c) * (y).c2; \
+  } \
+
+#endif /* OMP */
+
 #define _vector_tensor_vector(t,u,v)	\
   (t).c00 = (u).c0 * conj((v).c0);	\
   (t).c01 = (u).c0 * conj((v).c1);	\
