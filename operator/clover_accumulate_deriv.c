@@ -56,12 +56,31 @@
 # include "bgq_su3.h"
 #endif
 
+#ifdef OMP
+static int sw_buffer_initialized = 0;
+
+/* each [x][mu] of sw_buffer has 40 elements to hold the contribution from
+  each direct or 2-hop neighbour used in this loop */
+
+static su3adj *** sw_buffer;
+static su3adj * sw_buffer_memory;
+
+void init_sw_buffer(); 
+
+#endif
+
 // now we sum up all term from the clover term
 // after sw_spinor and sw_deriv have been called
-
 void sw_all(hamiltonian_field_t * const hf, const double kappa, 
 	    const double c_sw) {
 #ifdef OMP
+  if( !sw_buffer_initialized ) {
+    init_sw_buffer();
+    sw_buffer_initialized = 1;
+  } else {
+    memset(sw_buffer_memory,0,sizeof(su3adj)*VOLUMEPLUSRAND*40*4); 
+  }
+
 #pragma omp parallel
   {
 #endif
@@ -122,19 +141,27 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa,
 	_su3_times_su3d(plaq,v1,v2);
 	
 	_su3_times_su3(vv1,plaq,vis[k][l]);
- 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[x][k], -2.*ka_csw_8, vv1);
+ 	_trace_lambda_mul_add_assign(hf->derivative[x][k], -2.*ka_csw_8, vv1);
 
 	_su3d_times_su3(vv2,*w1,vv1); 
 	_su3_times_su3(vv1,vv2,*w1);
- 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xpk][l], -2.*ka_csw_8, vv1);
-	
+#ifndef OMP
+  _trace_lambda_mul_add_assign(hf->derivative[xpk][l], -2.*ka_csw_8, vv1);
+#else
+  _trace_lambda_mul_assign(sw_buffer[xpk][l][k], -2*ka_csw_8, vv1);
+#endif	
+
 	_su3_times_su3(vv2,vis[k][l],plaq); 
 	_su3_dagger(vv1,vv2);
- 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[x][l], -2.*ka_csw_8, vv1);
+ 	_trace_lambda_mul_add_assign(hf->derivative[x][l], -2.*ka_csw_8, vv1);
 
 	_su3d_times_su3(vv2,*w4,vv1); 
 	_su3_times_su3(vv1,vv2,*w4);
- 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xpl][k], -2.*ka_csw_8, vv1);
+#ifndef OMP  
+ 	_trace_lambda_mul_add_assign(hf->derivative[xpl][k], -2.*ka_csw_8, vv1);
+#else
+  _trace_lambda_mul_add_assign(sw_buffer[xpl][k][l], -2*ka_csw_8, vv1);
+#endif
 	
 	w1=&hf->gaugefield[x][l];
 	w2=&hf->gaugefield[xplmk][k];   /*dag*/
@@ -145,19 +172,32 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa,
 	_su3_times_su3(plaq,v1,v2);
 	
 	_su3_times_su3(vv1,plaq,vis[k][l]);
- 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[x][l], -2.*ka_csw_8, vv1);
+ 	_trace_lambda_mul_add_assign(hf->derivative[x][l], -2.*ka_csw_8, vv1);
 	
 	_su3_dagger(vv1,v1); 
 	_su3_times_su3d(vv2,vv1,vis[k][l]);
 	_su3_times_su3d(vv1,vv2,v2);
- 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xplmk][k], -2.*ka_csw_8, vv1);
+#ifndef OMP
+ 	_trace_lambda_mul_add_assign(hf->derivative[xplmk][k], -2.*ka_csw_8, vv1);
+#else
+  _trace_lambda_mul_assign(sw_buffer[xplmk][k][24+l*4+k], -2*ka_csw_8, vv1);
+#endif
 
 	_su3_times_su3(vv2,*w3,vv1); 
 	_su3_times_su3d(vv1,vv2,*w3);
- 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xmk][l], -2.*ka_csw_8, vv1);
+
+#ifndef OMP 	
+  _trace_lambda_mul_add_assign(hf->derivative[xmk][l], -2.*ka_csw_8, vv1);
+#else
+  _trace_lambda_mul_assign(sw_buffer[xmk][l][4+k], -2*ka_csw_8, vv1);
+#endif
 
 	_su3_dagger(vv2,vv1);
- 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xmk][k], -2.*ka_csw_8, vv2);
+#ifndef OMP 	
+  _trace_lambda_mul_add_assign(hf->derivative[xmk][k], -2.*ka_csw_8, vv2);
+#else
+  _trace_lambda_mul_add_assign(sw_buffer[xmk][k][4+k], -2*ka_csw_8, vv2);
+#endif
 	
 	w1=&hf->gaugefield[xmk][k];   /*dag*/
 	w2=&hf->gaugefield[xmkml][l]; /*dag*/
@@ -169,18 +209,35 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa,
 	_su3_times_su3d(vv1,*w1,vis[k][l]);
 	_su3_times_su3d(vv2,vv1,v2);
 	_su3_times_su3(vv1,vv2,*w2);
- 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xmk][k], -2.*ka_csw_8, vv1);
+
+#ifndef OMP 	
+  _trace_lambda_mul_add_assign(hf->derivative[xmk][k], -2.*ka_csw_8, vv1);
+#else
+  _trace_lambda_mul_add_assign(sw_buffer[xmk][k][4+k], -2*ka_csw_8, vv1);
+#endif
 
 	_su3_times_su3(vv2,*w2,vv1); 
 	_su3_times_su3d(vv1,vv2,*w2);
- 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xmkml][l], -2.*ka_csw_8, vv1);
+#ifndef OMP
+ 	_trace_lambda_mul_add_assign(hf->derivative[xmkml][l], -2.*ka_csw_8, vv1);
+#else
+  _trace_lambda_mul_assign(sw_buffer[xmkml][l][8+k*4+l],-2*ka_csw_8, vv1);
+#endif
 
 	_su3_dagger(vv2,vv1);
- 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xmkml][k], -2.*ka_csw_8, vv2);
+#ifndef OMP 	
+  _trace_lambda_mul_add_assign(hf->derivative[xmkml][k], -2.*ka_csw_8, vv2);
+#else
+  _trace_lambda_mul_add_assign(sw_buffer[xmkml][k][8+k*4+l],-2*ka_csw_8, vv2);
+#endif
 
 	_su3d_times_su3(vv1,*w3,vv2); 
 	_su3_times_su3(vv2,vv1,*w3);
- 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xml][l], -2.*ka_csw_8, vv2);
+#ifndef OMP 	
+  _trace_lambda_mul_add_assign(hf->derivative[xml][l], -2.*ka_csw_8, vv2);
+#else
+  _trace_lambda_mul_add_assign(sw_buffer[xml][l][4+l],-2*ka_csw_8,vv2);
+#endif
 	
 	w1=&hf->gaugefield[xml][l];   /*dag*/
 	w2=&hf->gaugefield[xml][k];
@@ -192,24 +249,63 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa,
 	_su3_times_su3d(vv1,*w1,vis[k][l]);
 	_su3_times_su3d(vv2,vv1,v2);
 	_su3_times_su3d(vv1,vv2,*w2);
- 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xml][l], -2.*ka_csw_8, vv1);
+#ifndef OMP
+  _trace_lambda_mul_add_assign(hf->derivative[xml][l], -2.*ka_csw_8, vv1);
+#else
+  _trace_lambda_mul_add_assign(sw_buffer[xml][l][4+l],-2*ka_csw_8,vv1);
+#endif
 	
 	_su3_dagger(vv2,vv1);
- 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xml][k], -2.*ka_csw_8, vv2);
+#ifndef OMP 	
+  _trace_lambda_mul_add_assign(hf->derivative[xml][k], -2.*ka_csw_8, vv2);
+#else
+  _trace_lambda_mul_add_assign(sw_buffer[xml][k][4+l],-2*ka_csw_8,vv2);
+#endif
 
 	_su3d_times_su3(vv1,*w2,vv2); 
 	_su3_times_su3(vv2,vv1,*w2);
- 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[xpkml][l], -2.*ka_csw_8, vv2);
+#ifndef OMP
+  _trace_lambda_mul_add_assign(hf->derivative[xpkml][l], -2.*ka_csw_8, vv2);
+#else
+  _trace_lambda_mul_add_assign(sw_buffer[xpkml][l][24+4*k+l],-2*ka_csw_8,vv2);
+#endif
 
 	_su3_dagger(vv2,v2);  
 	_su3_times_su3d(vv1,vv2,v1);
 	_su3_times_su3d(vv2,vv1,vis[k][l]);
- 	_trace_lambda_mul_add_assign_nonlocal(hf->derivative[x][k], -2.*ka_csw_8, vv2);
+ 	_trace_lambda_mul_add_assign(hf->derivative[x][k], -2.*ka_csw_8, vv2);
       }
     }
   }
+
+/* threadsafe accumulation of derivatives */
 #ifdef OMP
+#pragma omp for
+  for(int x = 0; x < VOLUMEPLUSRAND; ++x) {
+    for(int mu = 0; mu < 4; ++mu) {
+      for(int dir = 0; dir < 40; ++dir) {
+        _add_su3adj(hf->derivative[x][mu],sw_buffer[x][mu][dir]);
+      }
+    }
+  }
+  
   } /* OpenMP closing brace */
 #endif
   return;
 }
+
+#ifdef OMP
+void init_sw_buffer() {
+
+  sw_buffer = (su3adj***)calloc(VOLUMEPLUSRAND,sizeof(su3adj**));
+  sw_buffer_memory = (su3adj*) calloc(VOLUMEPLUSRAND*40*4,sizeof(su3adj));
+  memset(sw_buffer_memory,0,sizeof(su3adj)*VOLUMEPLUSRAND*40*4); 
+
+  for(int x = 0; x < VOLUMEPLUSRAND; ++x) {
+    sw_buffer[x] = (su3adj**) calloc(4,sizeof(su3adj*));
+    for(int mu = 0; mu < 4; ++mu) {
+      sw_buffer[x][mu] = sw_buffer_memory + x*40*4 + mu*40;
+    }
+  }
+}
+#endif
