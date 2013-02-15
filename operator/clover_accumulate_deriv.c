@@ -52,10 +52,11 @@
 #include "operator/clovertm_operators.h"
 #include "operator/clover_leaf.h"
 
-#ifdef OMP
+#ifdef BGQ
+#include "bgq_su3.h"
+#endif
 
-// now we sum up all term from the clover term
-// after sw_spinor and sw_deriv have been called
+#ifdef OMP
 
 static int sw_buffer_initialized = 0;
 
@@ -69,8 +70,15 @@ void init_sw_buffer();
 
 #endif
 
+// now we sum up all term from the clover term
+// after sw_spinor and sw_deriv have been called
+
 void sw_all(hamiltonian_field_t * const hf, const double kappa, 
 	    const double c_sw) {
+#ifdef BGQ
+  _bgq_declare_su3regs()
+#endif	    
+	    
 #ifdef OMP
   if( !sw_buffer_initialized ) {
     init_sw_buffer();
