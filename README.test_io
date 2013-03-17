@@ -1,0 +1,74 @@
+DESCRIPTION
+
+test_io is a a small application which can be used to test the I/O subsystem
+and the LIME and LEMON interfaces of tmLQCD
+
+It works by using a specified number of test gauge configurations, reading,
+writing and rereading them while keeping track of their SciDAC checksums.
+
+It has two modes of operation:
+
+1) Read pre-existing gauge configurations, write them to disk to a different
+filename and reread them. (test_conf.0000 to test_conf.N)
+2) Generate random gauge configurations, write them to disk and reread
+them. ( -g run-time flag )
+
+In principle, the first mode is more thorough because it allows one additional
+test, but clearly the second mode is more flexible because it enables very easy
+variation of the local and total volumes.
+
+The application uses the full parallelization available in tmLQCD.
+
+CONFIGURATION
+
+By default it attempts to read a "test_io.input" configuration file which should
+contain parameters for the lattice size and parallelization options (if running
+in parallel). Optionally, a random seed and random number generator mode can be 
+specified. Another file can be specified with the "-f filename.input" 
+run-time flag.
+
+
+test_io.input:
+----------
+
+L=24
+T=48
+
+NrXProcs=2
+NrYProcs=2
+NrZProcs=2
+
+ompnumthreads = 64
+
+(seed=88972)
+(reproducerandomnumbers=no)
+
+---------
+
+
+In addition to these run-time parameters, a few constants are defined in test_io.c which
+control behaviour:
+
+ITERATIONS    -  total number of test iterations (default 5)
+NUM_TESTCONFS -  how many test configurations to read or generate (default 10)
+NUM_REREADS   -  how many reread tests to do in each iterations (default 10)
+MIN_DELAY     -  between the writing and rereading the code can optionally
+                 synchronize and wait for a minimum of MIN_DELAY seconds (default 0)
+MAX_DELAY     -  between each reread test the delay can be increased up to
+                 at most MAX_DELAY seconds. Setting both parameters to 0
+                 avoids two MPI_Barriers and runs the test without any wait
+                 between write and reread. Under certain circumstances it could
+                 be beneficial to have a delay in order to circumvent filesystem
+                 caches. (default 5)
+
+
+RUN-TIME FLAGS
+
+To operate without pre-existing gauge configurations, supply the -g flag at runtime:
+
+$ test_io -g
+
+To specify a different input file:
+
+$ test_io -f filename.input
+
