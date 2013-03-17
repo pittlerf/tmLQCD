@@ -375,7 +375,7 @@ static void usage(void) {
   fprintf(stdout, "Version %s %s \n\n", PACKAGE_VERSION, git_hash);
   fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
   fprintf(stdout, "Usage:   test_io [options]\n");
-  fprintf(stdout, "Options: [-f input-filename]  default: hmc.input\n");
+  fprintf(stdout, "Options: [-f input-filename]  default: test_io.input\n");
   fprintf(stdout, "         [-v] more verbosity\n");
   fprintf(stdout, "         [-g] instead of reading, generate random gauge configurations\n");
   fprintf(stdout, "              (no input gauge configurations required)\n"); 
