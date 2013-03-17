@@ -67,7 +67,7 @@
 
 int const rlxdsize = 105;
 
-static void usage();
+static void usage(void);
 static void process_args(int argc, char *argv[], char ** input_filename, char ** filename);
 static void set_default_filenames(char ** input_filename, char ** filename);
 
@@ -97,6 +97,8 @@ typedef struct
   char filename_copy[200];
   DML_Checksum checksum_orig;
   DML_Checksum checksum_copy;
+  gauge_field_t buffer_orig;
+  gauge_field_t buffer_copy;
 } test_conf_t;
 
 typedef struct
@@ -116,9 +118,10 @@ static void add_failure(failure_flex_array_t*, const enum_failure_t, const int i
 static void output_failures(const failure_flex_array_t* const);
 static void shuffle(int* array,size_t n);
 
+int reread_only = 0;
 
 #define ITERATIONS 1
-#define NUM_TESTCONFS 50
+#define NUM_TESTCONFS 2
 #define NUM_REREADS 20
 #define MIN_DELAY 0
 #define MAX_DELAY 5
@@ -136,7 +139,6 @@ int main(int argc,char *argv[]) {
   failures.length = 0;
   
   test_conf_t test_confs[NUM_TESTCONFS];
-  gauge_field_t gauge_fields[NUM_TESTCONFS];
   srand(time(NULL));
   int conf_indices[NUM_TESTCONFS];
 
@@ -186,14 +188,15 @@ int main(int argc,char *argv[]) {
 
   tmlqcd_mpi_init(argc, argv);
  
-  initialize_gauge_buffers(NUM_TESTCONFS+1); 
+  initialize_gauge_buffers(2*NUM_TESTCONFS+1); 
   
   for( int i = 0; i < NUM_TESTCONFS; ++i) {
     snprintf(test_confs[i].filename_orig,200,"%s.%04d",testconf_filename_base,i+10);
     snprintf(test_confs[i].filename_copy,200,"%s.%04d.copy",testconf_filename_base,i+10);
     DML_checksum_init(&test_confs[i].checksum_orig);
     DML_checksum_init(&test_confs[i].checksum_copy);
-    gauge_fields[i] = get_gauge_field();
+    test_confs[i].buffer_orig = get_gauge_field();
+    test_confs[i].buffer_copy = get_gauge_field();
     conf_indices[i] = i;
   }
   
@@ -237,21 +240,33 @@ int main(int argc,char *argv[]) {
   //xchange_gauge(&g_gf);
 #endif
 
+  if( reread_only ) {
+    if( g_proc_id == 0 )
+      printf("\n# Generating random gauge configurations for reread tests!\n");
+      printf("# Note that not using pre-existing confiugrations reduces the strength of the test!\n\n");
+      for(int confnum = 0; confnum < NUM_TESTCONFS; ++confnum) {
+        ohnohack_remap_g_gauge_field(test_confs[confnum].buffer_orig);
+        random_gauge_field(reproduce_randomnumber_flag,g_gauge_field);
+      }
+  }
+
   /* Loop for tests */
   for(int j = 0; j < ITERATIONS; j++) {
     if(g_proc_id == 0) {
-      printf("#\n# Starting test iteration %d\n", j);
+      printf("\n# Starting test iteration %d\n", j);
     }
 
-    for(int confnum = 0; confnum < NUM_TESTCONFS; ++confnum) {
-      ohnohack_remap_g_gauge_field(gauge_fields[confnum]);
-      if( g_proc_id == 0 )
-        printf("\nReading gauge field %s. Iteration %d\n",test_confs[confnum].filename_orig,j);
-      if( (status = read_gauge_field_checksum( test_confs[confnum].filename_orig, 
-                                               &test_confs[confnum].checksum_orig)) != 0) {
-        if( g_proc_id == 0 )      
-          fprintf(stdout, "Error %d while reading gauge field from %s\n", status, test_confs[confnum].filename_orig);
-        add_failure(&failures,FAIL_READ,j,-1);
+    if( !reread_only ) {
+      for(int confnum = 0; confnum < NUM_TESTCONFS; ++confnum) {
+        ohnohack_remap_g_gauge_field(test_confs[confnum].buffer_orig);
+        if( g_proc_id == 0 )
+          printf("\nReading gauge field %s. Iteration %d\n",test_confs[confnum].filename_orig,j);
+        if( (status = read_gauge_field_checksum( test_confs[confnum].filename_orig, 
+                                                 &test_confs[confnum].checksum_orig)) != 0) {
+          if( g_proc_id == 0 )      
+            fprintf(stdout, "Error %d while reading gauge field from %s\n", status, test_confs[confnum].filename_orig);
+          add_failure(&failures,FAIL_READ,j,-1);
+        }
       }
     }
 
@@ -262,8 +277,8 @@ int main(int argc,char *argv[]) {
       shuffle(conf_indices,NUM_TESTCONFS);
       for(int i = 0; i < NUM_TESTCONFS; ++i){
         int confnum = conf_indices[i];
-        ohnohack_remap_g_gauge_field(gauge_fields[confnum]);
-        plaquette_energy = measure_gauge_action(gauge_fields[confnum]);
+        ohnohack_remap_g_gauge_field(test_confs[confnum].buffer_orig);
+        plaquette_energy = measure_gauge_action(test_confs[confnum].buffer_orig);
         xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), num_rereads);
         if (g_proc_id == 0) {
           fprintf(stdout, "\n# Writing gauge field to %s. Iteration %d, reread %d\n", test_confs[confnum].filename_copy,j,num_rereads);
@@ -301,10 +316,10 @@ int main(int argc,char *argv[]) {
       for(int i = 0; i < NUM_TESTCONFS; ++i) {
         int confnum = conf_indices[i];
         if(g_proc_id == 0)
-          printf("#\n\n RANDOM reread test %d, iteration %d\n",num_rereads,j);
-        ohnohack_remap_g_gauge_field(gauge_fields[confnum]);
-        ohnohack_remap_g_gauge_field(gauge_fields[confnum]);
-        plaquette_energy = measure_gauge_action(gauge_fields[confnum]);
+          printf("\n  RANDOM reread test %d, iteration %d\n",num_rereads,j);
+        
+        ohnohack_remap_g_gauge_field(test_confs[confnum].buffer_copy);
+        plaquette_energy = measure_gauge_action(test_confs[confnum].buffer_orig);
         xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), num_rereads);
 
         if( (status = read_gauge_field_checksum(test_confs[confnum].filename_copy,&test_confs[confnum].checksum_copy)) != 0) {
@@ -314,29 +329,25 @@ int main(int argc,char *argv[]) {
         } else {
           if (g_proc_id == 0)
             fprintf(stdout, "# Write successfully verified.\n");
-        } 
-        if( test_confs[confnum].checksum_orig.suma != test_confs[confnum].checksum_copy.suma ||
-            test_confs[confnum].checksum_orig.sumb != test_confs[confnum].checksum_copy.sumb ) {
-            if( g_proc_id == 0 ) 
-              printf("# Write verification successful but new checksum does not match the checksum originally computed!\n");
-            add_failure(&failures,FAIL_COMPARE_CHKSUM,j,num_rereads);
+        }
+        if( !reread_only ) {
+          if( test_confs[confnum].checksum_orig.suma != test_confs[confnum].checksum_copy.suma ||
+              test_confs[confnum].checksum_orig.sumb != test_confs[confnum].checksum_copy.sumb ) {
+              if( g_proc_id == 0 ) 
+                printf("# Write verification successful but new checksum does not match the checksum originally computed!\n");
+              add_failure(&failures,FAIL_COMPARE_CHKSUM,j,num_rereads);
+          }
         }
         free(xlfInfo);
       }
     }
   } /* end of loop over test iterations */
   
-  /* TEST add_failure 
-  add_failure(&failures,FAIL_READ_CHKSUM,0,22);
-  add_failure(&failures,FAIL_READ_PLAQ,20,11);
-  add_failure(&failures,FAIL_REREAD_CHKSUM,55,33);
-  add_failure(&failures,FAIL_REREAD_PLAQ,121,44);
-  add_failure(&failures,FAIL_WRITE,77,55); // */
-  
   output_failures(&failures);
 
   for( int i = 0; i < NUM_TESTCONFS; ++i){
-    return_gauge_field( &gauge_fields[i] );
+    return_gauge_field( &test_confs[i].buffer_orig );
+    return_gauge_field( &test_confs[i].buffer_copy );
   }
 
 #ifdef MPI
@@ -359,13 +370,15 @@ int main(int argc,char *argv[]) {
 #endif
 }
 
-static void usage(){
+static void usage(void) {
   fprintf(stdout, "IO test for LIME and LEMON configuration reading, writing and rereading\n");
   fprintf(stdout, "Version %s %s \n\n", PACKAGE_VERSION, git_hash);
   fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
   fprintf(stdout, "Usage:   test_io [options]\n");
   fprintf(stdout, "Options: [-f input-filename]  default: hmc.input\n");
   fprintf(stdout, "         [-v] more verbosity\n");
+  fprintf(stdout, "         [-g] instead of reading, generate random gauge configurations\n");
+  fprintf(stdout, "              (no input gauge configurations required)\n"); 
   fprintf(stdout, "         [-V] print version information and exit\n");
   fprintf(stdout, "         [-h|-? this help]\n");
   exit(0);
@@ -373,8 +386,11 @@ static void usage(){
 
 static void process_args(int argc, char *argv[], char ** input_filename, char ** filename) {
   int c;
-  while ((c = getopt(argc, argv, "h?vVf:o:")) != -1) {
+  while ((c = getopt(argc, argv, "h?gvVf:o:")) != -1) {
     switch (c) {
+      case 'g':
+        reread_only = 1;
+        break;
       case 'f':
         *input_filename = calloc(200, sizeof(char));
         strncpy(*input_filename, optarg, 200);
