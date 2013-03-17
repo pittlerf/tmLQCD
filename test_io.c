@@ -120,11 +120,13 @@ static void shuffle(int* array,size_t n);
 
 int reread_only = 0;
 
-#define ITERATIONS 1
-#define NUM_TESTCONFS 2
-#define NUM_REREADS 20
+#define ITERATIONS 5
+#define NUM_TESTCONFS 10
+#define NUM_REREADS 10
 #define MIN_DELAY 0
 #define MAX_DELAY 5
+  
+char* testconf_filename_base = "test_conf";
 
 int main(int argc,char *argv[]) {
 
@@ -141,8 +143,6 @@ int main(int argc,char *argv[]) {
   test_conf_t test_confs[NUM_TESTCONFS];
   srand(time(NULL));
   int conf_indices[NUM_TESTCONFS];
-
-  char* testconf_filename_base = "conf";
 
   /* Energy corresponding to the Gauge part */
   double plaquette_energy = 0.;
@@ -191,8 +191,8 @@ int main(int argc,char *argv[]) {
   initialize_gauge_buffers(2*NUM_TESTCONFS+1); 
   
   for( int i = 0; i < NUM_TESTCONFS; ++i) {
-    snprintf(test_confs[i].filename_orig,200,"%s.%04d",testconf_filename_base,i+10);
-    snprintf(test_confs[i].filename_copy,200,"%s.%04d.copy",testconf_filename_base,i+10);
+    snprintf(test_confs[i].filename_orig,200,"%s.%04d",testconf_filename_base,i);
+    snprintf(test_confs[i].filename_copy,200,"%s.%04d.copy",testconf_filename_base,i);
     DML_checksum_init(&test_confs[i].checksum_orig);
     DML_checksum_init(&test_confs[i].checksum_copy);
     test_confs[i].buffer_orig = get_gauge_field();
