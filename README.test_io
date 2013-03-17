@@ -19,6 +19,14 @@ variation of the local and total volumes.
 
 The application uses the full parallelization available in tmLQCD.
 
+COMPILATION
+
+test_io is not compiled by default. In order to build it, run 
+
+$ make test_io
+
+in your build directory after configuring tmLQCD as usual.
+
 CONFIGURATION
 
 By default it attempts to read a "test_io.input" configuration file which should
