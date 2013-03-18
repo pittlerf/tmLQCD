@@ -236,13 +236,14 @@ int main(int argc,char *argv[]) {
 #endif
 
   if( reread_only ) {
-    if( g_proc_id == 0 )
+    if( g_proc_id == 0 ) {
       printf("\n# Generating random gauge configurations for reread tests!\n");
       printf("# Note that not using pre-existing configurations reduces the strength of the test!\n\n");
-      for(int confnum = 0; confnum < NUM_TESTCONFS; ++confnum) {
-        ohnohack_remap_g_gauge_field(test_confs[confnum].buffer_orig);
-        random_gauge_field(reproduce_randomnumber_flag,g_gauge_field);
-      }
+    }
+    for(int confnum = 0; confnum < NUM_TESTCONFS; ++confnum) {
+      ohnohack_remap_g_gauge_field(test_confs[confnum].buffer_orig);
+      random_gauge_field(reproduce_randomnumber_flag,g_gauge_field);
+    }
   }
 
   /* Loop for tests */
