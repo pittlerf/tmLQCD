@@ -131,8 +131,6 @@ char* testconf_filename_base = "test_conf";
 int main(int argc,char *argv[]) {
 
   char *filename = NULL;
-  char gauge_filename[50];
-  char tmp_filename[50];
   char *input_filename = NULL;
   int status = 0;
   
@@ -152,9 +150,6 @@ int main(int argc,char *argv[]) {
 #if (defined SSE || defined SSE2 || SSE3)
   signal(SIGILL,&catch_ill_inst);
 #endif
-
-  strcpy(gauge_filename,"conf.save");
-  strcpy(tmp_filename, ".conf.tmp");
 
   verbose = 1;
   g_use_clover_flag = 0;
@@ -243,7 +238,7 @@ int main(int argc,char *argv[]) {
   if( reread_only ) {
     if( g_proc_id == 0 )
       printf("\n# Generating random gauge configurations for reread tests!\n");
-      printf("# Note that not using pre-existing confiugrations reduces the strength of the test!\n\n");
+      printf("# Note that not using pre-existing configurations reduces the strength of the test!\n\n");
       for(int confnum = 0; confnum < NUM_TESTCONFS; ++confnum) {
         ohnohack_remap_g_gauge_field(test_confs[confnum].buffer_orig);
         random_gauge_field(reproduce_randomnumber_flag,g_gauge_field);
