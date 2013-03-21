@@ -143,11 +143,13 @@ int read_gauge_field_expose(char * filename, paramsGaugeInfo* GaugeInfo_out) {
       fflush(stdout);
     }
     if (checksum_calc.suma != checksum_read.suma) {
-      fprintf(stderr, "# For gauge file %s, calculated and stored values for SciDAC checksum A do not match.\n", filename);
+      if(g_cart_id == 0)
+        fprintf(stderr, "# For gauge file %s, calculated and stored values for SciDAC checksum A do not match.\n", filename);
       return(-1);
     }
     if (checksum_calc.sumb != checksum_read.sumb) {
-      fprintf(stderr, "# For gauge file %s, calculated and stored values for SciDAC checksum B do not match.\n", filename);
+      if(g_cart_id == 0)
+        fprintf(stderr, "# For gauge file %s, calculated and stored values for SciDAC checksum B do not match.\n", filename);
       return(-1);
     }
 
