@@ -283,7 +283,10 @@ int main(int argc,char *argv[]) {
 
         if( fabs(test_confs[confnum].plaq_orig_read - test_confs[confnum].plaq_orig_comp) > 1E-11 ) {
           if( g_proc_id == 0 )
-            printf("ERROR: for %s computed and read plaquette value do not match!\n",test_confs[confnum].filename_orig);
+            printf("ERROR: for %s computed (%lf) and read (%lf)\n plaquette value do not match!\n",
+              test_confs[confnum].filename_orig,
+              test_confs[confnum].plaq_orig_comp,
+              test_confs[confnum].plaq_orig_read);
           add_failure(&failures,FAIL_READ_PLAQ,j,-1);
         }
       }
@@ -353,7 +356,11 @@ int main(int argc,char *argv[]) {
 
         if( fabs(test_confs[confnum].plaq_copy_read - test_confs[confnum].plaq_copy_comp) > 1E-11 ) {
           if( g_proc_id == 0 )
-            printf("# ERROR: for copy %s, read and computed plaquettes do no match!\n",test_confs[confnum].filename_copy);
+            printf("ERROR: for copy %s computed (%lf) and read (%lf)\n plaquette value do not match!\n",
+              test_confs[confnum].filename_copy,
+              test_confs[confnum].plaq_copy_comp,
+              test_confs[confnum].plaq_copy_read);
+          add_failure(&failures,FAIL_READ_PLAQ,j,-1);
           add_failure(&failures,FAIL_REREAD_PLAQ,j,num_rereads);
         }
 
@@ -367,7 +374,9 @@ int main(int argc,char *argv[]) {
 
           if( fabs(test_confs[confnum].plaq_copy_comp - test_confs[confnum].plaq_orig_comp) > 1E-11 ) {
             if( g_proc_id == 0 )
-              printf("# Write verification successful but plaquette of copy does not match the original!\n");
+              printf("# Write verification successful but plaquette of copy (%lf)\n does not match the original (%lf)!\n",
+                test_confs[confnum].plaq_copy_comp,
+                test_confs[confnum].plaq_orig_comp);
             add_failure(&failures,FAIL_COMPARE_PLAQ,j,num_rereads);
           }
         }
