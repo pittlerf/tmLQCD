@@ -30,7 +30,7 @@
 
 
 int read_gauge_field(char *filename);
-int read_gauge_field_checksum(char *filename, DML_Checksum *checksum_out);
+int read_gauge_field_expose(char *filename, paramsGaugeInfo* GaugeInfo_out);
 int read_binary_gauge_data(READER *reader, DML_Checksum *checksum, paramsIldgFormat * ildgformat);
 
 int write_gauge_field(char * filename, int prec, paramsXlfInfo const *xlfInfo);

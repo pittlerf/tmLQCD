@@ -75,18 +75,24 @@ enum enum_failure_enum
 {
   FAIL_READ,
   FAIL_READ_CHKSUM,
+  FAIL_READ_PLAQ,
   FAIL_REREAD,
   FAIL_REREAD_CHKSUM,
+  FAIL_REREAD_PLAQ,
   FAIL_COMPARE_CHKSUM,
+  FAIL_COMPARE_PLAQ,
   FAIL_WRITE
 };
    
-char *failure_names[6] = { 
+char *failure_names[FAIL_WRITE+1] = { 
   "read\0",
   "read checksum\0", 
+  "read plaq\0",
   "reread \0", 
   "reread checksum\0",
-  "compare checksum\0", 
+  "reread plaq\0",
+  "compare checksum\0",
+  "compare plaq\0", 
   "write\0" };
 
 typedef enum enum_failure_enum enum_failure_t;
@@ -99,6 +105,10 @@ typedef struct
   DML_Checksum checksum_copy;
   gauge_field_t buffer_orig;
   gauge_field_t buffer_copy;
+  double plaq_orig_comp;
+  double plaq_orig_read;
+  double plaq_copy_read;
+  double plaq_copy_comp;
 } test_conf_t;
 
 typedef struct
@@ -117,12 +127,13 @@ typedef struct
 static void add_failure(failure_flex_array_t*, const enum_failure_t, const int iteration, const int sub_iteration);
 static void output_failures(const failure_flex_array_t* const);
 static void shuffle(int* array,size_t n);
+static double extract_plaquette_from_xlfInfoString(char* xlfInfoString);
 
 int reread_only = 0;
 
-#define ITERATIONS 5
-#define NUM_TESTCONFS 10
-#define NUM_REREADS 10
+#define ITERATIONS 1
+#define NUM_TESTCONFS 5
+#define NUM_REREADS 2
 #define MIN_DELAY 0
 #define MAX_DELAY 5
   
@@ -142,10 +153,8 @@ int main(int argc,char *argv[]) {
   srand(time(NULL));
   int conf_indices[NUM_TESTCONFS];
 
-  /* Energy corresponding to the Gauge part */
-  double plaquette_energy = 0.;
-
   paramsXlfInfo *xlfInfo;
+  paramsGaugeInfo GaugeInfo_tmp;
 
 #if (defined SSE || defined SSE2 || SSE3)
   signal(SIGILL,&catch_ill_inst);
@@ -193,6 +202,10 @@ int main(int argc,char *argv[]) {
     test_confs[i].buffer_orig = get_gauge_field();
     test_confs[i].buffer_copy = get_gauge_field();
     conf_indices[i] = i;
+    test_confs[i].plaq_orig_comp = 0.0;
+    test_confs[i].plaq_copy_comp = 0.0;
+    test_confs[i].plaq_orig_read = 0.0;
+    test_confs[i].plaq_copy_read = 0.0;
   }
   
 #ifndef MPI
@@ -243,6 +256,7 @@ int main(int argc,char *argv[]) {
     for(int confnum = 0; confnum < NUM_TESTCONFS; ++confnum) {
       ohnohack_remap_g_gauge_field(test_confs[confnum].buffer_orig);
       random_gauge_field(reproduce_randomnumber_flag,g_gauge_field);
+      test_confs[confnum].plaq_orig_comp = measure_gauge_action(test_confs[confnum].buffer_orig)/(6*VOLUME*g_nproc);
     }
   }
 
@@ -257,11 +271,20 @@ int main(int argc,char *argv[]) {
         ohnohack_remap_g_gauge_field(test_confs[confnum].buffer_orig);
         if( g_proc_id == 0 )
           printf("\nReading gauge field %s. Iteration %d\n",test_confs[confnum].filename_orig,j);
-        if( (status = read_gauge_field_checksum( test_confs[confnum].filename_orig, 
-                                                 &test_confs[confnum].checksum_orig)) != 0) {
+        if( (status = read_gauge_field_expose( test_confs[confnum].filename_orig, 
+                                                 &GaugeInfo_tmp)) != 0) {
           if( g_proc_id == 0 )      
             fprintf(stdout, "Error %d while reading gauge field from %s\n", status, test_confs[confnum].filename_orig);
           add_failure(&failures,FAIL_READ,j,-1);
+        }
+        test_confs[confnum].plaq_orig_read = extract_plaquette_from_xlfInfoString(GaugeInfo.xlfInfo);
+        test_confs[confnum].plaq_orig_comp = measure_gauge_action(test_confs[confnum].buffer_orig)/(6*VOLUME*g_nproc);
+        test_confs[confnum].checksum_orig = GaugeInfo_tmp.checksum;
+
+        if( fabs(test_confs[confnum].plaq_orig_read - test_confs[confnum].plaq_orig_comp) > 1E-11 ) {
+          if( g_proc_id == 0 )
+            printf("ERROR: for %s computed and read plaquette value do not match!\n",test_confs[confnum].filename_orig);
+          add_failure(&failures,FAIL_READ_PLAQ,j,-1);
         }
       }
     }
@@ -274,8 +297,7 @@ int main(int argc,char *argv[]) {
       for(int i = 0; i < NUM_TESTCONFS; ++i){
         int confnum = conf_indices[i];
         ohnohack_remap_g_gauge_field(test_confs[confnum].buffer_orig);
-        plaquette_energy = measure_gauge_action(test_confs[confnum].buffer_orig);
-        xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), num_rereads);
+        xlfInfo = construct_paramsXlfInfo(test_confs[confnum].plaq_orig_comp, num_rereads);
         if (g_proc_id == 0) {
           fprintf(stdout, "\n# Writing gauge field to %s. Iteration %d, reread %d\n", test_confs[confnum].filename_copy,j,num_rereads);
         }
@@ -315,10 +337,8 @@ int main(int argc,char *argv[]) {
           printf("\n  RANDOM reread test %d, iteration %d\n",num_rereads,j);
         
         ohnohack_remap_g_gauge_field(test_confs[confnum].buffer_copy);
-        plaquette_energy = measure_gauge_action(test_confs[confnum].buffer_orig);
-        xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), num_rereads);
 
-        if( (status = read_gauge_field_checksum(test_confs[confnum].filename_copy,&test_confs[confnum].checksum_copy)) != 0) {
+        if( (status = read_gauge_field_expose(test_confs[confnum].filename_copy,&GaugeInfo_tmp)) != 0) {
               if( g_proc_id == 0 )
                 fprintf(stdout, "WARNING, verification of %s discovered errors.\n", test_confs[confnum].filename_copy);
             add_failure(&failures,FAIL_REREAD_CHKSUM,j,num_rereads);
@@ -326,6 +346,17 @@ int main(int argc,char *argv[]) {
           if (g_proc_id == 0)
             fprintf(stdout, "# Write successfully verified.\n");
         }
+
+        test_confs[confnum].checksum_copy = GaugeInfo_tmp.checksum;
+        test_confs[confnum].plaq_copy_read = extract_plaquette_from_xlfInfoString(GaugeInfo.xlfInfo);
+        test_confs[confnum].plaq_copy_comp = measure_gauge_action(test_confs[confnum].buffer_copy)/(6*VOLUME*g_nproc);
+
+        if( fabs(test_confs[confnum].plaq_copy_read - test_confs[confnum].plaq_copy_comp) > 1E-11 ) {
+          if( g_proc_id == 0 )
+            printf("# ERROR: for copy %s, read and computed plaquettes do no match!\n",test_confs[confnum].filename_copy);
+          add_failure(&failures,FAIL_REREAD_PLAQ,j,num_rereads);
+        }
+
         if( !reread_only ) {
           if( test_confs[confnum].checksum_orig.suma != test_confs[confnum].checksum_copy.suma ||
               test_confs[confnum].checksum_orig.sumb != test_confs[confnum].checksum_copy.sumb ) {
@@ -333,8 +364,13 @@ int main(int argc,char *argv[]) {
                 printf("# Write verification successful but new checksum does not match the checksum originally computed!\n");
               add_failure(&failures,FAIL_COMPARE_CHKSUM,j,num_rereads);
           }
+
+          if( fabs(test_confs[confnum].plaq_copy_comp - test_confs[confnum].plaq_orig_comp) > 1E-11 ) {
+            if( g_proc_id == 0 )
+              printf("# Write verification successful but plaquette of copy does not match the original!\n");
+            add_failure(&failures,FAIL_COMPARE_PLAQ,j,num_rereads);
+          }
         }
-        free(xlfInfo);
       }
     }
   } /* end of loop over test iterations */
@@ -470,3 +506,12 @@ static void shuffle(int *array, size_t n)
   }
 }
 
+static double extract_plaquette_from_xlfInfoString(char* xlfInfoString) {
+  // extract "plaquette"
+  char* token = strtok(xlfInfoString," ");
+  // extract "="
+  token = strtok(NULL," ");
+  // extract plaquette value
+  token = strtok(NULL," ");
+  return atof(token);
+}

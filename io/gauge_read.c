@@ -24,10 +24,10 @@ extern int gauge_precision_read_flag;
 paramsGaugeInfo GaugeInfo = { 0., 0, {0,0}, NULL, NULL};
 
 int read_gauge_field(char *filename) {
-  return(read_gauge_field_checksum(filename,NULL));
+  return(read_gauge_field_expose(filename,NULL));
 }
 
-int read_gauge_field_checksum(char * filename, DML_Checksum *checksum_out) {
+int read_gauge_field_expose(char * filename, paramsGaugeInfo* GaugeInfo_out) {
   int status = 0;
   char *header_type = NULL;
   READER *reader = NULL;
@@ -76,10 +76,6 @@ int read_gauge_field_checksum(char * filename, DML_Checksum *checksum_out) {
       gauge_read_flag = 1;
       GaugeInfo.gaugeRead = 1;
       GaugeInfo.checksum = checksum_calc;
-    
-      if( (void*) checksum_out != NULL ) {
-        *checksum_out = checksum_calc;
-      }
     }
     else if (strcmp("scidac-checksum", header_type) == 0) {
       if(checksum_string == (char*)NULL) {
@@ -171,6 +167,10 @@ int read_gauge_field_checksum(char * filename, DML_Checksum *checksum_out) {
 
   g_update_gauge_copy = 1;
   g_update_gauge_energy = 1;
+
+  // hopefully all output will now be available in GaugeInfo
+  if( GaugeInfo_out != NULL )
+    *GaugeInfo_out = GaugeInfo;
 
   return(0);
 }
