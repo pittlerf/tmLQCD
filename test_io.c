@@ -131,9 +131,9 @@ static double extract_plaquette_from_xlfInfoString(char* xlfInfoString);
 
 int reread_only = 0;
 
-#define ITERATIONS 1
-#define NUM_TESTCONFS 5
-#define NUM_REREADS 2
+#define ITERATIONS 10
+#define NUM_TESTCONFS 10
+#define NUM_REREADS 5
 #define MIN_DELAY 0
 #define MAX_DELAY 5
   
