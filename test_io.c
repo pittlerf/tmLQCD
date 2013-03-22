@@ -242,12 +242,6 @@ int main(int argc,char *argv[]) {
   /* Initialise random number generator */
   start_ranlux(rlxd_level, random_seed );
 
-  /*For parallelization: exchange the gaugefield (not really necessary in this test...) */
-#ifdef MPI
-  exchange_gauge_field(&g_gf);
-  //xchange_gauge(&g_gf);
-#endif
-
   if( reread_only ) {
     if( g_proc_id == 0 ) {
       printf("\n# Generating random gauge configurations for reread tests!\n");
@@ -256,6 +250,7 @@ int main(int argc,char *argv[]) {
     for(int confnum = 0; confnum < NUM_TESTCONFS; ++confnum) {
       ohnohack_remap_g_gauge_field(test_confs[confnum].buffer_orig);
       random_gauge_field(reproduce_randomnumber_flag,g_gauge_field);
+      exchange_gauge_field(&test_confs[confnum].buffer_orig);
       test_confs[confnum].plaq_orig_comp = measure_gauge_action(test_confs[confnum].buffer_orig)/(6*VOLUME*g_nproc);
     }
   }
@@ -277,6 +272,7 @@ int main(int argc,char *argv[]) {
             fprintf(stdout, "Error %d while reading gauge field from %s\n", status, test_confs[confnum].filename_orig);
           add_failure(&failures,FAIL_READ,j,-1);
         }
+        exchange_gauge_field(&test_confs[confnum].buffer_orig);
         test_confs[confnum].plaq_orig_read = extract_plaquette_from_xlfInfoString(GaugeInfo.xlfInfo);
         test_confs[confnum].plaq_orig_comp = measure_gauge_action(test_confs[confnum].buffer_orig)/(6*VOLUME*g_nproc);
         test_confs[confnum].checksum_orig = GaugeInfo_tmp.checksum;
@@ -300,6 +296,8 @@ int main(int argc,char *argv[]) {
       for(int i = 0; i < NUM_TESTCONFS; ++i){
         int confnum = conf_indices[i];
         ohnohack_remap_g_gauge_field(test_confs[confnum].buffer_orig);
+        // exchange not strictly necessary here
+        exchange_gauge_field(&test_confs[confnum].buffer_orig);
         xlfInfo = construct_paramsXlfInfo(test_confs[confnum].plaq_orig_comp, num_rereads);
         if (g_proc_id == 0) {
           fprintf(stdout, "\n# Writing gauge field to %s. Iteration %d, reread %d\n", test_confs[confnum].filename_copy,j,num_rereads);
@@ -349,6 +347,8 @@ int main(int argc,char *argv[]) {
           if (g_proc_id == 0)
             fprintf(stdout, "# Write successfully verified.\n");
         }
+
+        exchange_gauge_field(&test_confs[confnum].buffer_copy);
 
         test_confs[confnum].checksum_copy = GaugeInfo_tmp.checksum;
         test_confs[confnum].plaq_copy_read = extract_plaquette_from_xlfInfoString(GaugeInfo.xlfInfo);
