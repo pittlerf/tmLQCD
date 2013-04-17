@@ -83,8 +83,8 @@
 #include "P_M_eta.h"
 #include "operator/tm_operators.h"
 #include "operator/Dov_psi.h"
-#include "solver/spectral_proj.h"
 #include "gettime.h"
+#include "dirty_shameful_business.h"
 
 extern int nstore;
 int check_geometry();
@@ -182,7 +182,7 @@ int main(int argc, char *argv[])
   /* initialize set of 24 spinors to hold the result of the 12 inversions and their conjugates */
 
   spinor* M_inv[4][3];
-  spinor* M_dag_inv[4][3];
+  spinor* M_trans_inv[4][3];
 
   spinor** S;
   spinor* S_memory;
@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
   for(unsigned int spin=0; spin < 4; ++spin) {
     for(unsigned int col=0; col < 3; ++col) {
       M_inv[spin][col] = S[3*spin+col];
-      M_dag_inv[spin][col] = S[3*spin+col+12];
+      M_trans_inv[spin][col] = S[3*spin+col+12];
     }
   }
 
@@ -309,6 +309,11 @@ int main(int argc, char *argv[])
       exit(-2);
     }
 
+    /* ad-hoc manual smearing */
+    //stout_control *smear_control = NULL;
+    //smear_control = construct_stout_control(0.1 /* rho */, 3 /* iterations */, 0 /* calculate_force_terms */); 
+    //stout_smear(smear_control, _AS_GAUGE_FIELD_T(g_gauge_field));
+    //ohnohack_remap_g_gauge_field(smear_control->result);
 
     if (g_cart_id == 0) {
       printf("# Finished reading gauge field.\n");
@@ -326,14 +331,17 @@ int main(int argc, char *argv[])
       fflush(stdout);
     }
 
+    double oneover2kappasqSV;
+
     if (g_cart_id == 0) {
       fprintf(stdout, "#\n"); /*Indicate starting of the operator part*/
     }
     for(op_id = 0; op_id < no_operators; op_id++) {
       operator * optr = &operator_list[op_id]; 
-      boundary(operator_list[op_id].kappa);
-      g_kappa = operator_list[op_id].kappa; 
-      g_mu = operator_list[op_id].mu;
+      boundary(optr->kappa);
+      g_kappa = optr->kappa; 
+      g_mu = optr->mu;
+      oneover2kappasqSV = 1.0/(2*optr->kappa*optr->kappa*g_nproc_x*g_nproc_y*g_nproc_z*LX*LY*LZ);
 
       for (ix = 0; ix < 12; ix++) {
         if (g_cart_id == 0) {
@@ -373,7 +381,7 @@ int main(int argc, char *argv[])
         for(int col1=0;col1<3;++col1) {
           for(int spin2=0;spin2<4;++spin2) {
             for(int col2=0;col2<3;++col2) {
-              ptr = (complex double*)&M_dag_inv[spin1][col1][x]+spin2*3+col2;
+              ptr = (complex double*)&M_trans_inv[spin1][col1][x]+spin2*3+col2;
               ptr2 = (complex double*)&M_inv[spin2][col2][x]+spin1*3+col1;
               *ptr = *ptr2;
             }
@@ -401,7 +409,7 @@ int main(int argc, char *argv[])
       for(int x=j;x<j+LX*LY*LZ;++x){
         for(int spin=0; spin<4; ++spin){
           for(int col=0; col<3; ++col){
-            tr=_spinor_prod_re(M_inv[spin][col][j],M_dag_inv[spin][col][j])+kc;
+            tr=_spinor_prod_re(M_inv[spin][col][j],M_trans_inv[spin][col][j])+kc;
             ts=tr+ks;
             tt=ts-ks;
             ks=ts;
@@ -409,7 +417,7 @@ int main(int argc, char *argv[])
           }
         }
       }
-      Cpp[t] = kc+ks;
+      Cpp[t] = (kc+ks)*oneover2kappasqSV;
     }
     
     #ifdef OMP
@@ -428,10 +436,13 @@ int main(int argc, char *argv[])
      for(int t=0;t<T;++t){
        fprintf(f_correlator,"%d %e\n",t,Cpp[t]);
      }
-   }
-   fclose(f_correlator);
+    }
+    fclose(f_correlator);
        
     nstore += Nsave;
+
+    //ohnohack_remap_g_gauge_field(g_gf);
+    //free_stout_control(smear_control);
   }
 
   free(Cpp);
@@ -440,7 +451,7 @@ int main(int argc, char *argv[])
   free(S);
   
 
-  free_stout_control(smear_control);
+  //free_stout_control(smear_control);
   return_gauge_field(&g_gf);
 
 #ifdef MPI
