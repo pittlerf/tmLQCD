@@ -447,8 +447,8 @@ int main(int argc, char *argv[])
         }
         fclose(f_correlator);
       }
+      ohnohack_remap_g_gauge_field(g_gf);
     }
-    ohnohack_remap_g_gauge_field(g_gf);       
     nstore += Nsave;
   }
 
