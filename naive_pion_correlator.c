@@ -471,9 +471,9 @@ int main(int argc, char *argv[])
   free_spinor_field();
 
   free_chi_spinor_field();
+  finalize_smearing();
   finalize_gauge_buffers();
   finalize_adjoint_buffers();
-  finalize_smearing();
 
   free(filename);
   free(input_filename);
