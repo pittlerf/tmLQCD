@@ -60,7 +60,7 @@
 #include "boundary.h"
 #include "solver/solver.h"
 #include "init/init.h"
-#include <smearing/stout.h>
+#include <smearing/control.h>
 #include "invert_eo.h"
 #include "monomial/monomial.h"
 #include "ranlxd.h"
@@ -178,6 +178,7 @@ int main(int argc, char *argv[])
   /* Allocate needed memory */
   initialize_gauge_buffers(5);
   initialize_adjoint_buffers(5);
+  init_smearing();
 
   /* initialize set of 24 spinors to hold the result of the 12 inversions and their conjugates */
 
@@ -308,17 +309,18 @@ int main(int argc, char *argv[])
       fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", i, conf_filename);
       exit(-2);
     }
-
-    /* ad-hoc manual smearing */
-    //stout_control *smear_control = NULL;
-    //smear_control = construct_stout_control(0.1 /* rho */, 3 /* iterations */, 0 /* calculate_force_terms */); 
-    //stout_smear(smear_control, _AS_GAUGE_FIELD_T(g_gauge_field));
-    //ohnohack_remap_g_gauge_field(smear_control->result);
-
+  
     if (g_cart_id == 0) {
       printf("# Finished reading gauge field.\n");
       fflush(stdout);
     }
+
+    /* ad-hoc manual smearing */
+    //smearing_control_t *smear_control = NULL;
+    //smear_control = construct_smearing_control(Stout,0,4,0.2); 
+    //smear(smear_control,g_gf);
+    //ohnohack_remap_g_gauge_field(smear_control->result);
+
 #ifdef MPI
     xchange_gauge(g_gauge_field);
 #endif
@@ -336,6 +338,7 @@ int main(int argc, char *argv[])
     if (g_cart_id == 0) {
       fprintf(stdout, "#\n"); /*Indicate starting of the operator part*/
     }
+
     for(op_id = 0; op_id < no_operators; op_id++) {
       operator * optr = &operator_list[op_id]; 
       boundary(optr->kappa);
@@ -368,6 +371,8 @@ int main(int argc, char *argv[])
         
       }
     }
+    //ohnohack_remap_g_gauge_field(g_gf);
+    //free_smearing_control(smear_control);
 
     /* do transpose in spin-colour space only (conjugate is taken in spinor product below) */
     complex double *ptr;
@@ -442,7 +447,7 @@ int main(int argc, char *argv[])
     nstore += Nsave;
 
     //ohnohack_remap_g_gauge_field(g_gf);
-    //free_stout_control(smear_control);
+    //free_smearing_control(smear_control);
   }
 
   free(Cpp);
