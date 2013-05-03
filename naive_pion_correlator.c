@@ -1,6 +1,6 @@
 /***********************************************************************
  *
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ * Copyright (C) 2012 Carsten Urbach, Albert Deuzeman, Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -17,10 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  *
- * invert for twisted mass QCD
- *
- * Author: Carsten Urbach
- *         urbach@physik.fu-berlin.de
+ * naive pion correlator for twisted mass QCD
  *
  *******************************************************************************/
 
@@ -103,9 +100,8 @@ int main(int argc, char *argv[])
   char * input_filename = NULL;
   char * filename = NULL;
   double plaquette_energy;
-  /* struct stout_parameters params_smear; */
+  double oneover2kappasqSV;
   spinor **s, *s_;
-  stout_control *smear_control = NULL;
 
 #ifdef _KOJAK_INST
 #pragma pomp inst init
@@ -315,12 +311,6 @@ int main(int argc, char *argv[])
       fflush(stdout);
     }
 
-    /* ad-hoc manual smearing */
-    //smearing_control_t *smear_control = NULL;
-    //smear_control = construct_smearing_control(Stout,0,4,0.2); 
-    //smear(smear_control,g_gf);
-    //ohnohack_remap_g_gauge_field(smear_control->result);
-
 #ifdef MPI
     xchange_gauge(g_gauge_field);
 #endif
@@ -333,130 +323,139 @@ int main(int argc, char *argv[])
       fflush(stdout);
     }
 
-    double oneover2kappasqSV;
-
     if (g_cart_id == 0) {
       fprintf(stdout, "#\n"); /*Indicate starting of the operator part*/
     }
 
-    for(op_id = 0; op_id < no_operators; op_id++) {
-      operator * optr = &operator_list[op_id]; 
-      boundary(optr->kappa);
-      g_kappa = optr->kappa; 
-      g_mu = optr->mu;
-      oneover2kappasqSV = 1.0/(2*optr->kappa*optr->kappa*g_nproc_x*g_nproc_y*g_nproc_z*LX*LY*LZ);
+    for (int stype = 0; stype < no_smearings_operator; ++stype)
+    {
+      smear(smearing_control_operator[stype], g_gf);
+      double new_plaquette = measure_gauge_action(smearing_control_operator[stype]->result);
 
-      for (ix = 0; ix < 12; ix++) {
-        if (g_cart_id == 0) {
-          fprintf(stdout, "#\n"); /*Indicate starting of new index*/
-        }
-        prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location);
-
-        optr->iterations = invert_eo( optr->prop0, optr->prop1, optr->sr0, optr->sr1,
-                              optr->eps_sq, optr->maxiter,optr->solver, optr->rel_prec,
-                              0, optr->even_odd_flag,optr->no_extra_masses, optr->extra_masses, optr->id);
-    
-        /* check result */
-        M_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
-        diff(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], optr->sr0, VOLUME / 2);
-        diff(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], optr->sr1, VOLUME / 2);
-
-        double nrm1 = square_norm(g_spinor_field[DUM_DERI], VOLUME / 2, 1);
-        double nrm2 = square_norm(g_spinor_field[DUM_DERI+1], VOLUME / 2, 1);
-        optr->reached_prec = nrm1 + nrm2;
-
-        printf("# Reached precision for spin %d color %d: %e\n",ix/3,ix%3,optr->reached_prec);
-
-        convert_eo_to_lexic(M_inv[ix/3][ix%3],optr->prop0,optr->prop1);
-        
+      if (g_cart_id == 0)
+      {
+        printf("# After smearing type %d, the plaquette value is %e.\n", stype, new_plaquette / (6.*VOLUME*g_nproc));
+        fflush(stdout);
       }
-    }
-    //ohnohack_remap_g_gauge_field(g_gf);
-    //free_smearing_control(smear_control);
 
-    /* do transpose in spin-colour space only (conjugate is taken in spinor product below) */
-    complex double *ptr;
-    complex double *ptr2;
-    double t_begin = gettime();
-    #ifdef OMP
-    #pragma omp parallel for private(ptr,ptr2)
-    #endif
-    for(int x=0;x<VOLUME;++x) {
-      for(int spin1=0;spin1<4;++spin1) {
-        for(int col1=0;col1<3;++col1) {
-          for(int spin2=0;spin2<4;++spin2) {
-            for(int col2=0;col2<3;++col2) {
-              ptr = (complex double*)&M_trans_inv[spin1][col1][x]+spin2*3+col2;
-              ptr2 = (complex double*)&M_inv[spin2][col2][x]+spin1*3+col1;
-              *ptr = *ptr2;
+      ohnohack_remap_g_gauge_field(smearing_control_operator[stype]->result);
+
+      for(op_id = 0; op_id < no_operators; op_id++) {
+        if (operator_list[op_id].smearing != stype)
+        {
+          continue; /* if this operator is not smeared with the current stype, skip */
+        }
+
+        operator * optr = &operator_list[op_id]; 
+        boundary(optr->kappa);
+        g_kappa = optr->kappa; 
+        g_mu = optr->mu;
+        oneover2kappasqSV = 1.0/(2*optr->kappa*optr->kappa*g_nproc_x*g_nproc_y*g_nproc_z*LX*LY*LZ);
+
+        for (ix = 0; ix < 12; ix++) {
+          if (g_cart_id == 0) {
+            fprintf(stdout, "#\n"); /*Indicate starting of new index*/
+          }
+          prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location);
+
+          optr->iterations = invert_eo( optr->prop0, optr->prop1, optr->sr0, optr->sr1,
+                                optr->eps_sq, optr->maxiter,optr->solver, optr->rel_prec,
+                                0, optr->even_odd_flag,optr->no_extra_masses, optr->extra_masses, optr->id);
+    
+          /* check result */
+          M_full(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], optr->prop0, optr->prop1);
+          diff(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], optr->sr0, VOLUME / 2);
+          diff(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+1], optr->sr1, VOLUME / 2);
+
+          double nrm1 = square_norm(g_spinor_field[DUM_DERI], VOLUME / 2, 1);
+          double nrm2 = square_norm(g_spinor_field[DUM_DERI+1], VOLUME / 2, 1);
+          optr->reached_prec = nrm1 + nrm2;
+
+          printf("# Reached precision for spin %d color %d: %e\n",ix/3,ix%3,optr->reached_prec);
+
+          convert_eo_to_lexic(M_inv[ix/3][ix%3],optr->prop0,optr->prop1);
+        
+        }
+
+        /* do transpose in spin-colour space only (conjugate is taken in spinor product below) */
+        complex double *ptr;
+        complex double *ptr2;
+        double t_begin = gettime();
+        #ifdef OMP
+        #pragma omp parallel for private(ptr,ptr2)
+        #endif
+        for(int x=0;x<VOLUME;++x) {
+          for(int spin1=0;spin1<4;++spin1) {
+            for(int col1=0;col1<3;++col1) {
+              for(int spin2=0;spin2<4;++spin2) {
+                for(int col2=0;col2<3;++col2) {
+                  ptr = (complex double*)&M_trans_inv[spin1][col1][x]+spin2*3+col2;
+                  ptr2 = (complex double*)&M_inv[spin2][col2][x]+spin1*3+col1;
+                  *ptr = *ptr2;
+                }
+              }
             }
           }
         }
-      }
-    }
-    double t_spent = gettime() - t_begin;
-    printf("## Hermitian conjugation took %e seconds.\n",t_spent);
+        double t_spent = gettime() - t_begin;
+        printf("## Hermitian conjugation took %e seconds.\n",t_spent);
 
 
-    t_begin=gettime();
-    #ifdef OMP
-    #pragma omp parallel
-    {
-    #endif
+        t_begin=gettime();
+        #ifdef OMP
+        #pragma omp parallel
+        {
+        #endif
+  
+        #ifdef OMP
+        #pragma omp for
+        #endif
+        for(int t=0;t<T;++t){
+          Cpp[t]=0;
+          double kc=0,ks=0,tr=0,tt=0,ts=0;
+          int j = g_ipt[t][0][0][0];
+          for(int x=j;x<j+LX*LY*LZ;++x){
+            for(int spin=0; spin<4; ++spin){
+              for(int col=0; col<3; ++col){
+                tr=_spinor_prod_re(M_inv[spin][col][j],M_trans_inv[spin][col][j])+kc;
+                ts=tr+ks;
+                tt=ts-ks;
+                ks=ts;
+                kc=tr-tt;
+              }
+            }
+          }
+          Cpp[t] = (kc+ks)*oneover2kappasqSV;
+        }
+    
+        #ifdef OMP
+        } /* OpenMP parallel closing brace */
+        #endif
+    
+        t_spent = gettime() - t_begin;
+        printf("## Correlator computation took: %e seconds\n",t_spent);
+     
+        /* store correlator to file */
+        char f_correlator_filename[100];
+        snprintf(f_correlator_filename,99,"Cpp.data.%02d.%06d",op_id,nstore);
+        FILE* f_correlator = fopen(f_correlator_filename,"w");
 
-    #ifdef OMP
-    #pragma omp for
-    #endif
-    for(int t=0;t<T;++t){
-      Cpp[t]=0;
-      double kc=0,ks=0,tr=0,tt=0,ts=0;
-      int j = g_ipt[t][0][0][0];
-      for(int x=j;x<j+LX*LY*LZ;++x){
-        for(int spin=0; spin<4; ++spin){
-          for(int col=0; col<3; ++col){
-            tr=_spinor_prod_re(M_inv[spin][col][j],M_trans_inv[spin][col][j])+kc;
-            ts=tr+ks;
-            tt=ts-ks;
-            ks=ts;
-            kc=tr-tt;
+        if(f_correlator != NULL) { 
+          for(int t=0;t<T;++t){
+            fprintf(f_correlator,"%d %e\n",t,Cpp[t]);
           }
         }
+        fclose(f_correlator);
       }
-      Cpp[t] = (kc+ks)*oneover2kappasqSV;
     }
-    
-    #ifdef OMP
-    } /* OpenMP parallel closing brace */
-    #endif
-    
-    t_spent = gettime() - t_begin;
-    printf("## Correlator computation took: %e seconds\n",t_spent);
-   
-   /* store correlator to file */
-   char f_correlator_filename[100];
-   snprintf(f_correlator_filename,99,"Cpp.data.%06d",nstore);
-   FILE* f_correlator = fopen(f_correlator_filename,"w");
-
-   if(f_correlator != NULL) { 
-     for(int t=0;t<T;++t){
-       fprintf(f_correlator,"%d %e\n",t,Cpp[t]);
-     }
-    }
-    fclose(f_correlator);
-       
+    ohnohack_remap_g_gauge_field(g_gf);       
     nstore += Nsave;
-
-    //ohnohack_remap_g_gauge_field(g_gf);
-    //free_smearing_control(smear_control);
   }
 
   free(Cpp);
-
   free_spinor_field_array(&S_memory);
-  free(S);
-  
 
-  //free_stout_control(smear_control);
+  free(S);
   return_gauge_field(&g_gf);
 
 #ifdef MPI
@@ -470,10 +469,11 @@ int main(int argc, char *argv[])
   free_dfl_subspace();
   free_geometry_indices();
   free_spinor_field();
-/*  free_moment_field();*/
+
   free_chi_spinor_field();
   finalize_gauge_buffers();
   finalize_adjoint_buffers();
+  finalize_smearing();
 
   free(filename);
   free(input_filename);
