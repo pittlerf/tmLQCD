@@ -82,6 +82,7 @@
 #include "operator/Dov_psi.h"
 #include "gettime.h"
 #include "dirty_shameful_business.h"
+#include "measurements.h"
 
 extern int nstore;
 int check_geometry();
@@ -272,6 +273,15 @@ int main(int argc, char *argv[])
   phmc_invmaxev = 1.;
 
   init_operators();
+  
+  /* list and initialize measurements*/
+  if(g_proc_id == 0) {
+    printf("\n");
+    for(int j = 0; j < no_measurements; j++) {
+      printf("# measurement id %d, type = %d: Frequency %d\n", j, measurement_list[j].type, measurement_list[j].freq);
+    }
+  }
+  init_measurements();  
 
   /* this could be maybe moved to init_operators */
 #ifdef _USE_HALFSPINOR
@@ -339,6 +349,18 @@ int main(int argc, char *argv[])
       }
 
       ohnohack_remap_g_gauge_field(smearing_control_operator[stype]->result);
+      
+      /* online measurements */
+      measurement * meas;
+      for(int imeas = 0; imeas < no_measurements; imeas++){
+        meas = &measurement_list[imeas];
+        if(nstore%meas->freq == 0){
+          if (g_proc_id == 0) {
+            fprintf(stdout, "#\n# Beginning online measurement.\n");
+          }
+          meas->measurefunc(nstore, imeas, even_odd_flag);
+        }
+      }      
 
       for(op_id = 0; op_id < no_operators; op_id++) {
         if (operator_list[op_id].smearing != stype)
