@@ -1,0 +1,38 @@
+L=12
+T=20
+
+DebugLevel = 2
+InitialStoreCounter = 100
+Measurements = 94
+nsave=1
+2kappamu = 0.016651
+kappa = 0.16651
+BCAngleT = 1
+GaugeConfigInputFile = conf
+UseEvenOdd = yes
+ompnumthreads=4
+reproducerandomnumbers=no
+ranluxdlevel=2
+seed=232137
+
+BeginMeasurement CORRELATORS
+  Frequency = 1
+EndMeasurement
+
+BeginSmearing STOUT
+  iterations=4
+  rho=0.2
+  id=1
+EndSmearing
+
+BeginOperator TMWILSON
+  2kappaMu = 0.016651
+  kappa = 0.16651
+  UseEvenOdd = yes
+  Solver = CG
+  SolverPrecision = 1e-16
+  MaxSolverIterations = 1000
+  AddDownPropagator = no
+  smearingid=1
+EndOperator
+
