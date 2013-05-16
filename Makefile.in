@@ -67,7 +67,7 @@ NOOPTMOD = test/check_xchange test/check_geometry
 
 PROGRAMS = hmc_tm benchmark invert gen_sources  \
 	check_locallity test_io test_lemon hopping_test LapH_ev \
-  naive_pion_correlator
+  naive_pion_correlator offline_measurement
 
 ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES}
 SUBDIRS = ${USESUBDIRS}
