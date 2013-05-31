@@ -409,7 +409,9 @@ int main(int argc, char *argv[])
       }
 
     }
-    if(SourceInfo.type == 1) {
+    /* for volume sources OR timeslice sources which are not read from file we do only one inversion
+       per sample  */
+    if(SourceInfo.type == 1 || (SourceInfo.type == 2 && read_source_flag != 1) ) {
       index_start = 0;
       index_end = 1;
     }

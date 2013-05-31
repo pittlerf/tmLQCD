@@ -70,7 +70,12 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
       /* "Don't read inversion source from file, but save the one generated" */
       if (read_source_flag == 0 || read_source_flag == 2) {
         if (source_location == 0) {
-          source_spinor_field(g_spinor_field[0], g_spinor_field[1], is, ic);
+          if (source_type == 0){
+            source_spinor_field(g_spinor_field[0], g_spinor_field[1], is, ic);
+          } else if (source_type == 2) {
+            /* generate timeslice source at t=0 for single-inversion pseudoscalar measurements */
+            source_generation_pion_only(g_spinor_field[0], g_spinor_field[1], 0, isample, nstore);
+          }
         }
         else {
           source_spinor_field_point_from_file(g_spinor_field[0], g_spinor_field[1], is, ic, source_location);
