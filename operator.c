@@ -225,6 +225,8 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
   g_kappa = optr->kappa;
   boundary(g_kappa);
 
+  even_odd_flag = optr->even_odd_flag;
+
   atime = gettime();
   if(optr->type == TMWILSON || optr->type == WILSON || optr->type == CLOVER) {
     g_mu = optr->mu;
