@@ -73,6 +73,7 @@
 #include "prepare_source.h"
 #include <io/params.h>
 #include <io/spinor.h>
+#include <io/gauge.h>
 #include <io/utils.h>
 #include "solver/dirac_operator_eigenvectors.h"
 #include "P_M_eta.h"
@@ -156,10 +157,20 @@ int main(int argc, char *argv[])
   }
 
   tmlqcd_mpi_init(argc, argv);
+  
+  /* Allocate needed memory */
+  initialize_gauge_buffers(12);
+  initialize_adjoint_buffers(6);
 
   /* starts the single and double precision random number */
   /* generator                                            */
   start_ranlux(rlxd_level, random_seed);
+
+#ifdef _GAUGE_COPY
+  j = init_gauge_field(VOLUMEPLUSRAND, 1);
+#else
+  j = init_gauge_field(VOLUMEPLUSRAND, 0);
+#endif
   
   j = init_geometry_indices(VOLUMEPLUSRAND);
   if (j != 0) {
@@ -193,27 +204,74 @@ int main(int argc, char *argv[])
 
   init_operators();
 
-  int no_extra_masses = operator_list[0].no_extra_masses;
+  operator *optr = &operator_list[0];
+  int no_extra_masses = optr->no_extra_masses;
   
   /* allocate memory to hold the spinors that will be read from file and the KK correlators */
   
   spinor** S;
   spinor* S_memory;
 
-  allocate_spinor_field_array(&S, &S_memory, VOLUME, operator_list[0].no_extra_masses+1);
+  allocate_spinor_field_array(&S, &S_memory, VOLUME, no_extra_masses+1);
 
-  double** Cpp = calloc(no_extra_masses,sizeof(double*));
-  double* Cpp_memory = calloc(no_extra_masses*T,sizeof(double));
+  double *sCkk, *Ckk;
 
-  for(int i = 0; i < no_extra_masses; ++i ) {
-    Cpp[i] = Cpp_memory+T*i;
+#ifdef MPI
+  sCkk = (double*) calloc(T, sizeof(double));
+  if(g_mpi_time_rank == 0) {
+    Ckk = (double*) calloc(g_nproc_t*T, sizeof(double));
   }
+#else
+  Ckk = (double*) calloc(T, sizeof(double));
+#endif
 
   char spinor_filename[200];
 
-  for (j = 0; j < Nmeas; j++) {
+  /* this could be maybe moved to init_operators */
+#ifdef _USE_HALFSPINOR
+  j = init_dirac_halfspinor();
+  if (j != 0) {
+    fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
+    exit(-1);
+  }
+  if (g_sloppy_precision_flag == 1) {
+    j = init_dirac_halfspinor32();
+    if (j != 0)
+    {
+      fprintf(stderr, "Not enough memory for 32-bit halffield! Aborting...\n");
+      exit(-1);
+    }
+  }
+#  if (defined _PERSISTENT)
+  if (even_odd_flag)
+    init_xchange_halffield();
+#  endif
+#endif
+
+  for (int meas = 0; meas < Nmeas; ++meas) {
+    /* read the corresponding gauge field */
+    sprintf(conf_filename, "%s.%.4d", gauge_input_filename, nstore);
+    if (g_cart_id == 0) {
+      printf("#\n# Trying to read gauge field from file %s in %s precision.\n",
+            conf_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
+      fflush(stdout);
+    }
+    if( (i = read_gauge_field(conf_filename)) !=0) {
+      fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", i, conf_filename);
+      exit(-2);
+    }
+    if (g_cart_id == 0) {
+      printf("# Finished reading gauge field.\n");
+      fflush(stdout);
+    }
+#ifdef MPI
+    xchange_gauge(g_gauge_field);
+#endif
+    
     for(int mass = 0; mass <= no_extra_masses; ++mass ) {
-      sprintf(spinor_filename, "source.00.%04d.00000.cgmms.%02d.2", nstore, mass);
+      /* set the correct mass for the operator */
+      g_mu = (mass==0) ? optr->mu : optr->extra_masses[mass];
+      sprintf(spinor_filename, "source.00.%04d.00000.cgmms.%02d.%1d", nstore, mass, SourceInfo.type);
       if (g_cart_id == 0) {
         printf("#\n# Trying to read propagator for mass %d from file %s.\n",mass,spinor_filename);
         fflush(stdout);
@@ -226,30 +284,67 @@ int main(int argc, char *argv[])
         printf("# Finished reading spinor for mass %d.\n",mass);
         fflush(stdout);
       }
+      printf("kappa: %lf\n",g_kappa);
+      /* CGMMS stores (Q^+ Q^-)^(-1), multiply with Q^- to get correct spinor */
+      Qtm_minus_psi(g_spinor_field[0],g_spinor_field[1]);
+      convert_eo_to_lexic(S[mass],g_spinor_field[0],g_spinor_field[1]);
     }
    
-   /* correalator computation */
-   t_begin = gettime();
+     /* correalator computation */
+
+    double res, mres;
+    for(int mass = 0; mass <= no_extra_masses; ++mass ) {
+      t_begin = gettime();
     
-        t_spent = gettime() - t_begin;
-        printf("## Correlator computation took: %e seconds\n",t_spent);
-     
-        /* store correlator to file */
-//        char f_correlator_filename[100];
-//        snprintf(f_correlator_filename,99,"Cpp.data.%02d.%06d",op_id,nstore);
-//        FILE* f_correlator = fopen(f_correlator_filename,"w");
+      /* now we sum only over local space for every t */
+      for(int t = 0; t < T; t++) {
+        int j = g_ipt[t][0][0][0];
+        res = 0.;
+        for(int i = j; i < j+LX*LY*LZ; i++) {
+          res += _spinor_prod_re(S[mass][i], S[0][i]);
+        }
 
-  //      if(f_correlator != NULL) { 
-  //        for(int t=0;t<T;++t){
-//            fprintf(f_correlator,"%d %e\n",t,Cpp[t]);
-//          }
-//        }
-//        fclose(f_correlator);
+#if defined MPI
+      MPI_Reduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
+      res = mres;
+      sCkk[t] = +res/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
+#else
+      Ckk[t] = +res/(g_nproc_x*LX)/(g_nproc_y*LY)/(g_nproc_z*LZ)/2./optr->kappa/optr->kappa;
+#endif
+      }
+
+#ifdef MPI
+      /* some gymnastics needed in case of parallelisation */
+      if(g_mpi_time_rank == 0) {
+        MPI_Gather(sCkk, T, MPI_DOUBLE, Ckk, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
+      }
+#endif
+
+    t_spent = gettime() - t_begin;
+    printf("## Correlator computation took: %e seconds\n",t_spent);
+
+    char f_correlator_filename[100];
+    snprintf(f_correlator_filename,99,"Ckk.data.%02d.%06d",mass,nstore);
+    FILE* f_correlator = fopen(f_correlator_filename,"w");
+
+    if(f_correlator != NULL) { 
+      for(int t=0;t<T;++t){
+        fprintf(f_correlator,"%d %e\n",t,Ckk[t]);
+      }
+    }
+    fclose(f_correlator);
+    
+    } /* loop over masses */
     nstore += Nsave;
-  }
+  } /* loop over measurements */
 
-  free(Cpp_memory);
-  free(Cpp);
+  return_gauge_field(&g_gf);
+
+  free(Ckk);
+#ifdef MPI
+  free(sCkk);
+#endif
+
   free_spinor_field_array(&S_memory);
   free(S);
 
