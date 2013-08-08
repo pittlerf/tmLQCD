@@ -20,10 +20,6 @@ void smear(smearing_control_t *control, gauge_field_t in)
       hyp_smear((hyp_control*)control->type_control, in);
       control->result = ((hyp_control*)control->type_control)->result;
       break;
-//     case HYP_3D:
-//       hyp_3d_smear((hyp_3d_control*)control->type_control, in);
-//       control->result = ((hyp_3d_control*)control->type_control)->result;
-//       break;
     case Stout:
       stout_smear((stout_control*)control->type_control, in);
       control->result = ((stout_control*)control->type_control)->result;
@@ -40,6 +36,9 @@ void smear(smearing_control_t *control, gauge_field_t in)
       hex_3d_smear((hex_3d_control*)control->type_control, in);
       control->result = ((hex_3d_control*)control->type_control)->result;
       break;
+    case Gradient:
+      gradient_smear((gradient_control*)control->type_control, in);
+      control->result = ((gradient_control*)control->type_control)->result;
     default:
       fatal_error("Smearing type not implemented.", "smear");
   }
