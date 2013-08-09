@@ -15,6 +15,8 @@ typedef struct
  
   gauge_field_t U[2];
   
+  double current_distance /* Tracks the state of the integrator */
+  
   /* Final result */
   gauge_field_t result; /* Set upon calculation */
 } gradient_control;

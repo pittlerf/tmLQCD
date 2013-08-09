@@ -8,6 +8,8 @@ gradient_control *construct_gradient_control(unsigned int epsilon, double distan
   
   control->U[1] = get_gauge_field();
   
+  control->current_distance = 0.0; /* Tracks the distance already integrated over */
+  
   control->result = NULL; /* Set after calculation */
   
   return control;
