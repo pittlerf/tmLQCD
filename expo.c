@@ -158,14 +158,12 @@ void restoresu3_in_place(su3* const u) {
   u->c22 = conj(u->c00 * u->c11 - u->c01 * u->c10);
 }
                                 
-/* Exponentiates a hermitian 3x3 matrix Q */
-/* Convenience function -- wrapper around Hasenbusch's implementation */
-void exposu3_in_place(su3* const u) {
+void exposu3_copy(su3 *const v, su3 const * const u) {
   su3adj ALIGN p;
 
   _trace_lambda(p, *u); /* Projects onto the Gell-Mann matrices */
   /* -2.0 to get su3 to su3adjoint consistency ****/
   p.d1 *= -0.5; p.d2 *= -0.5; p.d3 *= -0.5; p.d4 *= -0.5;
   p.d5 *= -0.5; p.d6 *= -0.5; p.d7 *= -0.5; p.d8 *= -0.5;
-  exposu3(u,&p);
+  exposu3(v,&p);
 }

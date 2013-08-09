@@ -23,6 +23,8 @@ extern void exposu3(su3* const vr, const su3adj* const p);
 extern void exposu3_check(su3* const vr, const su3adj* const p, int im);
 extern void restoresu3(su3* const vr, const su3* const u);
 extern void restoresu3_in_place(su3* const u);
-extern void exposu3_in_place(su3* const u);
+extern void exposu3_copy(su3 * const v, su3 const* const u);
+
+inline void exposu3_in_place(su3* const u) {exposu3_copy(u, u);}
 
 #endif
