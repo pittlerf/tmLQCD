@@ -203,16 +203,27 @@ EQL {SPC}*={SPC}*
         fatal_error(error_string, "check_smearing_params");
       }
 
-    if (!cur_sm_dec->set[1])
-    {
-      sprintf(error_string, "The 'iterations' parameter is missing in input file for smearing id %d!", cur_sm_dec->id);
-      fatal_error(error_string, "check_smearing_params");
-    }
-
     switch (type)
     {
+      case Gradient:
+        if (!cur_sm_dec->set[1])
+        {
+          sprintf(error_string, "The 't' parameter is missing in input file for smearing id %d!", cur_sm_dec->id);
+          fatal_error(error_string, "check_smearing_params");
+        }
+        if (!cur_sm_dec->set[2])
+        {
+          sprintf(error_string, "The 'epsilon' parameter is missing in input file for smearing id %d!", cur_sm_dec->id);
+          fatal_error(error_string, "check_smearing_params");
+        }
+        break;
       case HEX:
       case HYP:
+        if (!cur_sm_dec->set[1])
+        {
+          sprintf(error_string, "The 'iterations' parameter is missing in input file for smearing id %d!", cur_sm_dec->id);
+          fatal_error(error_string, "check_smearing_params");
+        }
         if (!cur_sm_dec->set[2])
         {
           sprintf(error_string, "Smearing coefficient 3 ('alpha_3' or 'rho_3') missing in input file for smearing id %d!", cur_sm_dec->id);
@@ -231,6 +242,11 @@ EQL {SPC}*={SPC}*
         break;
       case HEX_3D:
       case HYP_3D:
+        if (!cur_sm_dec->set[1])
+        {
+          sprintf(error_string, "The 'iterations' parameter is missing in input file for smearing id %d!", cur_sm_dec->id);
+          fatal_error(error_string, "check_smearing_params");
+        }
         if (!cur_sm_dec->set[2])
         {
           sprintf(error_string, "Smearing coefficient 1 ('alpha_1' or 'rho_1') missing in input file for smearing id %d!", cur_sm_dec->id);
@@ -246,6 +262,11 @@ EQL {SPC}*={SPC}*
       case APE_3D:
       case Stout:
       case Stout_3D:
+        if (!cur_sm_dec->set[1])
+        {
+          sprintf(error_string, "The 'iterations' parameter is missing in input file for smearing id %d!", cur_sm_dec->id);
+          fatal_error(error_string, "check_smearing_params");
+        }
         if (!cur_sm_dec->set[2])
         {
           sprintf(error_string, "Smearing coefficient ('alpha' or 'rho') missing in input file for smearing id %d!", cur_sm_dec->id);
@@ -2110,10 +2131,34 @@ EQL {SPC}*={SPC}*
   if(myverbose) printf("  smearing block %d: configured to use smearing id %d\n", no_smearings_declared - 1, cur_sm_dec->id);
 }
 
-<SMEARING_IDENTITY,SMEARING_APE,SMEARING_APE_3D,SMEARING_HYP,SMEARING_STOUT,SMEARING_STOUT_3D,SMEARING_UNITARY,SMEARING_HEX,SMEARING_HEX_3D,SMEARING_GRADIENT,SMEARING_JACOBI>{SPC}*iterations{EQL}[[:digit:]]+ {
+<SMEARING_IDENTITY,SMEARING_APE,SMEARING_APE_3D,SMEARING_HYP,SMEARING_STOUT,SMEARING_STOUT_3D,SMEARING_UNITARY,SMEARING_HEX,SMEARING_HEX_3D,SMEARING_JACOBI>{SPC}*iterations{EQL}[[:digit:]]+ {
   sscanf(yytext, "%*[^=]= %u", &cur_sm_dec->iterations);
   cur_sm_dec->set[1] = 1;
   if(myverbose) printf("  smearing block %d: number of iterations set to %u\n", no_smearings_declared - 1, cur_sm_dec->iterations);
+}
+
+<SMEARING_GRADIENT>{SPC}*t{EQL}{FLT} {
+  if (cur_sm_dec->set[1])
+  {
+    char err_string[256];
+    sprintf(err_string, "The flow distance t is set more than once in block %d!", no_smearings_declared - 1);
+    fatal_error(err_string, "read_input");
+  }
+  sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[0]);
+  cur_sm_dec->set[1] = 1;
+  if(myverbose) printf("  smearing block %d: flow distance t set to %lf\n", no_smearings_declared - 1, cur_sm_dec->params[0]);
+}
+
+<SMEARING_GRADIENT>{SPC}*epsilon{EQL}{FLT} {
+  if (cur_sm_dec->set[2])
+  {
+    char err_string[256];
+    sprintf(err_string, "The integrator step size epsilon is set more than once in block %d!", no_smearings_declared - 1);
+    fatal_error(err_string, "read_input");
+  }
+  sscanf(yytext, "%*[^=]= %lf", &cur_sm_dec->params[1]);
+  cur_sm_dec->set[2] = 1;
+  if(myverbose) printf("  smearing block %d: integrator step size epsilon set to %lf\n", no_smearings_declared - 1, cur_sm_dec->params[1]);
 }
 
 <SMEARING_APE,SMEARING_STOUT,SMEARING_JACOBI,SMEARING_UNITARY>{SPC}*alpha{EQL}{FLT} {
@@ -2300,6 +2345,11 @@ EQL {SPC}*={SPC}*
 
 <SMEARING_APE_3D>{SPC}*EndSmearing{SPC}* {
   check_smearing_params(APE_3D);
+  BEGIN INITIAL;
+}
+
+<SMEARING_GRADIENT>{SPC}*EndSmearing{SPC}* {
+  check_smearing_params(Gradient);
   BEGIN INITIAL;
 }
 
