@@ -34,12 +34,20 @@ void gradient_smear(gradient_control *control, gauge_field_t in)
   // that value will be set to something tiny if a very small range of t integration
   // is actually required. It can therefore define our notion of a small distance.
   
-  double const rel_eps_tol = 1.0e-8
+  static double const rel_eps_tol = 1.0e-8
+  
+  // Check if the gauge field we're operating on is the currently stored one, reset if it isn't.
+  if (control->U[0] != in)
+  {
+    control->U[0] = in;
+    control->current_distance = 0.0;
+  }
+  
   double difference = control->distance - control->current_distance;
   
   if ((difference / epsilon) < rel_eps_tol) // To avoid both numerical weirdness and useless calculations.
   {
-    if (control->result == (gauge_field_t*)NULL) // Flow hasn't been performed yet, so just copy the input.
+    if (control->result == (gauge_field_t*)NULL) // Flow hasn't been performed yet, so actually copy the input.
     {
       copy_gauge_field(&control->U[1], control->U[0]);
       control->result = control->U[1];
@@ -48,7 +56,6 @@ void gradient_smear(gradient_control *control, gauge_field_t in)
   }
 
   /* Allocate the required memory */
-  control->U[0] = in;
   gauge_field_t Z01 = get_gauge_field();
   gauge_field_t buffer = get_gauge_field();
   
