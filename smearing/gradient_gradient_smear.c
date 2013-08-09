@@ -34,7 +34,7 @@ void gradient_smear(gradient_control *control, gauge_field_t in)
   // that value will be set to something tiny if a very small range of t integration
   // is actually required. It can therefore define our notion of a small distance.
   
-  static double const rel_eps_tol = 1.0e-8
+  static double const rel_eps_tol = 1.0e-8;
   
   // Check if the gauge field we're operating on is the currently stored one, reset if it isn't.
   if (control->U[0] != in)
