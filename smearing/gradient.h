@@ -15,14 +15,14 @@ typedef struct
  
   gauge_field_t U[2];
   
-  double current_distance /* Tracks the state of the integrator */
+  double current_distance; /* Tracks the state of the integrator */
   
   /* Final result */
   gauge_field_t result; /* Set upon calculation */
 } gradient_control;
 
 
-gradient_control *construct_gradient_control(int calculate_force_terms, double epsilon, double distance);
+gradient_control *construct_gradient_control(double epsilon, double distance);
 void free_gradient_control(gradient_control *control);
 
 void gradient_smear(gradient_control *control, gauge_field_t in);

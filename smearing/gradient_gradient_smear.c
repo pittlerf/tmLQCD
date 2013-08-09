@@ -45,9 +45,9 @@ void gradient_smear(gradient_control *control, gauge_field_t in)
   
   double difference = control->distance - control->current_distance;
   
-  if ((difference / epsilon) < rel_eps_tol) // To avoid both numerical weirdness and useless calculations.
+  if ((difference / control->epsilon) < rel_eps_tol) // To avoid both numerical weirdness and useless calculations.
   {
-    if (control->result == (gauge_field_t*)NULL) // Flow hasn't been performed yet, so actually copy the input.
+    if (control->result == (gauge_field_t)NULL) // Flow hasn't been performed yet, so actually copy the input.
     {
       copy_gauge_field(&control->U[1], control->U[0]);
       control->result = control->U[1];
@@ -73,9 +73,10 @@ void gradient_smear(gradient_control *control, gauge_field_t in)
   double e89    =   8.0 * control->epsilon /  9.0;
 
   // Start of the gradient flow */
-#pragma omp parallel private(staples, tmp)
+#pragma omp parallel private(tmp1, tmp2)
   for(unsigned int iter = 0; iter < steps; ++iter)
   {    
+#pragma omp single
     if (remainder && iter == (steps - 1)) // In case distance is not a multiple of epsilon.
     {
       double rescale = (difference / control->epsilon) - iter;

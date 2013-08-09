@@ -1,6 +1,6 @@
 #include "gradient.ih"
 
-gradient_control *construct_gradient_control(unsigned int epsilon, double distance)
+gradient_control *construct_gradient_control(double epsilon, double distance)
 {
   gradient_control *control = (gradient_control*)malloc(sizeof(gradient_control));
   control->epsilon = epsilon;
