@@ -1515,6 +1515,10 @@ EQL {SPC}*={SPC}*
     meas->type = ORIENTED_PLAQUETTES;
     strcpy(meas->name, "ORIENTEDPLAQUETTES");
   }
+  else if(strcmp(yytext, "W0")==0) {
+    meas->type = ORIENTED_PLAQUETTES;
+    strcpy(meas->name, "W0");
+  }
   else {
     fprintf(stderr, "Unknown measurement type %s in line %d\n", yytext, line_of_file);
     exit(1);
@@ -1535,9 +1539,10 @@ EQL {SPC}*={SPC}*
   else if(meas->type == PIONNORM) BEGIN(PIONNORMMEAS);
   else if(meas->type == POLYAKOV) BEGIN(PLOOP);
   else if(meas->type == ORIENTED_PLAQUETTES) BEGIN(ORIENTEDPLAQUETTESMEAS);
+  else if(meas->type == W0) BEGIN(W0MEAS);
 }
 
-<ONLINEMEAS,PIONNORMMEAS,PLOOP,ORIENTEDPLAQUETTESMEAS>{
+<ONLINEMEAS,PIONNORMMEAS,PLOOP,ORIENTEDPLAQUETTESMEAS,W0MEAS>{
   ^EndMeasurement{SPC}* {
     if(myverbose) printf("Measurement with id %d parsed in line %d\n\n", meas->id, line_of_file);
     BEGIN(0);
@@ -1562,6 +1567,14 @@ EQL {SPC}*={SPC}*
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     meas->direction = a;
     if(myverbose!=0) fprintf(stderr, "  Direction for polyakov loop set to %d\n", meas->direction);
+  }
+}
+
+<W0MEAS>{
+  {SPC}*Epsilon{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z] = %f", name, &cs);
+    meas->epsilon = cs;
+    if(myverbose!=0) fprintf(stderr, "  Epsilon for numerical integration of gradient flow set to %f\n", meas->epsilon);
   }
 }
 

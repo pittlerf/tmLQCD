@@ -72,7 +72,7 @@ int init_measurements(){
     if(measurement_list[i].type == ORIENTED_PLAQUETTES) {
       measurement_list[i].measurefunc = oriented_plaquettes_measurement;
     }
-    
+
     measurement_list[i].id = i;
     measurement_list[i].smearing = 0; /* FIXME A placeholder to avoid issues until smearing is properly implemented here. */
  }
