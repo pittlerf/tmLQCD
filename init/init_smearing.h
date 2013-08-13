@@ -2,7 +2,7 @@
 #define GUARD_INIT_SMEARING_H
 
 #include <global.h>
-#include <measurements.h>
+#include <measurements/measurements.h>
 #include <monomial/monomial.h>
 #include <operator.h>
 #include <smearing/control.h>
