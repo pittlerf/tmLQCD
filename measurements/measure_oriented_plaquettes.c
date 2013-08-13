@@ -36,7 +36,7 @@
 #include "fatal_error.h"
 
 
-void measure_oriented_plaquettes(const su3 ** const gf, double *plaq) {
+void measure_oriented_plaquettes(gauge_field_t const gf, double *plaq) {
 #ifdef MPI
   double ALIGN mplaq[6];
 #endif
@@ -87,7 +87,7 @@ void measure_oriented_plaquettes(const su3 ** const gf, double *plaq) {
 
 void oriented_plaquettes_measurement(const int traj, const int id, const int ieo) {
   double plaq[6];
-  measure_oriented_plaquettes((const su3** const)g_gauge_field,plaq);
+  measure_oriented_plaquettes(g_gf, plaq);
 
   if( g_proc_id == 0 ) {
     FILE *outfile;
