@@ -91,17 +91,17 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
   }
 #endif
 
-#ifdef OMP
-#pragma omp parallel
-  {
+//#ifdef OMP
+//#pragma omp parallel
+//  {
   su3 * restrict u0 ALIGN;
-#endif
+//#endif
 
 #  include "operator/halfspinor_body.c"
 
-#  ifdef OMP
-  } /* OpenMP closing brace */
-#  endif
+//#  ifdef OMP
+//  } /* OpenMP closing brace */
+//#  endif
   return;
 }
 

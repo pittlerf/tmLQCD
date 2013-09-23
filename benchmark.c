@@ -254,7 +254,7 @@ int main(int argc,char *argv[])
 
   if(even_odd_flag) {
     /*initialize the pseudo-fermion fields*/
-    j_max=4096;
+    j_max=160000;
     sdt=0.;
     for (k = 0; k < k_max; k++) {
       random_spinor_field_eo(g_spinor_field[k], reproduce_randomnumber_flag, RN_GAUSS);
@@ -266,13 +266,17 @@ int main(int argc,char *argv[])
 #endif
       t1 = gettime();
       antioptaway=0.0;
-      for (j=0;j<j_max;j++) {
-        for (k=0;k<k_max;k++) {
+#pragma omp parallel
+    {
+      for (int j=0;j<j_max;j++) {
+        for (int k=0;k<k_max;k++) {
           Hopping_Matrix(0, g_spinor_field[k+k_max], g_spinor_field[k]);
           Hopping_Matrix(1, g_spinor_field[2*k_max], g_spinor_field[k+k_max]);
-          antioptaway+=creal(g_spinor_field[2*k_max][0].s0.c0);
+
         }
       }
+    }
+      antioptaway=creal(g_spinor_field[2*k_max][0].s0.c0);
       t2 = gettime();
       dt = t2-t1;
 #ifdef MPI
@@ -312,8 +316,14 @@ int main(int argc,char *argv[])
     antioptaway=0.0;
     for (j=0;j<j_max;j++) {
       for (k=0;k<k_max;k++) {
-        Hopping_Matrix_nocom(0, g_spinor_field[k+k_max], g_spinor_field[k]);
-        Hopping_Matrix_nocom(1, g_spinor_field[2*k_max], g_spinor_field[k+k_max]);
+        #pragma omp parallel
+        {
+          if(j==0 && k == 0) {
+            printf("thread %d",omp_get_thread_num());
+          }
+          Hopping_Matrix_nocom(0, g_spinor_field[k+k_max], g_spinor_field[k]);
+          Hopping_Matrix_nocom(1, g_spinor_field[2*k_max], g_spinor_field[k+k_max]);
+        }
         antioptaway += creal(g_spinor_field[2*k_max][0].s0.c0);
       }
     }

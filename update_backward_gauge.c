@@ -28,10 +28,10 @@
 
 #if defined _USE_HALFSPINOR
 void update_backward_gauge(su3 ** const gf) {
-#ifdef OMP
-#pragma omp parallel
-  {
-#endif
+//#ifdef OMP
+//#pragma omp parallel
+//  {
+//#endif
 
   int ix=0, kb=0, iy=0;
 
@@ -59,9 +59,9 @@ void update_backward_gauge(su3 ** const gf) {
     _su3_assign(g_gauge_field_copy[1][ix][3], gf[kb][3]);
   }
 
-#ifdef OMP
-  } /* OpenMP closing brace */
-#endif
+//#ifdef OMP
+//  } /* OpenMP closing brace */
+//#endif
 
   g_update_gauge_copy = 0;
   return;
