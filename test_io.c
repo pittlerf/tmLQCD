@@ -131,9 +131,9 @@ static double extract_plaquette_from_xlfInfoString(char* xlfInfoString);
 
 int reread_only = 0;
 
-#define ITERATIONS 10
+#define ITERATIONS 5
 #define NUM_TESTCONFS 10
-#define NUM_REREADS 5
+#define NUM_REREADS 3
 #define MIN_DELAY 0
 #define MAX_DELAY 5
   
@@ -360,7 +360,6 @@ int main(int argc,char *argv[]) {
               test_confs[confnum].filename_copy,
               test_confs[confnum].plaq_copy_comp,
               test_confs[confnum].plaq_copy_read);
-          add_failure(&failures,FAIL_READ_PLAQ,j,-1);
           add_failure(&failures,FAIL_REREAD_PLAQ,j,num_rereads);
         }
 
@@ -368,13 +367,13 @@ int main(int argc,char *argv[]) {
           if( test_confs[confnum].checksum_orig.suma != test_confs[confnum].checksum_copy.suma ||
               test_confs[confnum].checksum_orig.sumb != test_confs[confnum].checksum_copy.sumb ) {
               if( g_proc_id == 0 ) 
-                printf("# Write verification successful but new checksum does not match the checksum originally computed!\n");
+                printf("ERROR: New checksum does not match the checksum originally computed!\n");
               add_failure(&failures,FAIL_COMPARE_CHKSUM,j,num_rereads);
           }
 
           if( fabs(test_confs[confnum].plaq_copy_comp - test_confs[confnum].plaq_orig_comp) > 1E-11 ) {
             if( g_proc_id == 0 )
-              printf("# Write verification successful but plaquette of copy (%lf)\n does not match the original (%lf)!\n",
+              printf("ERROR: Plaquette of copy (%lf)\n does not match the original (%lf)!\n",
                 test_confs[confnum].plaq_copy_comp,
                 test_confs[confnum].plaq_orig_comp);
             add_failure(&failures,FAIL_COMPARE_PLAQ,j,num_rereads);
