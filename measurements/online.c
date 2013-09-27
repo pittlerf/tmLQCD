@@ -36,7 +36,7 @@
 #include "geometry_eo.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "measurements.h"
-#include "online_measurement.h"
+#include "online.h"
 #include "gettime.h"
 
 

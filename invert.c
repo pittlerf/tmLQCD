@@ -427,15 +427,34 @@ int main(int argc, char *argv[])
 
       if (g_cart_id == 0)
       {
-        printf("# After smearing of type %s (id %d), the plaquette value is %e.\n", smearing_type_names[smearing_control_operator[stype]->type], 
+        printf("# After smearing of type %s (id %d), the plaquette value is %.13e.\n", smearing_type_names[smearing_control_operator[stype]->type], 
                                                                                     smearing_control_operator[stype]->id, new_plaquette / (6.*VOLUME*g_nproc));
         fflush(stdout);
       }
+      
     }  
        
     for(op_id = 0; op_id < no_operators; op_id++)
     {
       ohnohack_remap_g_gauge_field(smearing_control_operator[operator_list[op_id].smearing]->result);
+      
+      char smeared_conf_filename[50];
+      sprintf(smeared_conf_filename, "%s.stout.%.4d", gauge_input_filename, nstore);
+      paramsXlfInfo* xlfInfo = construct_paramsXlfInfo(
+        measure_gauge_action(smearing_control_operator[operator_list[op_id].smearing]->result)/(6.*VOLUME*g_nproc), nstore);
+      int status = write_gauge_field(smeared_conf_filename,64,xlfInfo);
+      free(xlfInfo);
+
+      if(g_cart_id == 0) {
+        printf("# Rereading gauge configuration.!\n");
+      }
+
+      status = read_gauge_field(smeared_conf_filename);
+      double test_plaquette = measure_gauge_action(smearing_control_operator[operator_list[op_id].smearing]->result);
+      
+      if(g_cart_id == 0) {
+        printf("# Plaquette of reread gauge configuration is %.13e\n",test_plaquette/(6*VOLUME*g_nproc));
+      }
 
       boundary(operator_list[op_id].kappa);
       g_kappa = operator_list[op_id].kappa; 
@@ -467,8 +486,8 @@ int main(int argc, char *argv[])
           /* we use g_spinor_field[0-7] for sources and props for the moment */
           /* 0-3 in case of 1 flavour  */
           /* 0-7 in case of 2 flavours */
-          prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location);
-          operator_list[op_id].inverter(op_id, index_start, 1);
+          //prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location);
+          //operator_list[op_id].inverter(op_id, index_start, 1);
         }
       }
 
