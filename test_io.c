@@ -129,7 +129,7 @@ static void output_failures(const failure_flex_array_t* const);
 static void shuffle(int* array,size_t n);
 static double extract_plaquette_from_xlfInfoString(char* xlfInfoString);
 
-int reread_only = 0;
+int gen_random_test_confs = 0;
 
 #define ITERATIONS 5
 #define NUM_TESTCONFS 10
@@ -242,7 +242,7 @@ int main(int argc,char *argv[]) {
   /* Initialise random number generator */
   start_ranlux(rlxd_level, random_seed );
 
-  if( reread_only ) {
+  if( gen_random_test_confs ) {
     if( g_proc_id == 0 ) {
       printf("\n# Generating random gauge configurations for reread tests!\n");
       printf("# Note that not using pre-existing configurations reduces the strength of the test!\n\n");
@@ -261,7 +261,7 @@ int main(int argc,char *argv[]) {
       printf("\n# Starting test iteration %d\n", j);
     }
 
-    if( !reread_only ) {
+    if( !gen_random_test_confs ) {
       for(int confnum = 0; confnum < NUM_TESTCONFS; ++confnum) {
         ohnohack_remap_g_gauge_field(test_confs[confnum].buffer_orig);
         if( g_proc_id == 0 )
@@ -354,6 +354,7 @@ int main(int argc,char *argv[]) {
         test_confs[confnum].plaq_copy_read = extract_plaquette_from_xlfInfoString(GaugeInfo.xlfInfo);
         test_confs[confnum].plaq_copy_comp = measure_gauge_action(test_confs[confnum].buffer_copy)/(6*VOLUME*g_nproc);
 
+        // does the plaquette from the header match the plaquette that was just computed?
         if( fabs(test_confs[confnum].plaq_copy_read - test_confs[confnum].plaq_copy_comp) > 1E-11 ) {
           if( g_proc_id == 0 )
             printf("ERROR: for copy %s computed (%lf) and read (%lf)\n plaquette value do not match!\n",
@@ -362,21 +363,22 @@ int main(int argc,char *argv[]) {
               test_confs[confnum].plaq_copy_read);
           add_failure(&failures,FAIL_REREAD_PLAQ,j,num_rereads);
         }
-
-        if( !reread_only ) {
+        // does the plaquette that was just computed match the one computed after generating (or reading) the gauge field?
+        if( fabs(test_confs[confnum].plaq_copy_comp - test_confs[confnum].plaq_orig_comp) > 1E-11 ) {
+          if( g_proc_id == 0 )
+            printf("ERROR: Plaquette of copy (%lf)\n does not match the original (%lf)!\n",
+              test_confs[confnum].plaq_copy_comp,
+              test_confs[confnum].plaq_orig_comp);
+              add_failure(&failures,FAIL_COMPARE_PLAQ,j,num_rereads);
+        }
+        // if we are using pre-existing configurations, compare the checksum that we computed 
+        // originally when they were read and what was read now
+        if( !gen_random_test_confs ) {
           if( test_confs[confnum].checksum_orig.suma != test_confs[confnum].checksum_copy.suma ||
               test_confs[confnum].checksum_orig.sumb != test_confs[confnum].checksum_copy.sumb ) {
               if( g_proc_id == 0 ) 
                 printf("ERROR: New checksum does not match the checksum originally computed!\n");
               add_failure(&failures,FAIL_COMPARE_CHKSUM,j,num_rereads);
-          }
-
-          if( fabs(test_confs[confnum].plaq_copy_comp - test_confs[confnum].plaq_orig_comp) > 1E-11 ) {
-            if( g_proc_id == 0 )
-              printf("ERROR: Plaquette of copy (%lf)\n does not match the original (%lf)!\n",
-                test_confs[confnum].plaq_copy_comp,
-                test_confs[confnum].plaq_orig_comp);
-            add_failure(&failures,FAIL_COMPARE_PLAQ,j,num_rereads);
           }
         }
       }
@@ -429,7 +431,7 @@ static void process_args(int argc, char *argv[], char ** input_filename, char **
   while ((c = getopt(argc, argv, "h?gvVf:o:")) != -1) {
     switch (c) {
       case 'g':
-        reread_only = 1;
+        gen_random_test_confs = 1;
         break;
       case 'f':
         *input_filename = calloc(200, sizeof(char));
