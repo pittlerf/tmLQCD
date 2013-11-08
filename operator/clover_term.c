@@ -52,6 +52,10 @@
 #include "operator/clovertm_operators.h"
 #include "operator/clover_leaf.h"
 
+#ifdef BGQ
+# include "bgq_su3.h"
+#endif
+
 // the clover term is written as
 //
 //   1 + T_{xa\alpha,yb\beta} 
@@ -100,6 +104,9 @@ void sw_term(const su3 ** const gf, const double kappa, const double c_sw) {
   su3 ALIGN magnetic[4],electric[4];
   su3 ALIGN aux;
   
+#ifdef BGQ
+  _bgq_declare_su3regs();
+#endif
 
   /*  compute the clover-leave */
   /*  l  __   __

@@ -26,11 +26,20 @@
 #include "su3.h"
 #include "get_rectangle_staples.h"
 
+#ifdef BGQ
+# include "bgq_su3.h"
+#endif
+
 void get_rectangle_staples(su3 * const v, const int x, const int mu) {
 
   su3 ALIGN tmp1, tmp2;
   int y, z, nu;
   su3 * a, * b, * c, * d, * e;
+
+#ifdef BGQ
+  _bgq_declare_su3regs();
+#endif
+
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(rectstaples)
 #endif

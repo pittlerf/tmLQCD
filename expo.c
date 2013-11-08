@@ -53,12 +53,20 @@
 #include "su3adj.h"
 #include "expo.h"
 
+#ifdef BGQ
+# include "bgq_su3.h"
+#endif
+
 void exposu3(su3* const vr, const su3adj* const p) {
   int i;
   su3 ALIGN v,v2;
   double ALIGN fac,r;
   double ALIGN a,b;
   _Complex double ALIGN a0,a1,a2,a1p;
+
+#ifdef BGQ
+  _bgq_declare_su3regs();
+#endif
 
   /* it writes 'p=vec(h_{j,mu})' in matrix form 'v' */  
   _make_su3(v,*p);
@@ -101,6 +109,10 @@ void exposu3_check(su3* const vr, const su3adj* const p, int im) {
   su3 ALIGN v,v2,v3;
   double ALIGN fac;
   int i;
+
+#ifdef BGQ
+  _bgq_declare_su3regs();
+#endif
 
   _make_su3(v, *p);
   _su3_one(*vr);

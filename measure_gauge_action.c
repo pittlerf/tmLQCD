@@ -43,6 +43,10 @@
 #include <io/params.h>
 #include "measure_gauge_action.h"
 
+#ifdef BGQ
+# include "bgq_su3.h"
+#endif
+
 double measure_gauge_action(const su3 ** const gf) {
   static double res;
 #ifdef MPI
@@ -59,6 +63,10 @@ double measure_gauge_action(const su3 ** const gf) {
   su3 ALIGN pr1,pr2; 
   const su3 *v,*w;
   double ALIGN ac,ks,kc,tr,ts,tt;
+
+#ifdef BGQ
+  _bgq_declare_su3regs();
+#endif
 
   if(g_update_gauge_energy) {
     kc=0.0; ks=0.0;

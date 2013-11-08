@@ -30,12 +30,19 @@
 #include "start.h"
 #include "get_staples.h"
 
+#ifdef BGQ
+# include "bgq_su3.h"
+#endif
 
 void get_staples(su3* const staple, const int x, const int mu, const su3 ** in_gauge_field) {
 
   int iy;
   su3 ALIGN st;
   const su3 *w1,*w2,*w3;
+
+#ifdef BGQ
+  _bgq_declare_su3regs();
+#endif
 
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(staples)
