@@ -32,6 +32,9 @@
 #include "hamiltonian_field.h"
 #include "deriv_Sb_D_psi.h"
 
+#ifdef BGQ
+# include "bgq_su3.h"
+#endif
 
 #if (defined BGLnotchecked && defined XLC)
 
@@ -404,6 +407,10 @@ void deriv_Sb_D_psi(spinor * const l, spinor * const k,
 /*   spinor * restrict r ALIGN; */
   spinor * restrict sp ALIGN;
   spinor * restrict sm ALIGN;
+
+#ifdef BGQ
+  _bgq_declare_su3regs();
+#endif
 
 #ifdef OMP
 #undef static

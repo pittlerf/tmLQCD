@@ -35,6 +35,9 @@
 #include "measure_oriented_plaquettes.h"
 #include "fatal_error.h"
 
+#ifdef BGQ
+# include "bgq_su3.h"
+#endif
 
 void measure_oriented_plaquettes(const su3 ** const gf, double *plaq) {
 #ifdef MPI
@@ -48,6 +51,10 @@ void measure_oriented_plaquettes(const su3 ** const gf, double *plaq) {
   double ALIGN ks[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
   double ALIGN kc[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
   double ALIGN tr[6],ts[6],tt[6];
+
+#ifdef BGQ
+  _bgq_declare_su3regs();
+#endif
 
   for (ix=0;ix<VOLUME;ix++){
     plane = 0;

@@ -39,6 +39,9 @@
 #include "hamiltonian_field.h"
 #include "update_gauge.h"
 
+#ifdef BGQ
+# include "bgq_su3.h"
+#endif
 
 /*******************************************************
  *
@@ -60,6 +63,11 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
   su3 *z;
   static su3adj deriv;
   su3adj *xm;
+
+#ifdef BGQ
+  _bgq_declare_su3regs();
+#endif
+
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(updategauge)
 #endif

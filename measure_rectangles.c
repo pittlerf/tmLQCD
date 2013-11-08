@@ -47,6 +47,9 @@
 #include "geometry_eo.h"
 #include "measure_rectangles.h"
 
+#ifdef BGQ
+# include "bgq_su3.h"
+#endif
 
 double measure_rectangles(const su3 ** const gf) {
   static double res;
@@ -64,6 +67,10 @@ double measure_rectangles(const su3 ** const gf) {
   su3 ALIGN pr1, pr2, tmp; 
   const su3 *v = NULL , *w = NULL;
   double ALIGN ac, ks, kc, tr, ts, tt;
+
+#ifdef BGQ
+  _bgq_declare_su3regs();
+#endif  
 
   if(g_update_rectangle_energy) {
     kc = 0.0;

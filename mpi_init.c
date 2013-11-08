@@ -32,6 +32,10 @@
 #include "read_input.h"
 #include "mpi_init.h"
 
+#ifdef BGQ
+# include "bgq_su3.h"
+#endif
+
 #ifdef MPI
 /* Datatypes for the data exchange */
 MPI_Datatype mpi_su3;
@@ -194,6 +198,10 @@ void reduce_su3_ray(
    su3 *u, *v, tmp;
    u = (su3 *)u_i;
    v = (su3 *)u_io;
+
+#ifdef BGQ
+  _bgq_declare_su3regs();
+#endif    
 
    if(*dt != mpi_su3) {
       fprintf(stderr, "\nInvalid datatype for reduce_su3_ray(); abort.\n");
