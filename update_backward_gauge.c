@@ -20,6 +20,9 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#ifdef OMP
+#include <omp.h>
+#endif
 #include <stdlib.h>
 #include "global.h"
 #include "su3.h"
@@ -28,164 +31,72 @@
 
 #if defined _USE_HALFSPINOR
 void update_backward_gauge(su3 ** const gf) {
-#ifdef OMP
-#pragma omp parallel
-  {
-#endif
-
-  int ix=0, kb=0, iy=0;
-
-#ifdef OMP
-#pragma omp for
-#endif 
-  for(ix = 0; ix < VOLUME/2; ix++) {
-    iy = (VOLUME+RAND)/2+ix;
-    kb = g_idn[ g_eo2lexic[iy] ][0];
-    _su3_assign(g_gauge_field_copy[0][ix][0], gf[kb][0]);
-    kb = g_idn[ g_eo2lexic[iy] ][1];
-    _su3_assign(g_gauge_field_copy[0][ix][1], gf[kb][1]);
-    kb = g_idn[ g_eo2lexic[iy] ][2];
-    _su3_assign(g_gauge_field_copy[0][ix][2], gf[kb][2]);
-    kb = g_idn[ g_eo2lexic[iy] ][3];
-    _su3_assign(g_gauge_field_copy[0][ix][3], gf[kb][3]);
-
-    kb = g_idn[ g_eo2lexic[ix] ][0];
-    _su3_assign(g_gauge_field_copy[1][ix][0], gf[kb][0]);
-    kb = g_idn[ g_eo2lexic[ix] ][1];
-    _su3_assign(g_gauge_field_copy[1][ix][1], gf[kb][1]);
-    kb = g_idn[ g_eo2lexic[ix] ][2];
-    _su3_assign(g_gauge_field_copy[1][ix][2], gf[kb][2]);
-    kb = g_idn[ g_eo2lexic[ix] ][3];
-    _su3_assign(g_gauge_field_copy[1][ix][3], gf[kb][3]);
-  }
-
-#ifdef OMP
-  } /* OpenMP closing brace */
-#endif
-
+#ifndef OMP
+  #include "function_bodies/update_backward_gauge_halfspinor_body.ic"
   g_update_gauge_copy = 0;
+#else
+  if( omp_get_num_threads() > 1 ) {
+    #include "function_bodies/update_backward_gauge_halfspinor_body.ic"
+    #pragma omp single nowait
+    {
+      g_update_gauge_copy = 0;
+    }
+  } else {
+    #pragma omp parallel
+    {
+      #include "function_bodies/update_backward_gauge_halfspinor_body.ic"
+    }
+    g_update_gauge_copy = 0;
+  }
+#endif
   return;
 }
 
 #elif _USE_TSPLITPAR 
 
 void update_backward_gauge(su3 ** const gf) {
-#ifdef OMP
-#pragma omp parallel
-  {
-#endif
-
-  int ix=0, kb=0, kb2=0;
-
-#ifdef OMP
-#pragma omp for
-#endif
-  for(ix = 0; ix < VOLUME/2;ix++) {
-    kb2=g_eo2lexic[ix];
-    _su3_assign(g_gauge_field_copyt[ix][0],gf[kb2][0]);
-    kb=g_idn[g_eo2lexic[ix]][0];
-    _su3_assign(g_gauge_field_copyt[ix][1],gf[kb][0]);
-
-    _su3_assign(g_gauge_field_copys[ix][0],gf[kb2][1]);
-    kb=g_idn[g_eo2lexic[ix]][1];
-    _su3_assign(g_gauge_field_copys[ix][1],gf[kb][1]);
-
-    _su3_assign(g_gauge_field_copys[ix][2],gf[kb2][2]);
-    kb=g_idn[g_eo2lexic[ix]][2];
-    _su3_assign(g_gauge_field_copys[ix][3],gf[kb][2]);
-
-    _su3_assign(g_gauge_field_copys[ix][4],gf[kb2][3]);
-    kb=g_idn[g_eo2lexic[ix]][3];
-    _su3_assign(g_gauge_field_copys[ix][5],gf[kb][3]);
-  }
-#ifdef OMP
-#pragma omp for
-#endif
-  for(ix = (VOLUME+RAND)/2; ix < (VOLUME+RAND)/2+VOLUME/2;ix++) {
-    kb2=g_eo2lexic[ix];
-    _su3_assign(g_gauge_field_copyt[ix][0],gf[kb2][0]);
-    kb=g_idn[g_eo2lexic[ix]][0];
-    _su3_assign(g_gauge_field_copyt[ix][1],gf[kb][0]);
-
-    _su3_assign(g_gauge_field_copys[ix][0],gf[kb2][1]);
-    kb=g_idn[g_eo2lexic[ix]][1];
-    _su3_assign(g_gauge_field_copys[ix][1],gf[kb][1]);
-
-    _su3_assign(g_gauge_field_copys[ix][2],gf[kb2][2]);
-    kb=g_idn[g_eo2lexic[ix]][2];
-    _su3_assign(g_gauge_field_copys[ix][3],gf[kb][2]);
-
-    _su3_assign(g_gauge_field_copys[ix][4],gf[kb2][3]);
-    kb=g_idn[g_eo2lexic[ix]][3];
-    _su3_assign(g_gauge_field_copys[ix][5],gf[kb][3]);
-  }
-
-#ifdef OMP
-  } /* OpenMP closing brace */
-#endif
-
+#ifndef OMP
+  #include "function_bodies/update_backward_gauge_tsplitpar_body.ic"
   g_update_gauge_copy = 0;
+#else
+  if( omp_get_num_threads() > 1 ) {
+    #include "function_bodies/update_backward_gauge_tsplitpar_body.ic"
+    #pragma omp single nowait
+    {
+      g_update_gauge_copy = 0;
+    }
+  } else {
+    #pragma omp parallel
+    {
+      #include "function_bodies/update_backward_gauge_tsplitpar_body.ic"
+    }
+    g_update_gauge_copy = 0;
+  }
+#endif
   return;
 }
 
 #else
 
 void update_backward_gauge(su3 ** const gf) {
-#ifdef OMP
-#pragma omp parallel
-  {
-#endif
-
-  int ix=0, kb=0, kb2=0;
-
-#ifdef OMP
-#pragma omp for
-#endif
-  for(ix = 0; ix < VOLUME/2; ix++) {
-    kb2=g_eo2lexic[ix];
-    _su3_assign(g_gauge_field_copy[ix][0],gf[kb2][0]);
-    kb=g_idn[g_eo2lexic[ix]][0];
-    _su3_assign(g_gauge_field_copy[ix][1],gf[kb][0]);
-
-    _su3_assign(g_gauge_field_copy[ix][2],gf[kb2][1]);
-    kb=g_idn[g_eo2lexic[ix]][1];
-    _su3_assign(g_gauge_field_copy[ix][3],gf[kb][1]);
-
-    _su3_assign(g_gauge_field_copy[ix][4],gf[kb2][2]);
-    kb=g_idn[g_eo2lexic[ix]][2];
-    _su3_assign(g_gauge_field_copy[ix][5],gf[kb][2]);
-
-    _su3_assign(g_gauge_field_copy[ix][6],gf[kb2][3]);
-    kb=g_idn[g_eo2lexic[ix]][3];
-    _su3_assign(g_gauge_field_copy[ix][7],gf[kb][3]);
-  }
-#ifdef OMP
-#pragma omp for
-#endif
-  for(ix = (VOLUME+RAND)/2; ix < (VOLUME+RAND)/2+VOLUME/2; ix++) {
-    kb2=g_eo2lexic[ix];
-    _su3_assign(g_gauge_field_copy[ix][0],gf[kb2][0]);
-    kb=g_idn[g_eo2lexic[ix]][0];
-    _su3_assign(g_gauge_field_copy[ix][1],gf[kb][0]);
-
-    _su3_assign(g_gauge_field_copy[ix][2],gf[kb2][1]);
-    kb=g_idn[g_eo2lexic[ix]][1];
-    _su3_assign(g_gauge_field_copy[ix][3],gf[kb][1]);
-
-    _su3_assign(g_gauge_field_copy[ix][4],gf[kb2][2]);
-    kb=g_idn[g_eo2lexic[ix]][2];
-    _su3_assign(g_gauge_field_copy[ix][5],gf[kb][2]);
-
-    _su3_assign(g_gauge_field_copy[ix][6],gf[kb2][3]);
-    kb=g_idn[g_eo2lexic[ix]][3];
-    _su3_assign(g_gauge_field_copy[ix][7],gf[kb][3]);
-  }
-
-#ifdef OMP
-  } /* OpenMP closing brace */
-#endif
-
+#ifndef OMP
+  #include "function_bodies/update_backward_gauge_fullspinor_body.ic"
   g_update_gauge_copy = 0;
+#else
+  if( omp_get_num_threads() > 1 ) {
+    #include "function_bodies/update_backward_gauge_fullspinor_body.ic"
+    #pragma omp single nowait
+    {
+      g_update_gauge_copy = 0;
+    }
+  } else {
+    #pragma omp parallel
+    {
+      #include "function_bodies/update_backward_gauge_fullspinor_body.ic"
+    }
+    g_update_gauge_copy = 0;
+  }
+#endif
   return;
 }
 
