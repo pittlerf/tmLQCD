@@ -78,27 +78,51 @@ void tm_sub_Hopping_Matrix(const int ieo, spinor * const l, spinor * const p, sp
     update_backward_gauge(g_gauge_field);
   }
 #  endif
-  
-#  ifdef OMP
-#  pragma omp parallel
-  {
-    su3 * restrict u0 ALIGN;
-#  endif
 
-#  define _TM_SUB_HOP
-    spinor * pn;
-#  if (defined BGQ && defined XLC)
+#define _TM_SUB_HOP
+  
+#ifndef OMP
+  spinor * pn;
+  #if (defined BGQ && defined XLC)
     complex double ALIGN bla = cfactor;
     vector4double ALIGN cf = vec_ld2(0, (double*) &bla);
-#  elif (defined SSE2 || defined SSE3)
+  #elif (defined SSE2 || defined SSE3)
     _Complex double ALIGN cf = cfactor;
     su3_vector ALIGN psi, psi2;
-#  endif
-#  include "operator/halfspinor_body.c"
-#  undef _TM_SUB_HOP    
-#  ifdef OMP
-  } /* OpenMP closing brace */
-#  endif
+  #endif
+  #include "operator/halfspinor_body.c"
+#else /* OMP */
+  if( omp_get_num_threads() > 1 ) {
+    su3 * restrict u0 ALIGN;
+    spinor * pn;
+    #if (defined BGQ && defined XLC)
+      complex double ALIGN bla = cfactor;
+      vector4double ALIGN cf = vec_ld2(0, (double*) &bla);
+    #elif (defined SSE2 || defined SSE3)
+      _Complex double ALIGN cf = cfactor;
+      su3_vector ALIGN psi, psi2;
+    #endif
+    #include "operator/halfspinor_body.c"
+  } else {
+    #pragma omp parallel
+    {
+      su3 * restrict u0 ALIGN;
+
+      spinor * pn;
+      #if (defined BGQ && defined XLC)
+        complex double ALIGN bla = cfactor;
+        vector4double ALIGN cf = vec_ld2(0, (double*) &bla);
+      #elif (defined SSE2 || defined SSE3)
+        _Complex double ALIGN cf = cfactor;
+        su3_vector ALIGN psi, psi2;
+      #endif
+      #include "operator/halfspinor_body.c"
+    }
+  }
+#endif /* OMP */
+
+#undef _TM_SUB_HOP    
+
   return;
 }
 
@@ -130,28 +154,56 @@ void tm_sub_Hopping_Matrix(const int ieo, spinor * const l, spinor * p, spinor *
   }
 #  endif
 
-#  if (defined MPI)
-  xchange_field(k, ieo);
-#  endif
-  
-#  ifdef OMP
-#    pragma omp parallel
-  {
-#  endif
-#  define _TM_SUB_HOP
-    spinor * pn;
-#  if (defined BGQ && defined XLC)
+#define _TM_SUB_HOP
+
+#ifndef OMP
+  spinor * pn;
+  #if (defined BGQ && defined XLC)
     complex double ALIGN bla = cfactor;
     vector4double ALIGN cf = vec_ld2(0, (double*) &bla);
-#  elif (defined SSE2 || defined SSE3)
+  #elif (defined SSE2 || defined SSE3)
     _Complex double ALIGN cf = cfactor;
     su3_vector ALIGN psi, psi2;
-#  endif
-#  include "operator/hopping_body_dbl.c"
-#  undef _TM_SUB_HOP
-#  ifdef OMP
-  } /* OpenMP closing brace */
-#  endif
+  #endif
+  #include "operator/hopping_body_dbl.c"
+#else /* OMP */
+  if( omp_get_num_threads() > 1 ) {
+    #if (defined MPI && !(defined _NO_COMM))
+      #pragma omp single
+      {
+        xchange_field(k, ieo);
+      }
+    #endif
+    spinor * pn;
+    #if (defined BGQ && defined XLC)
+      complex double ALIGN bla = cfactor;
+      vector4double ALIGN cf = vec_ld2(0, (double*) &bla);
+    #elif (defined SSE2 || defined SSE3)
+      _Complex double ALIGN cf = cfactor;
+      su3_vector ALIGN psi, psi2;
+    #endif
+    #include "operator/hopping_body_dbl.c"
+  } else {
+    #if (defined MPI && !(defined _NO_COMM))
+      xchange_field(k, ieo);
+    #endif
+    #pragma omp parallel
+    {
+    spinor * pn;
+    #if (defined BGQ && defined XLC)
+      complex double ALIGN bla = cfactor;
+      vector4double ALIGN cf = vec_ld2(0, (double*) &bla);
+    #elif (defined SSE2 || defined SSE3)
+      _Complex double ALIGN cf = cfactor;
+      su3_vector ALIGN psi, psi2;
+    #endif
+    #include "operator/hopping_body_dbl.c"
+    }
+  }
+#endif /* OMP */
+
+#undef _TM_SUB_HOP
+
   return;
 }
 #endif

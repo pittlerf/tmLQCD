@@ -77,25 +77,43 @@ void tm_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k, 
     update_backward_gauge(g_gauge_field);
   }
 #  endif
-  
-#  ifdef OMP
-#  pragma omp parallel
-  {
-    su3 * restrict u0 ALIGN;
-#  endif
 
-#  define _MUL_G5_CMPLX
-#  if (defined BGQ && defined XLC)
+#define _MUL_G5_CMPLX
+
+#ifndef OMP
+  #if (defined BGQ && defined XLC)
     complex double ALIGN bla = cfactor;
     vector4double ALIGN cf = vec_ld2(0, (double*) &bla);
-#  elif (defined SSE2 || defined SSE3)
+  #elif (defined SSE2 || defined SSE3)
     _Complex double ALIGN cf = cfactor;
-#  endif
-#  include "operator/halfspinor_body.c"
-#  undef _MUL_G5_CMPLX    
-#  ifdef OMP
-  } /* OpenMP closing brace */
-#  endif
+  #endif
+  #include "operator/halfspinor_body.c"
+#else /* OMP */
+  if( omp_get_num_threads() > 1 ) {
+    su3 * restrict u0 ALIGN;
+    #if (defined BGQ && defined XLC)
+      complex double ALIGN bla = cfactor;
+      vector4double ALIGN cf = vec_ld2(0, (double*) &bla);
+    #elif (defined SSE2 || defined SSE3)
+      _Complex double ALIGN cf = cfactor;
+    #endif
+    #include "operator/halfspinor_body.c"
+  } else {
+    #pragma omp parallel
+    {
+      su3 * restrict u0 ALIGN;
+      #if (defined BGQ && defined XLC)
+        complex double ALIGN bla = cfactor;
+        vector4double ALIGN cf = vec_ld2(0, (double*) &bla);
+      #elif (defined SSE2 || defined SSE3)
+        _Complex double ALIGN cf = cfactor;
+      #endif
+      #include "operator/halfspinor_body.c"
+    }
+  }
+#endif /* OMP */
+
+#undef _MUL_G5_CMPLX
   return;
 }
 
@@ -120,32 +138,59 @@ void tm_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k, 
 #  ifdef XLC
 #    pragma disjoint(*l, *k)
 #  endif
+
 #  ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
     update_backward_gauge(g_gauge_field);
   }
 #  endif
 
-#  if (defined MPI)
-  xchange_field(k, ieo);
-#  endif
-  
-#  ifdef OMP
-#    pragma omp parallel
-  {
-#  endif
-#  define _MUL_G5_CMPLX
-#  if (defined BGQ && defined XLC)
+#define _MUL_G5_CMPLX
+
+#ifndef OMP
+  #if (defined MPI && !(defined _NO_COMM))
+    xchange_field(k, ieo);
+  #endif
+  #if (defined BGQ && defined XLC)
     complex double ALIGN bla = cfactor;
     vector4double ALIGN cf = vec_ld2(0, (double*) &bla);
-#  elif (defined SSE2 || defined SSE3)
+  #elif (defined SSE2 || defined SSE3)
     _Complex double ALIGN cf = cfactor;
-#  endif
-#  include "operator/hopping_body_dbl.c"
-#  undef _MUL_G5_CMPLX
-#  ifdef OMP
-  } /* OpenMP closing brace */
-#  endif
+  #endif
+  #include "operator/hopping_body_dbl.c"
+#else /* OMP */
+  if( omp_get_num_threads() > 1 ) {
+    #if (defined MPI && !(defined _NO_COMM))
+      #pragma omp single
+      {
+        xchange_field(k, ieo);
+      }
+    #endif
+    #if(defined BGQ && defined XLC)
+      complex double ALIGN bla = cfactor;
+      vector4double ALIGN cf = vec_ld2(0, (double*) &bla);
+    #elif (defined SSE2 || defined SSE3)
+      _Complex double ALIGN cf = cfactor;
+    #endif
+    #include "operator/hopping_body_dbl.c"
+  } else {
+    #if (defined MPI && !(defined _NO_COMM))
+      xchange_field(k, ieo);
+    #endif
+    #pragma omp parallel
+    {
+      #if (defined BGQ && defined XLC)
+        complex double ALIGN bla = cfactor;
+        vector4double ALIGN cf = vec_ld2(0, (double*) &bla);
+      #elif (defined SSE2 || defined SSE3)
+        _Complex double ALIGN cf = cfactor;
+      #endif
+      #include "operator/hopping_body_dbl.c"
+    }
+  }
+#endif /* OMP */
+
+#undef _MUL_G5_CMPLX
   return;
 }
 #endif
