@@ -45,6 +45,9 @@
 #ifdef BGQ
 #  include "bgq.h"
 #endif
+#ifdef OMP
+#  include <omp.h>
+#endif
 
 #include "solver/dirac_operator_eigenvectors.h"
 
@@ -154,10 +157,17 @@ void M_minus_1_timesC(spinor * const Even_new, spinor * const Odd_new,
  * on a half spinor
  ******************************************/
 void Qtm_plus_psi(spinor * const l, spinor * const k){
+  #ifdef OMP
+  #pragma omp parallel
+  {
+  #endif
   Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], k);
   mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], +1., VOLUME/2);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
   mul_one_pm_imu_sub_mul_gamma5(l, k, g_spinor_field[DUM_MATRIX], +1.);
+  #ifdef OMP
+  } /* OpenMP closing brace */
+  #endif
 }
 
 void Qtm_plus_psi_nocom(spinor * const l, spinor * const k){
@@ -198,9 +208,16 @@ void Qtm_plus_sym_psi_nocom(spinor * const l, spinor * const k){
  * on a half spinor
  ******************************************/
 void Qtm_minus_psi(spinor * const l, spinor * const k) {
+  #ifdef OMP
+  #pragma omp parallel
+  {
+  #endif
   H_eo_tm_inv_psi(g_spinor_field[DUM_MATRIX+1], k, EO, -1);
   Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX+2], g_spinor_field[DUM_MATRIX+1]);
   mul_one_pm_imu_sub_mul_gamma5(l, k, g_spinor_field[DUM_MATRIX+2], -1);
+  #ifdef OMP
+  } /* OpenMP closing brace */
+  #endif
   //tm_sub_H_eo_gamma5(l, k, g_spinor_field[DUM_MATRIX+1], OE, -1.);
 }
 
@@ -307,12 +324,19 @@ void Mtm_minus_sym_psi_nocom(spinor * const l, spinor * const k) {
  * on a half spinor
  ******************************************/
 void Qtm_pm_psi(spinor * const l, spinor * const k){
+  #ifdef OMP
+  #pragma omp parallel
+  {
+  #endif
   /* Q_{-} */
   H_eo_tm_inv_psi(g_spinor_field[DUM_MATRIX+1], k, EO, -1);
   tm_sub_H_eo_gamma5(g_spinor_field[DUM_MATRIX], k, g_spinor_field[DUM_MATRIX+1], OE, -1);
   /* Q_{+} */
   H_eo_tm_inv_psi(g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX], EO, +1);
   tm_sub_H_eo_gamma5(l, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1], OE, +1);
+  #ifdef OMP
+  } /* OpenMP closing brace */
+  #endif
 }
 
 void Qtm_pm_sym_psi(spinor * const l, spinor * const k){
@@ -515,62 +539,18 @@ void tm_sub_H_eo_gamma5(spinor* const l, spinor * const p, spinor * const k,
  **********************************************/
 
 void mul_one_pm_imu_inv(spinor * const l, const double _sign, const int N){
-#ifdef OMP
-#pragma omp parallel
-  {
-#endif
-  _Complex double ALIGN z,w;
-  int ix;
-  double sign=-1.; 
-  spinor *r;
-
-  su3_vector ALIGN phi1;
-
-  double ALIGN nrm = 1./(1.+g_mu*g_mu);
-
-  if(_sign < 0.){
-    sign = 1.; 
-  }
-
-  z = nrm + (sign * nrm * g_mu) * I;
-  w = conj(z);
-  /************ loop over all lattice sites ************/
-#ifdef OMP
-#pragma omp for
-#endif
-  for(ix = 0; ix < N; ix++){
-    r=l + ix;
-    /* Multiply the spinorfield with the inverse of 1+imu\gamma_5 */
-#if ( defined SSE2 || defined SSE3 )
-    _prefetch_spinor((r+predist)); 
-    _sse_load_up(r->s0);
-    _sse_vector_cmplx_mul(z);
-    _sse_store_nt_up(r->s0);
-    _sse_load_up(r->s1);
-    _sse_vector_cmplx_mul_two();
-    _sse_store_nt_up(r->s1);
-    _sse_load_up(r->s2);
-    _sse_vector_cmplx_mul(w);
-    _sse_store_nt_up(r->s2);
-    _sse_load_up(r->s3);
-    _sse_vector_cmplx_mul_two();
-    _sse_store_nt_up(r->s3);
+#ifndef OMP
+  #include "operator/function_bodies/mul_one_pm_imu_inv_body.ic"
 #else
-    _complex_times_vector(phi1, z, r->s0);
-    _vector_assign(r->s0, phi1);
-    _complex_times_vector(phi1, z, r->s1);
-    _vector_assign(r->s1, phi1);
-    _complex_times_vector(phi1, w, r->s2);
-    _vector_assign(r->s2, phi1);
-    _complex_times_vector(phi1, w, r->s3);
-    _vector_assign(r->s3, phi1);
-#endif
+  if( omp_get_num_threads() > 1 ) {
+    #include "operator/function_bodies/mul_one_pm_imu_inv_body.ic"
+  } else {
+    #pragma omp parallel
+    {
+      #include "operator/function_bodies/mul_one_pm_imu_inv_body.ic"
+    }
   }
-
-#ifdef OMP
-  } /* OpenMP closing brace */
 #endif
-
 }
 
 void assign_mul_one_pm_imu_inv(spinor * const l, spinor * const k, const double _sign, const int N){
@@ -739,121 +719,34 @@ void mul_one_sub_mul_gamma5(spinor * const l, spinor * const k,
 
 void mul_one_pm_imu_sub_mul_gamma5(spinor * const l, spinor * const k, 
 				   spinor * const j, const double _sign){
-#ifdef OMP
-#pragma omp parallel
-  {
-#endif
-  _Complex double z,w;
-  int ix;
-  double sign=1.;
-  spinor *r, *s, *t;
-
-  su3_vector ALIGN phi1, phi2, phi3, phi4;
-
-  if(_sign < 0.){
-    sign = -1.;
+#ifndef OMP
+  #include "operator/function_bodies/mul_one_pm_imu_sub_mul_gamma5_body.ic"
+#else
+  if( omp_get_num_threads() > 1 ) {
+    #include "operator/function_bodies/mul_one_pm_imu_sub_mul_gamma5_body.ic"
+  } else {
+    #pragma omp parallel
+    {
+      #include "operator/function_bodies/mul_one_pm_imu_sub_mul_gamma5_body.ic"
+    }
   }
-
-  z = 1. + (sign * g_mu) * I;
-  w = conj(z);
-  
-  /************ loop over all lattice sites ************/
-#ifdef OMP
-#pragma omp for
-#endif
-  for(ix = 0; ix < (VOLUME/2); ix++){
-    r = k+ix;
-    s = j+ix;
-    t = l+ix;
-    /* Multiply the spinorfield with 1+imu\gamma_5 */
-    _complex_times_vector(phi1, z, r->s0);
-    _complex_times_vector(phi2, z, r->s1);
-    _complex_times_vector(phi3, w, r->s2);
-    _complex_times_vector(phi4, w, r->s3);
-    /* Subtract s and store the result in t */
-    /* multiply with  gamma5 included by    */
-    /* reversed order of s and phi3|4       */
-    _vector_sub(t->s0, phi1, s->s0);
-    _vector_sub(t->s1, phi2, s->s1);
-    _vector_sub(t->s2, s->s2, phi3);
-    _vector_sub(t->s3, s->s3, phi4);
-  }
-
-#ifdef OMP
-  } /* OpenMP closing brace */
 #endif
 }
 
 void mul_one_pm_imu_sub_mul(spinor * const l, spinor * const k, 
 			    spinor * const j, const double _sign, const int N){
-#ifdef OMP
-#pragma omp parallel
-  {
-#endif
-  _Complex double z,w;
-  int ix;
-  double sign=1.;
-  spinor *r, *s, *t;
 
-#if (!defined SSE2 && !defined SSE3)
-
-  su3_vector ALIGN phi1, phi2, phi3, phi4;
-  
-#endif
-
-  if(_sign < 0.){
-    sign = -1.;
-  }
-
-  z = 1. + (sign * g_mu) * I;
-  w = conj(z);
-  /************ loop over all lattice sites ************/
-#ifdef OMP
-#pragma omp for
-#endif
-  for(ix = 0; ix < N; ix++){
-    r = k+ix;
-    s = j+ix;
-    t = l+ix;
-    /* Multiply the spinorfield with 1+imu\gamma_5 */
-#if (defined SSE2 || defined SSE3)
-    _prefetch_spinor((r+predist));
-    _prefetch_spinor((s+predist));
-    _sse_load_up(r->s0);
-    _sse_vector_cmplx_mul(z);
-    _sse_load(s->s0);
-    _sse_vector_sub_up();
-    _sse_store_nt_up(t->s0);
-    _sse_load_up(r->s1);
-    _sse_vector_cmplx_mul_two();
-    _sse_load(s->s1);
-    _sse_vector_sub_up();
-    _sse_store_nt_up(t->s1);
-    _sse_load_up(r->s2);
-    _sse_vector_cmplx_mul(w);
-    _sse_load(s->s2);
-    _sse_vector_sub_up();
-    _sse_store_nt_up(t->s2);
-    _sse_load_up(r->s3);
-    _sse_vector_cmplx_mul_two();
-    _sse_load(s->s3);
-    _sse_vector_sub_up();
-    _sse_store_nt_up(t->s3);
+#ifndef OMP
+  #include "operator/function_bodies/mul_one_pm_imu_sub_mul_body.ic"
 #else
-    _complex_times_vector(phi1, z, r->s0);
-    _complex_times_vector(phi2, z, r->s1);
-    _complex_times_vector(phi3, w, r->s2);
-    _complex_times_vector(phi4, w, r->s3);
-    /* Subtract s and store the result in t */
-    _vector_sub(t->s0, phi1, s->s0);
-    _vector_sub(t->s1, phi2, s->s1);
-    _vector_sub(t->s2, phi3, s->s2);
-    _vector_sub(t->s3, phi4, s->s3);
-#endif
+  if( omp_get_num_threads() > 1 ) {
+    #include "operator/function_bodies/mul_one_pm_imu_sub_mul_body.ic"
+  } else {
+    #pragma omp parallel
+    {
+      #include "operator/function_bodies/mul_one_pm_imu_sub_mul_body.ic"
+    }
   }
-
-#ifdef OMP
-  } /* OpenMP closing brace */
 #endif
 }
 

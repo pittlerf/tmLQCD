@@ -1,0 +1,63 @@
+// mul_one_pm_imu_sub_mul_body
+
+_Complex double z,w;
+  int ix;
+  double sign=1.;
+  spinor *r, *s, *t;
+
+#if (!defined SSE2 && !defined SSE3)
+
+  su3_vector ALIGN phi1, phi2, phi3, phi4;
+  
+#endif
+
+  if(_sign < 0.){
+    sign = -1.;
+  }
+
+  z = 1. + (sign * g_mu) * I;
+  w = conj(z);
+  /************ loop over all lattice sites ************/
+#ifdef OMP
+#pragma omp for
+#endif
+  for(ix = 0; ix < N; ix++){
+    r = k+ix;
+    s = j+ix;
+    t = l+ix;
+    /* Multiply the spinorfield with 1+imu\gamma_5 */
+#if (defined SSE2 || defined SSE3)
+    _prefetch_spinor((r+predist));
+    _prefetch_spinor((s+predist));
+    _sse_load_up(r->s0);
+    _sse_vector_cmplx_mul(z);
+    _sse_load(s->s0);
+    _sse_vector_sub_up();
+    _sse_store_nt_up(t->s0);
+    _sse_load_up(r->s1);
+    _sse_vector_cmplx_mul_two();
+    _sse_load(s->s1);
+    _sse_vector_sub_up();
+    _sse_store_nt_up(t->s1);
+    _sse_load_up(r->s2);
+    _sse_vector_cmplx_mul(w);
+    _sse_load(s->s2);
+    _sse_vector_sub_up();
+    _sse_store_nt_up(t->s2);
+    _sse_load_up(r->s3);
+    _sse_vector_cmplx_mul_two();
+    _sse_load(s->s3);
+    _sse_vector_sub_up();
+    _sse_store_nt_up(t->s3);
+#else
+    _complex_times_vector(phi1, z, r->s0);
+    _complex_times_vector(phi2, z, r->s1);
+    _complex_times_vector(phi3, w, r->s2);
+    _complex_times_vector(phi4, w, r->s3);
+    /* Subtract s and store the result in t */
+    _vector_sub(t->s0, phi1, s->s0);
+    _vector_sub(t->s1, phi2, s->s1);
+    _vector_sub(t->s2, phi3, s->s2);
+    _vector_sub(t->s3, phi4, s->s3);
+#endif
+  }
