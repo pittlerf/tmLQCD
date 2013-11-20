@@ -44,11 +44,7 @@ int init_gauge_tmp(const int V) {
     errno = 0;
     return(1);
   }
-#if (defined SSE || defined SSE2 || defined SSE3)
   gauge_tmp[0] = (su3*)(((unsigned long int)(gauge_tmp_)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  gauge_tmp[0] = gauge_tmp_;
-#endif
   for(i = 1; i < V; i++){
     gauge_tmp[i] = gauge_tmp[i-1]+4;
   }
