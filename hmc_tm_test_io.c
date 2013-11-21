@@ -78,10 +78,7 @@ static void set_default_filenames(char ** input_filename, char ** filename);
 
 int main(int argc,char *argv[]) {
 
-  FILE *parameterfile=NULL, *countfile=NULL;
   char *filename = NULL;
-  char datafilename[206];
-  char parameterfilename[206];
   char gauge_filename[50];
   char nstore_filename[50];
   char tmp_filename[50];
@@ -151,36 +148,10 @@ int main(int argc,char *argv[]) {
   init_openmp();
 #endif
 
-  DUM_DERI = 4;
-  DUM_SOLVER = DUM_DERI+1;
-  DUM_MATRIX = DUM_SOLVER+6;
-  if(g_running_phmc) {
-    NO_OF_SPINORFIELDS = DUM_MATRIX+8;
-  }
-  else {
-    NO_OF_SPINORFIELDS = DUM_MATRIX+6;
-  }
-  DUM_BI_DERI = 6;
-  DUM_BI_SOLVER = DUM_BI_DERI+7;
-
-  DUM_BI_MATRIX = DUM_BI_SOLVER+6;
-  NO_OF_BISPINORFIELDS = DUM_BI_MATRIX+6;
-
   tmlqcd_mpi_init(argc, argv);
 
-  if(nstore == -1) {
-    countfile = fopen(nstore_filename, "r");
-    if(countfile != NULL) {
-      j = fscanf(countfile, "%d %d %s\n", &nstore, &trajectory_counter, gauge_input_filename);
-      if(j < 1) nstore = 0;
-      if(j < 2) trajectory_counter = 0;
-      fclose(countfile);
-    }
-    else {
-      nstore = 0;
-      trajectory_counter = 0;
-    }
-  }
+  nstore = 0;
+  trajectory_counter = 0;
   
 #ifndef MPI
   g_dbw2rand = 0;
@@ -205,51 +176,9 @@ int main(int argc,char *argv[]) {
     fprintf(stderr, "Not enough memory for geometry_indices! Aborting...\n");
     exit(0);
   }
-  if(even_odd_flag) {
-    j = init_spinor_field(VOLUMEPLUSRAND/2, NO_OF_SPINORFIELDS);
-  }
-  else {
-    j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
-  }
-  if (j != 0) {
-    fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
-    exit(0);
-  }
-  if(even_odd_flag) {
-    j = init_csg_field(VOLUMEPLUSRAND/2);
-  }
-  else {
-    j = init_csg_field(VOLUMEPLUSRAND);
-  }
-  if (j != 0) {
-    fprintf(stderr, "Not enough memory for csg fields! Aborting...\n");
-    exit(0);
-  }
-  j = init_moment_field(VOLUME, VOLUMEPLUSRAND + g_dbw2rand);
-  if (j != 0) {
-    fprintf(stderr, "Not enough memory for moment fields! Aborting...\n");
-    exit(0);
-  }
-
-  if(g_running_phmc) {
-    j = init_bispinor_field(VOLUME/2, NO_OF_BISPINORFIELDS);
-    if (j!= 0) {
-      fprintf(stderr, "Not enough memory for bi-spinor fields! Aborting...\n");
-      exit(0);
-    }
-  }
-
-  /*construct the filenames for the observables and the parameters*/
-  strncpy(datafilename,filename,200);  
-  strcat(datafilename,".data");
-  strncpy(parameterfilename,filename,200);  
-  strcat(parameterfilename,".para");
 
   /* define the geometry */
   geometry();
-
-  /* define the boundary conditions for the fermion fields */
-  boundary(g_kappa);
 
   status = check_geometry();
 
@@ -258,146 +187,112 @@ int main(int argc,char *argv[]) {
     exit(1);
   }
 
-#ifdef _USE_HALFSPINOR
-  j = init_dirac_halfspinor();
-  if (j!= 0) {
-    fprintf(stderr, "Not enough memory for halffield! Aborting...\n");
-    exit(-1);
-  }
-  if(g_sloppy_precision_flag == 1) {
-    init_dirac_halfspinor32();
-  }
-#  if (defined _PERSISTENT)
-  init_xchange_halffield();
-#  endif
-#endif
-
   /* Initialise random number generator */
   start_ranlux(rlxd_level, random_seed^trajectory_counter);
 
   /* Set up the gauge field */
-  /* continue and restart */
-  if(startoption==3 || startoption == 2) {
-    if(g_proc_id == 0) {
-      printf("# Trying to read gauge field from file %s in %s precision.\n",
-            gauge_input_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
-      fflush(stdout);
-    }
-    if( (status = read_gauge_field(gauge_input_filename,g_gauge_field)) != 0) {
-      fprintf(stderr, "Error %d while reading gauge field from %s\nAborting...\n", status, gauge_input_filename);
-      exit(-2);
-    }
-
-    if (g_proc_id == 0){
-      printf("# Finished reading gauge field.\n");
-      fflush(stdout);
-    }
-  }
-  else if (startoption == 1) {
-    /* hot */
-    random_gauge_field(reproduce_randomnumber_flag, g_gauge_field);
-  }
-  else if(startoption == 0) {
-    /* cold */
-    unit_g_gauge_field();
-  }
+  random_gauge_field(reproduce_randomnumber_flag, g_gauge_field);
 
   /*For parallelization: exchange the gaugefield */
 #ifdef MPI
   xchange_gauge(g_gauge_field);
 #endif
 
-  plaquette_energy = measure_gauge_action( (const su3**) g_gauge_field);
-  if(g_rgi_C1 > 0. || g_rgi_C1 < 0.) {
-    rectangle_energy = measure_rectangles( (const su3**) g_gauge_field);
-  }
 
-  if(g_proc_id == 0) {
-    printf("# Computed plaquette value: %14.12f.\n", plaquette_energy/(6.*VOLUME*g_nproc));
-  }
-
-  /* Loop for trajectories */
-  for(j = 0; j < Nmeas; j++) {
-    if(g_proc_id == 0) {
-      printf("#\n# Starting trajectory no %d\n", trajectory_counter);
-    }
-
-    sprintf(gauge_filename,"conf.%.4d", nstore);
-    nstore ++;
-    for (unsigned int attempt = 1; attempt <= io_max_attempts; ++attempt)
-    {
-      if (g_proc_id == 0) fprintf(stdout, "# Writing gauge field to %s.\n", tmp_filename);
-
-      xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
-      status = write_gauge_field( tmp_filename, gauge_precision_write_flag, xlfInfo);
-      free(xlfInfo);
-          
-      if (status) {
-        /* Writing the gauge field failed directly */
-        fprintf(stderr, "Error %d while writing gauge field to %s\nAborting...\n", status, tmp_filename);
-        exit(-2);
+  /* Writing errors will happen for i=1 */
+  for(int i = 0; i < 2; i++) {
+    /* Loop for "trajectories" */
+    for(j = 0; j < 50; j++) {
+      if(g_proc_id == 0) {
+        printf("#\n# Starting trajectory no %d\n", trajectory_counter);
       }
-          
-      /* Read gauge field back to verify the writeout */
-      if (g_proc_id == 0) fprintf(stdout, "# Write completed, verifying write...\n");
 
-      for(int read_attempt = 0; read_attempt < 2; ++read_attempt) {
-        status = read_gauge_field(tmp_filename,gauge_tmp);        
-        if (!status) {
-          if (g_proc_id == 0) fprintf(stdout, "# Write successfully verified.\n");
-          break; // out of read attempt loop
-        } else {
-          if(g_proc_id==0) {
-            if(read_attempt+1 < 2) {
-              fprintf(stdout, "# Reread attempt %d out of %d failed, trying again in %d seconds!\n",read_attempt+1,2,2);
-            } else {
-              fprintf(stdout, "$ Reread attept %d out of %d failed, write will be reattempted!\n",read_attempt+1,2,2);
+      sprintf(gauge_filename,"conf.%.4d", nstore);
+      nstore++;
+      
+      /* we write to tmp_filename, when i==0, we write to a different file in each iteration
+         otherwise we write to the same one */
+      if(i==0) {
+        sprintf(tmp_filename,".conf.%.4d.tmp", trajectory_counter);
+      } else {
+        sprintf(tmp_filename,".conf.tmp");
+      }
+      
+      /* loop over writing attempts */ 
+      for (unsigned int attempt = 1; attempt <= io_max_attempts; ++attempt)
+      {
+        if (g_proc_id == 0) fprintf(stdout, "# Writing gauge field to %s.\n", tmp_filename);
+        
+        xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
+        status = write_gauge_field( tmp_filename, gauge_precision_write_flag, xlfInfo);
+        free(xlfInfo);
+          
+        if (status) {
+          /* Writing the gauge field failed directly */
+          fprintf(stderr, "Error %d while writing gauge field to %s\nAborting...\n", status, tmp_filename);
+          exit(-2);
+        }
+         
+        /* Read gauge field back to verify the writeout */
+        if (g_proc_id == 0) fprintf(stdout, "# Write completed, verifying write...\n");
+
+        /* we attempt to reread the file twice if the checksum doesn't come out right */
+        for(int read_attempt = 0; read_attempt < 2; ++read_attempt) {
+          status = read_gauge_field(tmp_filename,gauge_tmp);        
+          if (!status) {
+            if (g_proc_id == 0) fprintf(stdout, "# Write successfully verified.\n");
+            break; // out of read attempt loop
+          } else {
+            if(g_proc_id==0) {
+              if(read_attempt+1 < 2) {
+                fprintf(stdout, "# Reread attempt %d out of %d failed, trying again in %d seconds!\n",read_attempt+1,2,2);
+              } else {
+                fprintf(stdout, "$ Reread attept %d out of %d failed, write will be reattempted!\n",read_attempt+1,2);
+              }
             }
+          sleep(2);
           }
-        sleep(2);
+        }
+
+        /* we broke out of the read attempt loop, still need to break out of the write attempt loop ! */
+        if(!status) {
+          break;
+        } 
+
+        if (g_proc_id == 0) {
+          fprintf(stdout, "# Writeout of %s returned no error, but verification discovered errors.\n", tmp_filename);
+          fprintf(stdout, "# Potential disk or MPI I/O error.\n");
+          fprintf(stdout, "# This was writing attempt %d out of %d.\n", attempt, io_max_attempts);
+        }
+
+        if (attempt == io_max_attempts)
+          kill_with_error(NULL, g_proc_id, "Persistent I/O failures!\n");
+
+        if (g_proc_id == 0)
+          fprintf(stdout, "# Will attempt to write again in %d seconds.\n", io_timeout);
+         
+        sleep(io_timeout);
+#ifdef MPI
+        MPI_Barrier(MPI_COMM_WORLD);
+#endif
+      }
+
+      /* Now move tmp_filename into place */
+      if(g_proc_id == 0) {
+        fprintf(stdout, "# Renaming %s to %s.\n", tmp_filename, gauge_filename);
+        if (rename(tmp_filename, gauge_filename) != 0) {
+          /* Errno can be inspected here for more descriptive error reporting */
+          fprintf(stderr, "Error while trying to rename temporary file %s to %s. Unable to proceed.\n", tmp_filename, gauge_filename);
+          exit(-2);
         }
       }
 
-      /* we broke out of the read attempt loop, still need to break out of the write attempt loop ! */
-      if(!status) {
-        break;
-      } 
-
-      if (g_proc_id == 0) {
-        fprintf(stdout, "# Writeout of %s returned no error, but verification discovered errors.\n", tmp_filename);
-        fprintf(stdout, "# Potential disk or MPI I/O error.\n");
-        fprintf(stdout, "# This was writing attempt %d out of %d.\n", attempt, io_max_attempts);
-      }
-
-      if (attempt == io_max_attempts)
-        kill_with_error(NULL, g_proc_id, "Persistent I/O failures!\n");
-
-      if (g_proc_id == 0)
-        fprintf(stdout, "# Will attempt to write again in %d seconds.\n", io_timeout);
-       
-      sleep(io_timeout);
 #ifdef MPI
       MPI_Barrier(MPI_COMM_WORLD);
 #endif
-    }
-    /* Now move .conf.tmp into place */
-    if(g_proc_id == 0) {
-      fprintf(stdout, "# Renaming %s to %s.\n", tmp_filename, gauge_filename);
-      if (rename(tmp_filename, gauge_filename) != 0) {
-        /* Errno can be inspected here for more descriptive error reporting */
-        fprintf(stderr, "Error while trying to rename temporary file %s to %s. Unable to proceed.\n", tmp_filename, gauge_filename);
-        exit(-2);
-      }
-      countfile = fopen(nstore_filename, "w");
-      fprintf(countfile, "%d %d %s\n", nstore, trajectory_counter+1, gauge_filename);
-      fclose(countfile);
-    }
-
-#ifdef MPI
-    MPI_Barrier(MPI_COMM_WORLD);
-#endif
-    trajectory_counter++;
-  } /* end of loop over trajectories */
+      trajectory_counter++;
+    } /* end of loop over trajectories */
+  } /* loop over i */
 
 #ifdef OMP
   free_omp_accumulators();
