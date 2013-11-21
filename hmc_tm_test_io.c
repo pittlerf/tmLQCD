@@ -49,8 +49,6 @@
 #include "ranlxd.h"
 #include "geometry_eo.h"
 #include "start.h"
-#include "measure_gauge_action.h"
-#include "measure_rectangles.h"
 #ifdef MPI
 # include "xchange/xchange.h"
 #endif
@@ -61,12 +59,7 @@
 #include "init/init.h"
 #include "test/check_geometry.h"
 #include "boundary.h"
-#include "phmc.h"
-#include "solver/solver.h"
-#include "monomial/monomial.h"
-#include "integrator.h"
 #include "sighandler.h"
-#include "measurements.h"
 
 extern int nstore;
 
@@ -80,42 +73,16 @@ int main(int argc,char *argv[]) {
 
   char *filename = NULL;
   char gauge_filename[50];
-  char nstore_filename[50];
   char tmp_filename[50];
   char *input_filename = NULL;
   int status = 0, accept = 0;
   int j,ix,mu, trajectory_counter=0;
   unsigned int const io_max_attempts = 5; /* Make this configurable? */
   unsigned int const io_timeout = 5; /* Make this configurable? */
-  struct timeval t1;
-
-  /* Energy corresponding to the Gauge part */
-  double plaquette_energy = 0., rectangle_energy = 0.;
-  /* Acceptance rate */
-  int Rate=0;
-  /* Do we want to perform reversibility checks */
-  /* See also return_check_flag in read_input.h */
-  int return_check = 0;
-  /* For getopt */
-  int c;
 
   paramsXlfInfo *xlfInfo;
 
-/* For online measurements */
-  measurement * meas;
-  int imeas;
-  
-#ifdef _KOJAK_INST
-#pragma pomp inst init
-#pragma pomp inst begin(main)
-#endif
-
-#if (defined SSE || defined SSE2 || SSE3)
-  signal(SIGILL,&catch_ill_inst);
-#endif
-
   strcpy(gauge_filename,"conf.save");
-  strcpy(nstore_filename,".nstore_counter");
   strcpy(tmp_filename, ".conf.tmp");
 
   verbose = 1;
@@ -202,7 +169,7 @@ int main(int argc,char *argv[]) {
   /* Writing errors will happen for i=1 */
   for(int i = 0; i < 2; i++) {
     /* Loop for "trajectories" */
-    for(j = 0; j < 50; j++) {
+    for(j = 0; j < 25; j++) {
       if(g_proc_id == 0) {
         printf("#\n# Starting trajectory no %d\n", trajectory_counter);
       }
@@ -210,8 +177,9 @@ int main(int argc,char *argv[]) {
       sprintf(gauge_filename,"conf.%.4d", nstore);
       nstore++;
       
-      /* we write to tmp_filename, when i==0, we write to a different file in each iteration
-         otherwise we write to the same one */
+      /* we write to tmp_filename, when i==0, we write to a different filename in each iteration
+         otherwise we write to the same one, note that .conf.tmp is renamed further below
+         if the write was successful and our checksum is confirmed correct */
       if(i==0) {
         sprintf(tmp_filename,".conf.%.4d.tmp", trajectory_counter);
       } else {
@@ -223,7 +191,7 @@ int main(int argc,char *argv[]) {
       {
         if (g_proc_id == 0) fprintf(stdout, "# Writing gauge field to %s.\n", tmp_filename);
         
-        xlfInfo = construct_paramsXlfInfo(plaquette_energy/(6.*VOLUME*g_nproc), trajectory_counter);
+        xlfInfo = construct_paramsXlfInfo(0.5, trajectory_counter);
         status = write_gauge_field( tmp_filename, gauge_precision_write_flag, xlfInfo);
         free(xlfInfo);
           
@@ -300,13 +268,6 @@ int main(int argc,char *argv[]) {
   free_gauge_tmp();
   free_gauge_field();
   free_geometry_indices();
-  free_spinor_field();
-  free_moment_field();
-  free_monomials();
-  if(g_running_phmc) {
-    free_bispinor_field();
-    free_chi_spinor_field();
-  }
   free(input_filename);
   free(filename);
 #ifdef MPI
@@ -314,13 +275,10 @@ int main(int argc,char *argv[]) {
   MPI_Finalize();
 #endif
   return(0);
-#ifdef _KOJAK_INST
-#pragma pomp inst end(main)
-#endif
 }
 
 static void usage(){
-  fprintf(stdout, "HMC for Wilson twisted mass QCD\n");
+  fprintf(stdout, "IO Test based on HMC for Wilson twisted mass QCD\n");
   fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
   fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
   fprintf(stdout, "Usage:   hmc_tm [options]\n");
