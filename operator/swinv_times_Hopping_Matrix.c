@@ -71,7 +71,7 @@
 
 #  endif
 
-void swinv_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k) {
+void swinv_times_Hopping_Matrix(const int ieo, spinor * const l, spinor * const k, const double mu) {
   
 #  ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
