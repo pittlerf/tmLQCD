@@ -280,7 +280,7 @@ void sw_all(hamiltonian_field_t * const hf, const double kappa,
 
 /* threadsafe accumulation of derivatives */
 #ifdef OMP
-#pragma omp for
+#pragma omp for nowait
   for(int x = 0; x < VOLUMEPLUSRAND; ++x) {
     for(int mu = 0; mu < 4; ++mu) {
       for(int dir = 0; dir < 40; ++dir) {
