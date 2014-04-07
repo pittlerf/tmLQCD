@@ -1,6 +1,6 @@
 /***********************************************************************
  *
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ * Copyright (C) 2014 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -36,55 +36,27 @@
 #include <time.h>
 #include <string.h>
 #include <signal.h>
-#ifdef MPI
-#include <mpi.h>
-#endif
-#ifdef OMP
-# include <omp.h>
-#endif
 #include "global.h"
 #include "git_hash.h"
 #include "getopt.h"
 #include "linalg_eo.h"
 #include "geometry_eo.h"
 #include "start.h"
-/*#include "eigenvalues.h"*/
 #include "measure_gauge_action.h"
-#ifdef MPI
-#include "xchange/xchange.h"
-#endif
 #include <io/utils.h>
 #include "read_input.h"
 #include "mpi_init.h"
 #include "sighandler.h"
 #include "boundary.h"
-#include "solver/solver.h"
 #include "init/init.h"
 #include "dirty_shameful_business.h"
-#include <smearing/control.h>
 #include "invert_eo.h"
-#include "monomial/monomial.h"
 #include "ranlxd.h"
-#include "phmc.h"
-#include "operator/D_psi.h"
-#include "little_D.h"
-#include "reweighting_factor.h"
-#include "linalg/convert_eo_to_lexic.h"
-#include "block.h"
-#include "operator.h"
 #include "sighandler.h"
-#include "solver/dfl_projector.h"
-#include "solver/generate_dfl_subspace.h"
-#include <measurements/prepare_source.h>
 #include <io/params.h>
 #include <io/gauge.h>
 #include <io/spinor.h>
 #include <io/utils.h>
-#include "solver/dirac_operator_eigenvectors.h"
-#include "P_M_eta.h"
-#include "operator/tm_operators.h"
-#include "operator/Dov_psi.h"
-#include "solver/spectral_proj.h"
 
 extern int nstore;
 int check_geometry();
@@ -120,10 +92,6 @@ int main(int argc, char *argv[])
     exit(-1);
   }
 
-#ifdef OMP
-  init_openmp();
-#endif
-
   if (Nsave == 0) {
     Nsave = 1;
   }
@@ -136,10 +104,6 @@ int main(int argc, char *argv[])
   /* starts the single and double precision random number */
   /* generator                                            */
   start_ranlux(rlxd_level, random_seed);
-
-#ifndef MPI
-  g_dbw2rand = 0;
-#endif
 
   j = init_gauge_field(VOLUMEPLUSRAND, 0);
   
@@ -180,10 +144,6 @@ int main(int argc, char *argv[])
       fflush(stdout);
     }
     
-    #ifdef MPI
-    xchange_gauge(g_gauge_field);
-    #endif
-   
     /*compute the energy of the gauge field*/
     plaquette_energy = measure_gauge_action(_AS_GAUGE_FIELD_T(g_gauge_field));
     if (g_cart_id == 0) {
@@ -239,13 +199,6 @@ int main(int argc, char *argv[])
 
   return_gauge_field(&g_gf);
   return_gauge_field(&tmp_gauge);
-
-#ifdef MPI
-  MPI_Finalize();
-#endif
-#ifdef OMP
-  free_omp_accumulators();
-#endif
 
   free_geometry_indices();
   finalize_gauge_buffers();
