@@ -65,7 +65,8 @@ GPUOBJECTS := $(patsubst $(srcdir)/$(GPUDIR)/%.cu, $(GPUDIR)/%.o, $(GPUSOURCES))
 NOOPTMOD = test/check_xchange test/check_geometry
 
 PROGRAMS = hmc_tm benchmark invert gen_sources  \
-	check_locallity test_io test_lemon hopping_test LapH_ev
+	check_locallity test_io test_lemon hopping_test LapH_ev \
+  shift_gauge_field
 
 ALLOBJ = ${MODULES} ${PROGRAMS} ${SMODULES}
 SUBDIRS = ${USESUBDIRS}

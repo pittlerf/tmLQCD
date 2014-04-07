@@ -243,6 +243,9 @@ EXTERN int g_nb_z_up, g_nb_z_dn;
 EXTERN int omp_num_threads;
 #endif
 
+// variables to hold shifts in the different directions
+EXTERN int g_t_shift, g_x_shift, g_y_shift, g_z_shift;
+
 /* something to evaluate time elaps */
 EXTERN double DeltaTtot, DeltaTcd, DeltaTev;
 EXTERN int counter_Spsi;

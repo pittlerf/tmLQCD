@@ -168,6 +168,8 @@ EQL {SPC}*={SPC}*
   int dfl_poly_iter;
 
   int use_preconditioning;
+
+  int g_t_shift, g_x_shift, g_y_shift, g_z_shift;
   
   static void rmQuotes(char *str)
   {
@@ -421,6 +423,11 @@ EQL {SPC}*={SPC}*
 %x SMEARING_STOUT_3D
 %x SMEARING_UNITARY
 
+%x TSHIFT
+%x XSHIFT
+%x YSHIFT
+%x ZSHIFT
+
 %%
 ^SourceFilename{EQL}               BEGIN(SOURCEFILE);
 ^T{EQL}                            BEGIN(TT);
@@ -428,6 +435,10 @@ EQL {SPC}*={SPC}*
 ^LX{EQL}                           BEGIN(LLX);
 ^LY{EQL}                           BEGIN(LLY);
 ^LZ{EQL}                           BEGIN(LLZ);
+^TShift{EQL}                       BEGIN(TSHIFT);
+^XShift{EQL}                       BEGIN(XSHIFT);
+^YShift{EQL}                       BEGIN(YSHIFT);
+^ZShift{EQL}                       BEGIN(ZSHIFT);
 ^NRXProcs{EQL}                     BEGIN(NPROCX);
 ^NRYProcs{EQL}                     BEGIN(NPROCY);
 ^NRZProcs{EQL}                     BEGIN(NPROCZ);
@@ -2039,6 +2050,22 @@ EQL {SPC}*={SPC}*
 <REWSAMPLES>{DIGIT}+ {
   reweighting_samples = atoi(yytext);
   if(myverbose!=0) fprintf(stderr, "Number of reweighting samples set to %d\n", reweighting_samples);
+}
+<TSHIFT>{DIGIT}+ {
+  g_t_shift = atoi(yytext);
+  if(myverbose!=0) fprintf(stderr, "Shift gauge field by %d in T direction.\n", g_t_shift);
+}
+<XSHIFT>{DIGIT}+ {
+  g_x_shift = atoi(yytext);
+  if(myverbose!=0) fprintf(stderr, "Shift gauge field by %d in X direction.\n", g_x_shift);
+}
+<YSHIFT>{DIGIT}+ {
+  g_y_shift = atoi(yytext);
+  if(myverbose!=0) fprintf(stderr, "Shift gauge field by %d in Y direction.\n", g_y_shift);
+}
+<ZSHIFT>{DIGIT}+ {
+  g_z_shift = atoi(yytext);
+  if(myverbose!=0) fprintf(stderr, "Shift gauge field by %d in Z direction.\n", g_z_shift);
 }
 
 <*>^#   {
