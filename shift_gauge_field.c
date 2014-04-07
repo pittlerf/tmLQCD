@@ -147,24 +147,24 @@ int main(int argc, char *argv[])
     /*compute the energy of the gauge field*/
     plaquette_energy = measure_gauge_action(_AS_GAUGE_FIELD_T(g_gauge_field));
     if (g_cart_id == 0) {
-      printf("# The computed ORIGINAL plaquette value is %e.\n", plaquette_energy / (6.*VOLUME*g_nproc));
+      printf("# The computed ORIGINAL plaquette value is %.12e.\n", plaquette_energy / (6.*VOLUME*g_nproc));
       fflush(stdout);
     }
 
     // shift gauge field by shifts defined in the input file
-    unsigned int shifted_index;
-    unsigned int original_index;
+    int shifted_index;
+    int original_index;
     su3 *orig, *shifted;
-    for(unsigned int t=0; t<T; ++t){
-      for(unsigned int x=0; x<LX; ++x){
-        for(unsigned int y=0; y<LY; ++y){
-          for(unsigned int z=0; z<LZ; ++z){
+    for(int t=0; t<T; ++t){
+      for(int x=0; x<LX; ++x){
+        for(int y=0; y<LY; ++y){
+          for(int z=0; z<LZ; ++z){
             original_index = Index(t,x,y,z); 
-            shifted_index = Index( abs( (t+g_t_shift)%T ) ,
-                                   abs( (x+g_x_shift)%LX ) ,
-                                   abs( (y+g_y_shift)%LY ) ,
-                                   abs( (z+g_z_shift)%LZ ) );
-            for(unsigned int mu=0; mu<4; mu++){
+            shifted_index = Index( (t+g_t_shift)%T < 0 ? T+(t+g_t_shift)%T : (t+g_t_shift)%T ,
+                                   (x+g_x_shift)%LX < 0 ? LX+(x+g_x_shift)%LX : (x+g_x_shift)%LX ,
+                                   (y+g_y_shift)%LY < 0 ? LY+(y+g_y_shift)%LY : (y+g_y_shift)%LY ,
+                                   (z+g_z_shift)%LZ < 0 ? LZ+(z+g_z_shift)%LZ : (z+g_z_shift)%LZ  );
+            for(int mu=0; mu<4; mu++){
               shifted = &tmp_gauge[shifted_index][mu];
               orig = &g_gf[original_index][mu];
               _su3_assign(*shifted,*orig);
@@ -181,7 +181,7 @@ int main(int argc, char *argv[])
     /*compute the energy of the gauge field*/
     plaquette_energy = measure_gauge_action(_AS_GAUGE_FIELD_T(g_gauge_field));
     if (g_cart_id == 0) {
-      printf("# The computed SHIFTED plaquette value is %e.\n", plaquette_energy / (6.*VOLUME*g_nproc));
+      printf("# The computed SHIFTED plaquette value is %.12e.\n", plaquette_energy / (6.*VOLUME*g_nproc));
       fflush(stdout);
     }
 

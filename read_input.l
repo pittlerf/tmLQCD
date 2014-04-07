@@ -2051,19 +2051,19 @@ EQL {SPC}*={SPC}*
   reweighting_samples = atoi(yytext);
   if(myverbose!=0) fprintf(stderr, "Number of reweighting samples set to %d\n", reweighting_samples);
 }
-<TSHIFT>{DIGIT}+ {
+<TSHIFT>{SIGN}*{DIGIT}+ {
   g_t_shift = atoi(yytext);
   if(myverbose!=0) fprintf(stderr, "Shift gauge field by %d in T direction.\n", g_t_shift);
 }
-<XSHIFT>{DIGIT}+ {
+<XSHIFT>{SIGN}*{DIGIT}+ {
   g_x_shift = atoi(yytext);
   if(myverbose!=0) fprintf(stderr, "Shift gauge field by %d in X direction.\n", g_x_shift);
 }
-<YSHIFT>{DIGIT}+ {
+<YSHIFT>{SIGN}*{DIGIT}+ {
   g_y_shift = atoi(yytext);
   if(myverbose!=0) fprintf(stderr, "Shift gauge field by %d in Y direction.\n", g_y_shift);
 }
-<ZSHIFT>{DIGIT}+ {
+<ZSHIFT>{SIGN}*{DIGIT}+ {
   g_z_shift = atoi(yytext);
   if(myverbose!=0) fprintf(stderr, "Shift gauge field by %d in Z direction.\n", g_z_shift);
 }
@@ -2562,6 +2562,11 @@ int read_input(char * conf_file){
   change the value. If not then set it to source_format_flag */
   PropInfo.format = -1;
   /********************************************/
+
+  g_t_shift = _default_g_t_shift;
+  g_x_shift = _default_g_x_shift;
+  g_y_shift = _default_g_y_shift;
+  g_z_shift = _default_g_z_shift;
  
   /* Construct the default smearing */
   smearing_declarations = (smearing_params_t*)malloc(sizeof(smearing_params_t));

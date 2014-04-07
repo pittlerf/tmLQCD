@@ -133,6 +133,11 @@
 #define _default_compute_topsus 0
 #define _default_mstarsq 0.01
 #define _default_no_sources_z2 1
+#define _default_g_t_shift 0
+#define _default_g_x_shift 0
+#define _default_g_y_shift 0
+#define _default_g_z_shift 0
+
 
 /* sf default values */
 #define _default_g_eta 0.
