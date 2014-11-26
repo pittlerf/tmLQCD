@@ -8,7 +8,7 @@
 
 #include <smearing/ape.h>
 #include <smearing/ape_3d.h>
-// #include <smearing/gradient.h>
+#include <smearing/gradient.h>
 #include <smearing/hex.h>
 #include <smearing/hex_3d.h>
 #include <smearing/hyp.h>

@@ -25,6 +25,10 @@ smearing_control_t *construct_smearing_control_from_params(smearing_params_t con
     case HYP:
     case HEX:
       return construct_smearing_control(params->type, calculate_force_terms, params->iterations, params->params[0], params->params[1], params->params[2]);
+    case Gradient:
+      if (calculate_force_terms)
+        fatal_error("Gradient flow for the HMC algorithm has not yet been implemented.", "construct_smearing_control");
+      return construct_smearing_control(params->type, calculate_force_terms, params->params[0], params->params[1]);
     default:
       fatal_error("Requested smearing type not implemented.", "construct_smearing_control_from_params");
   }

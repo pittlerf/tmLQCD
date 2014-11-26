@@ -13,6 +13,9 @@ void free_smearing_control(smearing_control_t *control)
     case APE_3D:
       free_ape_3d_control((ape_3d_control*)(control->type_control));
       break;
+    case Gradient:
+      free_gradient_control((gradient_control*)(control->type_control));
+      break;
     case HYP:
       free_hyp_control((hyp_control*)(control->type_control));
       break;

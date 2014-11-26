@@ -34,6 +34,13 @@ smearing_control_t *construct_smearing_control(smearing_type type, int calculate
       params_double[0] = va_arg(smearing_args, double);
       result->type_control = (void*)construct_ape_3d_control(params_uint[0], params_double[0]);
       break;
+    case Gradient:
+      if (calculate_force_terms)
+        fatal_error("Gradient flow has not been implemented for forces.", "construct_smearing_control");
+      params_double[0] = va_arg(smearing_args, double);
+      params_double[1] = va_arg(smearing_args, double);
+      result->type_control = (void*)construct_gradient_control(params_double[0], params_double[1]);
+      break;
     case HEX:
       params_uint[0] = va_arg(smearing_args, unsigned int);
       params_double[0] = va_arg(smearing_args, double);

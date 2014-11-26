@@ -42,7 +42,7 @@ CCLD=${CC}
 
 
 # compilation in operator is slowest so we do it first, saves time in parallel compiles
-USESUBDIRS="operator linalg solver monomial buffers smearing cu io xchange init rational"
+USESUBDIRS="operator linalg solver monomial buffers smearing measurements cu io xchange init rational"
 
 AC_CHECK_HEADERS([stdint.h],
 [ dnl for inttypes.h and stdint.h for uint_xxx types
@@ -913,7 +913,7 @@ if test ! -e tests/regressions; then
 fi
 
 
-LIBS="-lhmc -lmonomial -loperator -lsolver -linit -llinalg -lsmear -lbuffers -lhmc -lxchange -lrational -lio $LIBS"
+LIBS="-lhmc -lmonomial -loperator -lsolver -linit -llinalg -lsmear -lbuffers -lhmc -lxchange -lrational -lio -lmeas $LIBS"
 AUTOCONF=autoconf
 
 for i in $USESUBDIRS

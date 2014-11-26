@@ -654,6 +654,17 @@ _sse_store_up(r);
     + (v).c21 * (w).c12			\
     + (v).c22 * (w).c22;
 
+#define _real_trace_su3_squared(x,v) \
+  x = real((v).c00 * (v).c00         \
+         + (v).c01 * (v).c10         \
+         + (v).c02 * (v).c20         \
+         + (v).c10 * (v).c01         \
+         + (v).c11 * (v).c11         \
+         + (v).c12 * (v).c21         \
+         + (v).c20 * (v).c02         \
+         + (v).c21 * (v).c12         \
+         + (v).c22 * (v).c22);
+    
 #define _complex_times_vector(x, c, y)	\
    x.c0 = (c) * (y).c0;			\
    x.c1 = (c) * (y).c1;			\

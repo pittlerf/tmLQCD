@@ -43,6 +43,9 @@ libsmear_TARGETS = 	ape_3d_construct_control \
 			control_free_smearing_control \
 			control_smear \
 			control_smear_forces \
+			gradient_construct_gradient_control \
+			gradient_free_gradient_control \
+			gradient_gradient_smear \
 			hex_construct_hex_control \
 			hex_free_hex_control \
 			hex_hex_smear \

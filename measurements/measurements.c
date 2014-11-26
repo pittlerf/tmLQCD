@@ -30,9 +30,9 @@
 #include "default_input_values.h"
 #include "read_input.h"
 #include "pion_norm.h"
-#include "online_measurement.h"
+#include "online.h"
 #include "polyakov_loop.h"
-#include "measure_oriented_plaquettes.h"
+#include "oriented_plaquettes.h"
 #include "measurements.h"
 
 measurement measurement_list[max_no_measurements];
@@ -72,7 +72,7 @@ int init_measurements(){
     if(measurement_list[i].type == ORIENTED_PLAQUETTES) {
       measurement_list[i].measurefunc = oriented_plaquettes_measurement;
     }
-    
+
     measurement_list[i].id = i;
     measurement_list[i].smearing = 0; /* FIXME A placeholder to avoid issues until smearing is properly implemented here. */
  }

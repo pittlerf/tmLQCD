@@ -29,7 +29,7 @@
    
    the caller must provide the memory for plaq */
 
-void measure_oriented_plaquettes(const su3 ** const gf, double *plaq);
+void measure_oriented_plaquettes(gauge_field_t const gf, double *plaq);
 
 /* implements the online measurement function for the oriented
    plaquettes, writes (in append mode) into "oriented_plaquettes.data" */

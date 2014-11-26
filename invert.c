@@ -75,7 +75,7 @@
 #include "sighandler.h"
 #include "solver/dfl_projector.h"
 #include "solver/generate_dfl_subspace.h"
-#include "prepare_source.h"
+#include <measurements/prepare_source.h>
 #include <io/params.h>
 #include <io/gauge.h>
 #include <io/spinor.h>

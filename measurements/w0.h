@@ -1,5 +1,5 @@
 /***********************************************************************
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
+ * Copyright (C) 2013 Albert Deuzeman
  *
  * This file is part of tmLQCD.
  *
@@ -16,15 +16,10 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-#ifndef _EXPO_H
-#define _EXPO_H
 
-extern void exposu3(su3* const vr, const su3adj* const p);
-extern void exposu3_check(su3* const vr, const su3adj* const p, int im);
-extern void restoresu3(su3* const vr, const su3* const u);
-extern void restoresu3_in_place(su3* const u);
-extern void exposu3_copy(su3 * const v, su3 const* const u);
+#ifndef _MEASUREMENTS_W0_H
+#define _MEASUREMENTS_W0_H
 
-inline void exposu3_in_place(su3* const u) {exposu3_copy(u, u);}
+void w0_measurement(const int traj, const int id, const int ieo);
 
 #endif

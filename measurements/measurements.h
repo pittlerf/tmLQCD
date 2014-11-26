@@ -29,7 +29,8 @@ enum MEAS_TYPE {
   ONLINE, 
   PIONNORM, 
   POLYAKOV, 
-  ORIENTED_PLAQUETTES 
+  ORIENTED_PLAQUETTES,
+  W0
   };
 
 typedef struct {
@@ -43,6 +44,8 @@ typedef struct {
   int max_iter;
   /* for polyakov loop */
   int direction;
+  /* for gradient flow */ /* NOTE This is some seriously ugly looking polymorphism... */
+  double epsilon;
   
   /* how it's usually called */
   char name[100];
