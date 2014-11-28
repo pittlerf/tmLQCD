@@ -21,6 +21,7 @@
 
 typedef enum 
 {
+  Identity,
   APE,
   APE_3D,
   Gradient,
@@ -28,7 +29,6 @@ typedef enum
   HEX_3D,
   HYP,
   HYP_3D,
-  Identity,
   Jacobi,
   Stout,
   Stout_3D,
