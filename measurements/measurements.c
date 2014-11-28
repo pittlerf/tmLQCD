@@ -30,9 +30,9 @@
 #include "default_input_values.h"
 #include "read_input.h"
 #include "pion_norm.h"
-#include "online.h"
+#include "online_measurement.h"
 #include "polyakov_loop.h"
-#include "oriented_plaquettes.h"
+#include "measure_oriented_plaquettes.h"
 #include "measurements.h"
 
 measurement measurement_list[max_no_measurements];

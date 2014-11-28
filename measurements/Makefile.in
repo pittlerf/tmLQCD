@@ -32,8 +32,8 @@ COMPILE = ${CC} ${DEFS} ${INCLUDES} ${CFLAGS} ${OPTARGS}
 LIBRARIES = libmeas
 
 libmeas_TARGETS = 	measurements \
-			oriented_plaquettes \
-			online \
+			measure_oriented_plaquettes \
+			online_measurement \
 			pion_norm \
 			polyakov_loop \
 			prepare_source \

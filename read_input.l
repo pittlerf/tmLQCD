@@ -52,14 +52,14 @@ EQL {SPC}*={SPC}*
 #include<stdlib.h>
 #include<stdio.h>
 #include<string.h>
-#include"global.h"
-#include"read_input.h"
-#include"default_input_values.h"
-#include"monomial/monomial.h"
-#include"measurements.h"
-#include"integrator.h"
-#include"operator.h"
-#include"phmc.h"
+#include "global.h"
+#include "read_input.h"
+#include "default_input_values.h"
+#include "monomial/monomial.h"
+#include "measurements/measurements.h"
+#include "integrator.h"
+#include "operator.h"
+#include "phmc.h"
 #include <fatal_error.h>
 #include <io/params.h>
 #include <smearing/control.h>
