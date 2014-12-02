@@ -23,8 +23,11 @@
 #include "hamiltonian_field.h"
 
 void ndrat_derivative(const int id, hamiltonian_field_t * const hf);
+void ndrat_derivative_analytical(const int id, hamiltonian_field_t * const hf);
+void ndrat_derivative_numerical(const int id, hamiltonian_field_t * const hf);
 double ndrat_acc(const int id, hamiltonian_field_t * const hf);
 void ndrat_heatbath(const int id, hamiltonian_field_t * const hf);
+double ndrat_energy(const int id, const su3** gaugefield);
 void nd_set_global_parameter(monomial * const mnl);
 int init_ndrat_monomial(const int id);
 

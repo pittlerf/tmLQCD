@@ -47,9 +47,128 @@
 #include "operator/clovertm_operators.h"
 #include "cloverdet_monomial.h"
 
+#include "dirty_shameful_business.h"
+#include "expo.h"
+#include "buffers/gauge.h"
+#include "buffers/adjoint.h"
+#include "measure_gauge_action.h"
+#include "update_backward_gauge.h"
+#include "operator/clover_leaf.h"
+
 /* think about chronological solver ! */
 
 void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
+  static short first = 1;
+
+  char mode[2] = {'a','\0'};
+  if( first == 1 ) {
+    mode[0] = 'w';
+    first = 0;
+  }
+
+  adjoint_field_t df_analytical = get_adjoint_field();
+  adjoint_field_t df_numerical  = get_adjoint_field();
+
+  zero_adjoint_field(&df_analytical);
+  zero_adjoint_field(&df_numerical);
+
+  ohnohack_remap_df0(df_analytical);
+
+  cloverdet_derivative_analytical(id,hf);
+
+  ohnohack_remap_df0(df_numerical);
+
+  cloverdet_derivative_numerical(id,hf);
+
+  FILE * f_numerical = fopen("f_numerical.bin",mode);
+  if( f_numerical != NULL ) {
+    fwrite((const void *) df_numerical, sizeof(double), 8*4*VOLUME, f_numerical);
+    fclose(f_numerical);
+  }
+
+  FILE * f_analytical = fopen("f_analytical.bin",mode);
+  if( f_analytical != NULL ) {
+    fwrite((const void *) df_analytical, sizeof(double), 8*4*VOLUME, f_analytical);
+    fclose(f_analytical);
+  }
+
+  int x = 1, mu = 1;
+  double *ar_num = (double*)&df_numerical[x][mu];
+  double *ar_an = (double*)&df_analytical[x][mu];
+  fprintf(stderr, "[DEBUG] Comparison of force calculation at [%d][%d]!\n",x,mu);
+  fprintf(stderr, "         numerical force <-> analytical force \n");
+  for (int component = 0; component < 8; ++component)
+    fprintf(stderr, "    [%d]  %+14.12f <-> %+14.12f\n", component, ar_num[component], ar_an[component]); //*/
+
+  // HACK: decouple monomial completely by not adding derivative
+  //  #pragma omp parallel for
+  //  for(int x = 0; x < VOLUME; ++x) {
+  //    for(int mu = 0; mu < 4; ++mu) {
+  //      _add_su3adj(df[x][mu],df_analytical[x][mu]);
+  //    }
+  //  }
+
+  return_adjoint_field(&df_analytical);
+  return_adjoint_field(&df_numerical);
+  ohnohack_remap_df0(df);
+}
+
+void cloverdet_derivative_numerical(const int id, hamiltonian_field_t * const hf) {
+  monomial * mnl = &monomial_list[id];
+  double atime = gettime();
+
+  su3adj rotation;
+  double *ar_rotation = (double*)&rotation;
+  double const eps = 1e-6;
+  double const oneov2eps = 1.0/(2*eps);
+  double const epsilon[2] = {-eps,eps};
+  su3 old_value;
+  su3 mat_rotation;
+  double* xm;
+  su3* link;
+
+  for(int x = 0; x < VOLUME; ++x)
+  {
+    for(int mu = 0; mu < 4; ++mu)
+    {
+      xm=(double*)&hf->derivative[x][mu];
+      for (int component = 0; component < 8; ++component)
+      {
+        double h_rotated[2] = {0.0,0.0};
+        for(int direction = 0; direction < 2; ++direction)
+        {
+          link=&(hf->gaugefield[x][mu]);
+          // save current value of gauge field
+          memmove(&old_value, link, sizeof(su3));
+          /* Introduce a rotation along one of the components */
+          memset(ar_rotation, 0, sizeof(su3adj));
+          ar_rotation[component] = epsilon[direction];
+          exposu3(&mat_rotation, &rotation);
+          _su3_times_su3(*link, mat_rotation, old_value);
+          g_update_gauge_copy = 1;
+          update_backward_gauge(_AS_GAUGE_FIELD_T(hf->gaugefield));
+
+          h_rotated[direction] = cloverdet_energy(id,hf);
+          //sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw);
+          h_rotated[direction] -= sw_trace(EO, mnl->mu);
+
+          // reset modified part of gauge field
+          memmove(link,&old_value, sizeof(su3));
+          g_update_gauge_copy = 1;
+          update_backward_gauge(_AS_GAUGE_FIELD_T(hf->gaugefield));
+        } // direction
+        // calculate force contribution from gauge field due to rotation
+        xm[component] += (h_rotated[1]-h_rotated[0])*oneov2eps;
+      } // component
+    } // mu
+  } // x
+  double etime = gettime();
+  if(g_debug_level > 1 && g_proc_id == 0) {
+    printf("# Time for numerical %s monomial derivative: %e s\n", mnl->name, etime-atime);
+  }
+}
+
+void cloverdet_derivative_analytical(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   double atime, etime;
   atime = gettime();
@@ -159,6 +278,9 @@ void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   random_spinor_field_eo(mnl->w_fields[0], mnl->rngrepro, RN_GAUSS);
   mnl->energy0 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
+
+  // HACK: decouple monomial completely
+  mnl->energy0 = 0;
   
   mnl->Qp(mnl->pf, mnl->w_fields[0]);
   chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
@@ -205,6 +327,9 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
   /* Compute the energy contr. from first field */
   mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
 
+  // HACK: decouple monomial completely
+  mnl->energy1 = 0;
+
   g_mu = g_mu1;
   g_mu3 = 0.;
   boundary(g_kappa);
@@ -219,4 +344,45 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
     }
   }
   return(mnl->energy1 - mnl->energy0);
+}
+
+double cloverdet_energy(const int id, hamiltonian_field_t * const hf) {
+  monomial * mnl = &monomial_list[id];
+  int save_sloppy = g_sloppy_precision_flag;
+  double atime, etime;
+  atime = gettime();
+
+  g_mu = mnl->mu;
+  g_mu3 = mnl->rho;
+  g_c_sw = mnl->c_sw;
+  boundary(mnl->kappa);
+
+  double energy = 0;
+
+  sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw);
+  sw_invert(EE, mnl->mu);
+
+  g_sloppy_precision_flag = 0;
+  cg_her(mnl->w_fields[0], mnl->pf, mnl->maxiter, mnl->accprec,
+                      g_relative_precision_flag, VOLUME/2, mnl->Qsq);
+  mnl->Qm(mnl->w_fields[0], mnl->w_fields[0]);
+
+  g_sloppy_precision_flag = save_sloppy;
+  /* Compute the energy contr. from first field */
+  energy = square_norm(mnl->w_fields[0], VOLUME/2, 1);
+
+  g_mu = g_mu1;
+  g_mu3 = 0.;
+  boundary(g_kappa);
+  etime = gettime();
+  if(g_proc_id == 0) {
+    if(g_debug_level > 1) {
+      printf("# Time for %s monomial energy computation: %e s\n", mnl->name, etime-atime);
+    }
+    if(g_debug_level > 3) {
+      printf("called cloverdet_energy for id %d H_cdet = %1.10e\n",
+             id, energy);
+    }
+  }
+  return(energy);
 }

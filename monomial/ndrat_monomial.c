@@ -27,6 +27,7 @@
 #include <time.h>
 #include "global.h"
 #include "su3.h"
+#include "su3adj.h"
 #include "linalg_eo.h"
 #include "start.h"
 #include "gettime.h"
@@ -44,6 +45,14 @@
 #include "rational/rational.h"
 #include "phmc.h"
 #include "ndrat_monomial.h"
+
+#include "dirty_shameful_business.h"
+#include "expo.h"
+#include "buffers/gauge.h"
+#include "buffers/adjoint.h"
+#include "measure_gauge_action.h"
+#include "update_backward_gauge.h"
+#include "operator/clover_leaf.h"
 
 void nd_set_global_parameter(monomial * const mnl) {
 
@@ -70,6 +79,119 @@ void nd_set_global_parameter(monomial * const mnl) {
  ********************************************/
 
 void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
+  static short first = 1;
+
+  char mode[2] = {'a','\0'};
+  if( first == 1 ) {
+    mode[0] = 'w';
+    first = 0;
+  }
+
+  adjoint_field_t df_analytical = get_adjoint_field();
+  adjoint_field_t df_numerical  = get_adjoint_field();
+
+  zero_adjoint_field(&df_analytical);
+  zero_adjoint_field(&df_numerical);
+
+  ohnohack_remap_df0(df_analytical);
+
+  ndrat_derivative_analytical(id,hf);
+
+  ohnohack_remap_df0(df_numerical);
+
+  ndrat_derivative_numerical(id,hf);
+
+  FILE * f_numerical = fopen("f_numerical.bin",mode);
+  if( f_numerical != NULL ) {
+    fwrite((const void *) df_numerical, sizeof(double), 8*4*VOLUME, f_numerical);
+    fclose(f_numerical);
+  }
+  
+  FILE * f_analytical = fopen("f_analytical.bin",mode);
+  if( f_analytical != NULL ) {
+    fwrite((const void *) df_analytical, sizeof(double), 8*4*VOLUME, f_analytical);
+    fclose(f_analytical);
+  }
+
+  int x = 1, mu = 1;
+  double *ar_num = (double*)&df_numerical[x][mu];
+  double *ar_an = (double*)&df_analytical[x][mu];
+  fprintf(stderr, "[DEBUG] Comparison of force calculation at [%d][%d]!\n",x,mu);
+  fprintf(stderr, "         numerical force <-> analytical force \n");
+  for (int component = 0; component < 8; ++component)
+    fprintf(stderr, "    [%d]  %+14.12f <-> %+14.12f\n", component, ar_num[component], ar_an[component]); //*/
+
+  // HACK: decouple monomial completely by no adding derivative
+  //  #pragma omp parallel for 
+  //  for(int x = 0; x < VOLUME; ++x) {
+  //    for(int mu = 0; mu < 4; ++mu) {
+  //      _add_su3adj(df[x][mu],df_analytical[x][mu]);
+  //    }
+  //  }
+
+  return_adjoint_field(&df_analytical);
+  return_adjoint_field(&df_numerical);
+  ohnohack_remap_df0(df);
+}
+
+void ndrat_derivative_numerical(const int id, hamiltonian_field_t * const hf) {
+  monomial * mnl = &monomial_list[id];
+  double atime = gettime();
+
+  su3adj rotation;
+  double *ar_rotation = (double*)&rotation;
+  double const eps = 1e-10;
+  double const oneov2eps = 1.0/(2*eps);
+  double const epsilon[2] = {-eps,eps};
+  su3 old_value;
+  su3 mat_rotation;
+  double* xm;
+  su3* link;
+
+  for(int x = 0; x < VOLUME; ++x)
+  {
+    for(int mu = 0; mu < 4; ++mu)
+    {
+      xm=(double*)&hf->derivative[x][mu];
+      for (int component = 0; component < 8; ++component)
+      {
+        double h_rotated[2] = {0.0,0.0};
+        for(int direction = 0; direction < 2; ++direction)
+        {
+          link=&(hf->gaugefield[x][mu]);
+          // save current value of gauge field
+          memmove(&old_value, link, sizeof(su3));
+          /* Introduce a rotation along one of the components */
+          memset(ar_rotation, 0, sizeof(su3adj));
+          ar_rotation[component] = epsilon[direction];
+          exposu3(&mat_rotation, &rotation);
+          _su3_times_su3(*link, mat_rotation, old_value);
+          g_update_gauge_copy = 1;
+          update_backward_gauge(_AS_GAUGE_FIELD_T(hf->gaugefield));
+          
+          h_rotated[direction] = ndrat_energy(id,(su3 const **)hf->gaugefield);
+          if( mnl->type == NDCLOVERRAT && mnl->trlog ) {
+            sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw);
+            h_rotated[direction] += -sw_trace_nd(EE, mnl->mubar, mnl->epsbar);
+          }
+
+          // reset modified part of gauge field
+          memmove(link,&old_value, sizeof(su3));
+          g_update_gauge_copy = 1;
+          update_backward_gauge(_AS_GAUGE_FIELD_T(hf->gaugefield));
+        } // direction
+        // calculate force contribution from gauge field due to rotation
+        xm[component] += (h_rotated[1]-h_rotated[0])*oneov2eps;
+      } // component
+    } // mu
+  } // x
+  double etime = gettime();
+  if(g_debug_level > 1 && g_proc_id == 0) {
+    printf("# Time for numerical %s monomial derivative: %e s\n", mnl->name, etime-atime);
+  }
+}
+
+void ndrat_derivative_analytical(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   solver_pm_t solver_pm;
   double atime, etime;
@@ -209,6 +331,8 @@ void ndrat_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   random_spinor_field_eo(mnl->pf2, mnl->rngrepro, RN_GAUSS);
   mnl->energy0 += square_norm(mnl->pf2, VOLUME/2, 1);
+  // HACK: decouple monomial completely
+  mnl->energy0 = 0;
   // set solver parameters
   solver_pm.max_iter = mnl->maxiter;
   solver_pm.squared_solver_prec = mnl->accprec;
@@ -293,18 +417,70 @@ double ndrat_acc(const int id, hamiltonian_field_t * const hf) {
 
   mnl->energy1 = scalar_prod_r(mnl->pf, mnl->w_fields[0], VOLUME/2, 1);
   mnl->energy1 += scalar_prod_r(mnl->pf2, mnl->w_fields[1], VOLUME/2, 1);
+  // HACK: decouple monomial completely
+  mnl->energy1 = 0;
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
       printf("# Time for %s monomial acc step: %e s\n", mnl->name, etime-atime);
     }
-    if(g_debug_level > 0) { // shoud be 3
+    if(g_debug_level > 3) { // shoud be 3
       printf("called ndrat_acc for id %d dH = %1.10e\n", id, mnl->energy1 - mnl->energy0);
     }
   }
   return(mnl->energy1 - mnl->energy0);
 }
 
+double ndrat_energy(const int id, const su3** gaugefield) {
+  solver_pm_t solver_pm;
+  monomial * mnl = &monomial_list[id];
+  double atime, etime;
+  atime = gettime();
+
+  double energy = 0;
+  
+  nd_set_global_parameter(mnl);
+  if(mnl->type == NDCLOVERRAT) {
+    sw_term((const su3**) gaugefield, mnl->kappa, mnl->c_sw);
+    sw_invert_nd(mnl->mubar*mnl->mubar - mnl->epsbar*mnl->epsbar);
+  }
+
+  solver_pm.max_iter = mnl->maxiter;
+  solver_pm.squared_solver_prec = mnl->accprec;
+  solver_pm.no_shifts = mnl->rat.np;
+  solver_pm.shifts = mnl->rat.mu;
+  solver_pm.type = CGMMSND;
+  solver_pm.M_ndpsi = &Qtm_pm_ndpsi;
+  if(mnl->type == NDCLOVERRAT) solver_pm.M_ndpsi = &Qsw_pm_ndpsi;
+  solver_pm.sdim = VOLUME/2;
+  solver_pm.rel_prec = g_relative_precision_flag;
+  cg_mms_tm_nd(g_chi_up_spinor_field, g_chi_dn_spinor_field,
+               mnl->pf, mnl->pf2,
+               &solver_pm);
+
+  // apply R to the pseudo-fermion fields
+  assign(mnl->w_fields[0], mnl->pf, VOLUME/2);
+  assign(mnl->w_fields[1], mnl->pf2, VOLUME/2);
+  for(int j = (mnl->rat.np-1); j > -1; j--) {
+    assign_add_mul_r(mnl->w_fields[0], g_chi_up_spinor_field[j],
+                     mnl->rat.rmu[j], VOLUME/2);
+    assign_add_mul_r(mnl->w_fields[1], g_chi_dn_spinor_field[j],
+                     mnl->rat.rmu[j], VOLUME/2);
+  }
+
+  energy = scalar_prod_r(mnl->pf, mnl->w_fields[0], VOLUME/2, 1);
+  energy += scalar_prod_r(mnl->pf2, mnl->w_fields[1], VOLUME/2, 1);
+  etime = gettime();
+  if(g_proc_id == 1) {
+    if(g_debug_level > 1) {
+      printf("# Time for %s monomial energy computation: %e s\n", mnl->name, etime-atime);
+    }
+    if(g_debug_level > 3) {
+      printf("called ndrat_energy for id %d H_ndrat = %1.10e\n", id, energy);
+    }
+  }
+  return(energy);
+}
 
 int init_ndrat_monomial(const int id) {
   monomial * mnl = &monomial_list[id];  

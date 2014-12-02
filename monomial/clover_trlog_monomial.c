@@ -57,6 +57,8 @@ void clover_trlog_heatbath(const int id, hamiltonian_field_t * const hf) {
   sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
   /*compute the contribution from the clover trlog term */
   mnl->energy0 = -sw_trace(EO, mnl->mu);
+  // HACK: decouple monomial completely
+  mnl->energy0 = 0;
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
@@ -77,6 +79,8 @@ double clover_trlog_acc(const int id, hamiltonian_field_t * const hf) {
   sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
   /*compute the contribution from the clover trlog term */
   mnl->energy1 = -sw_trace(EO, mnl->mu);
+  // HACK: decouple monomial completely
+  mnl->energy1 = 0;
   etime = gettime();
   if(g_proc_id == 0 && g_debug_level > 3) {
     if(g_debug_level > 1) {
