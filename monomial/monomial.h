@@ -65,6 +65,8 @@ typedef struct {
   int csg_N, csg_N2;
   int csg_n, csg_n2;
   int use_rectangles;
+  int decouple;
+  int num_deriv;
   /* trlog */
   int trlog;
   int * csg_index_array, *csg_index_array2;

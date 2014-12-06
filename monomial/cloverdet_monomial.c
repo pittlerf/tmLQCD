@@ -54,63 +54,84 @@
 #include "measure_gauge_action.h"
 #include "update_backward_gauge.h"
 #include "operator/clover_leaf.h"
+#include "read_input.h"
 
 /* think about chronological solver ! */
 
 void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   static short first = 1;
+  monomial * mnl = &monomial_list[id];
 
-  char mode[2] = {'a','\0'};
-  if( first == 1 ) {
-    mode[0] = 'w';
-    first = 0;
+  if(mnl->num_deriv) {
+    char mode[2] = {'a','\0'};
+    if( first == 1 ) {
+      mode[0] = 'w';
+      first = 0;
+    }
+
+    adjoint_field_t df_analytical = get_adjoint_field();
+    adjoint_field_t df_numerical  = get_adjoint_field();
+
+    zero_adjoint_field(&df_analytical);
+    zero_adjoint_field(&df_numerical);
+
+    ohnohack_remap_df0(df_analytical);
+
+    cloverdet_derivative_analytical(id,hf);
+
+    ohnohack_remap_df0(df_numerical);
+
+    cloverdet_derivative_numerical(id,hf);
+
+    FILE * f_numerical = fopen("f_numerical.bin",mode);
+    if( f_numerical != NULL ) {
+      if( mode[0] == 'w' ) {
+        fwrite((const void *) &mnl->accprec, sizeof(double), 1, f_numerical);
+        fwrite((const void *) &mnl->forceprec, sizeof(double), 1, f_numerical);
+        fwrite((const void *) &num_deriv_eps, sizeof(double), 1, f_numerical);
+      }
+      fwrite((const void *) df_numerical, sizeof(double), 8*4*VOLUME, f_numerical);
+      fclose(f_numerical);
+    }
+
+    FILE * f_analytical = fopen("f_analytical.bin",mode);
+    if( f_analytical != NULL ) {
+      if( mode[0] == 'w' ) {
+        fwrite((const void *) &mnl->accprec, sizeof(double), 1, f_analytical);
+        fwrite((const void *) &mnl->forceprec, sizeof(double), 1, f_analytical);
+        fwrite((const void *) &num_deriv_eps, sizeof(double), 1, f_analytical);
+      }
+      fwrite((const void *) df_analytical, sizeof(double), 8*4*VOLUME, f_analytical);
+      fclose(f_analytical);
+    }
+
+    int x = 1, mu = 1;
+    double *ar_num = (double*)&df_numerical[x][mu];
+    double *ar_an = (double*)&df_analytical[x][mu];
+    fprintf(stderr, "[DEBUG] Comparison of force calculation at [%d][%d]!\n",x,mu);
+    fprintf(stderr, "         numerical force <-> analytical force \n");
+    for (int component = 0; component < 8; ++component)
+      fprintf(stderr, "    [%d]  %+14.12f <-> %+14.12f\n", component, ar_num[component], ar_an[component]); //*/
+
+
+    if(!mnl->decouple) {
+      #ifdef OMP
+      #pragma omp parallel for
+      #endif
+      for(int x = 0; x < VOLUME; ++x) {
+        for(int mu = 0; mu < 4; ++mu) {
+          _add_su3adj(df[x][mu],df_analytical[x][mu]);
+        }
+      }
+    }
+
+    return_adjoint_field(&df_analytical);
+    return_adjoint_field(&df_numerical);
+    ohnohack_remap_df0(df);
+  } else { // mnl->num_deriv
+    if(!mnl->decouple)
+      cloverdet_derivative_analytical(id,hf);
   }
-
-  adjoint_field_t df_analytical = get_adjoint_field();
-  adjoint_field_t df_numerical  = get_adjoint_field();
-
-  zero_adjoint_field(&df_analytical);
-  zero_adjoint_field(&df_numerical);
-
-  ohnohack_remap_df0(df_analytical);
-
-  cloverdet_derivative_analytical(id,hf);
-
-  ohnohack_remap_df0(df_numerical);
-
-  cloverdet_derivative_numerical(id,hf);
-
-  FILE * f_numerical = fopen("f_numerical.bin",mode);
-  if( f_numerical != NULL ) {
-    fwrite((const void *) df_numerical, sizeof(double), 8*4*VOLUME, f_numerical);
-    fclose(f_numerical);
-  }
-
-  FILE * f_analytical = fopen("f_analytical.bin",mode);
-  if( f_analytical != NULL ) {
-    fwrite((const void *) df_analytical, sizeof(double), 8*4*VOLUME, f_analytical);
-    fclose(f_analytical);
-  }
-
-  int x = 1, mu = 1;
-  double *ar_num = (double*)&df_numerical[x][mu];
-  double *ar_an = (double*)&df_analytical[x][mu];
-  fprintf(stderr, "[DEBUG] Comparison of force calculation at [%d][%d]!\n",x,mu);
-  fprintf(stderr, "         numerical force <-> analytical force \n");
-  for (int component = 0; component < 8; ++component)
-    fprintf(stderr, "    [%d]  %+14.12f <-> %+14.12f\n", component, ar_num[component], ar_an[component]); //*/
-
-  // HACK: decouple monomial completely by not adding derivative
-  //  #pragma omp parallel for
-  //  for(int x = 0; x < VOLUME; ++x) {
-  //    for(int mu = 0; mu < 4; ++mu) {
-  //      _add_su3adj(df[x][mu],df_analytical[x][mu]);
-  //    }
-  //  }
-
-  return_adjoint_field(&df_analytical);
-  return_adjoint_field(&df_numerical);
-  ohnohack_remap_df0(df);
 }
 
 void cloverdet_derivative_numerical(const int id, hamiltonian_field_t * const hf) {
@@ -119,7 +140,7 @@ void cloverdet_derivative_numerical(const int id, hamiltonian_field_t * const hf
 
   su3adj rotation;
   double *ar_rotation = (double*)&rotation;
-  double const eps = 1e-6;
+  double const eps = num_deriv_eps;
   double const oneov2eps = 1.0/(2*eps);
   double const epsilon[2] = {-eps,eps};
   su3 old_value;
@@ -279,8 +300,9 @@ void cloverdet_heatbath(const int id, hamiltonian_field_t * const hf) {
   random_spinor_field_eo(mnl->w_fields[0], mnl->rngrepro, RN_GAUSS);
   mnl->energy0 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
 
-  // HACK: decouple monomial completely
-  mnl->energy0 = 0;
+  if(mnl->decouple) {
+    mnl->energy0 = 0;
+  }
   
   mnl->Qp(mnl->pf, mnl->w_fields[0]);
   chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
@@ -327,8 +349,9 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
   /* Compute the energy contr. from first field */
   mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
 
-  // HACK: decouple monomial completely
-  mnl->energy1 = 0;
+  if(mnl->decouple) {
+    mnl->energy1 = 0;
+  }
 
   g_mu = g_mu1;
   g_mu3 = 0.;
@@ -363,7 +386,7 @@ double cloverdet_energy(const int id, hamiltonian_field_t * const hf) {
   sw_invert(EE, mnl->mu);
 
   g_sloppy_precision_flag = 0;
-  cg_her(mnl->w_fields[0], mnl->pf, mnl->maxiter, mnl->accprec,
+  int iter = cg_her(mnl->w_fields[0], mnl->pf, mnl->maxiter, mnl->accprec,
                       g_relative_precision_flag, VOLUME/2, mnl->Qsq);
   mnl->Qm(mnl->w_fields[0], mnl->w_fields[0]);
 
@@ -376,6 +399,9 @@ double cloverdet_energy(const int id, hamiltonian_field_t * const hf) {
   boundary(g_kappa);
   etime = gettime();
   if(g_proc_id == 0) {
+    if(iter == -1) {
+      printf("WARNING: solver for monomial %s in energy computation did not converge!\n",mnl->name);
+    }
     if(g_debug_level > 1) {
       printf("# Time for %s monomial energy computation: %e s\n", mnl->name, etime-atime);
     }

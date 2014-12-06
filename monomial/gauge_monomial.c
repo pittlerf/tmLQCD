@@ -44,8 +44,62 @@
 #include "hamiltonian_field.h"
 #include "gauge_monomial.h"
 
-/* this function calculates the derivative of the momenta: equation 13 of Gottlieb */
+#include "dirty_shameful_business.h"
+#include "expo.h"
+#include "buffers/gauge.h"
+#include "buffers/adjoint.h"
+#include "measure_gauge_action.h"
+#include "update_backward_gauge.h"
+#include "operator/clover_leaf.h"
+
 void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
+  static short first = 1;
+  monomial * mnl = &monomial_list[id];
+
+  if(mnl->num_deriv) {
+    char mode[2] = {'a','\0'};
+    if( first == 1 ) {
+      mode[0] = 'w';
+      first = 0;
+    }
+
+    adjoint_field_t df_analytical = get_adjoint_field();
+    zero_adjoint_field(&df_analytical);
+    ohnohack_remap_df0(df_analytical);
+    gauge_derivative_analytical(id,hf);
+
+    char filename[100];
+    snprintf(filename,100,"%s_f_analytical.bin",mnl->name);
+    FILE * f_analytical = fopen(filename,mode);
+    if( f_analytical != NULL ) {
+      if( mode[0] == 'w' ) {
+        fwrite((const void *) &mnl->accprec, sizeof(double), 1, f_analytical);
+        fwrite((const void *) &mnl->forceprec, sizeof(double), 1, f_analytical);
+        fwrite((const void *) &num_deriv_eps, sizeof(double), 1, f_analytical);
+      }
+      fwrite((const void *) df_analytical, sizeof(double), 8*4*VOLUME, f_analytical);
+      fclose(f_analytical);
+    }
+
+    if(!mnl->decouple) {
+      #ifdef OMP
+      #pragma omp parallel for
+      #endif
+      for(int x = 0; x < VOLUME; ++x) {
+        for(int mu = 0; mu < 4; ++mu) {
+          _add_su3adj(df[x][mu],df_analytical[x][mu]);
+        }
+      }
+    }
+    ohnohack_remap_df0(df);
+    return_adjoint_field(&df_analytical);
+  } else {
+    gauge_derivative_analytical(id,hf);
+  }
+}
+
+/* this function calculates the derivative of the momenta: equation 13 of Gottlieb */
+void gauge_derivative_analytical(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   double factor = -1. * g_beta/3.0;
   if(mnl->use_rectangles) {

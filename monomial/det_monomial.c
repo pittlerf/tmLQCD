@@ -41,9 +41,147 @@
 #include "monomial/monomial.h"
 #include "det_monomial.h"
 
+#include "dirty_shameful_business.h"
+#include "expo.h"
+#include "buffers/gauge.h"
+#include "buffers/adjoint.h"
+#include "measure_gauge_action.h"
+#include "update_backward_gauge.h"
+#include "operator/clover_leaf.h"
+#include "read_input.h"
+
 /* think about chronological solver ! */
 
 void det_derivative(const int id, hamiltonian_field_t * const hf) {
+  static short first = 1;
+  monomial * mnl = &monomial_list[id];
+
+  if(mnl->num_deriv) {
+    char mode[2] = {'a','\0'};
+    if( first == 1 ) {
+      mode[0] = 'w';
+      first = 0;
+    }
+
+    adjoint_field_t df_analytical = get_adjoint_field();
+    adjoint_field_t df_numerical  = get_adjoint_field();
+
+    zero_adjoint_field(&df_analytical);
+    zero_adjoint_field(&df_numerical);
+
+    ohnohack_remap_df0(df_analytical);
+
+    det_derivative_analytical(id,hf);
+
+    ohnohack_remap_df0(df_numerical);
+
+    det_derivative_numerical(id,hf);
+
+    FILE * f_numerical = fopen("f_numerical.bin",mode);
+    if( f_numerical != NULL ) {
+      if( mode[0] == 'w' ) {
+        fwrite((const void *) &mnl->accprec, sizeof(double), 1, f_numerical);
+        fwrite((const void *) &mnl->forceprec, sizeof(double), 1, f_numerical);
+        fwrite((const void *) &num_deriv_eps, sizeof(double), 1, f_numerical);
+      }
+      fwrite((const void *) df_numerical, sizeof(double), 8*4*VOLUME, f_numerical);
+      fclose(f_numerical);
+    }
+
+    FILE * f_analytical = fopen("f_analytical.bin",mode);
+    if( f_analytical != NULL ) {
+      if( mode[0] == 'w' ) {
+        fwrite((const void *) &mnl->accprec, sizeof(double), 1, f_analytical);
+        fwrite((const void *) &mnl->forceprec, sizeof(double), 1, f_analytical);
+        fwrite((const void *) &num_deriv_eps, sizeof(double), 1, f_analytical);
+      }
+      fwrite((const void *) df_analytical, sizeof(double), 8*4*VOLUME, f_analytical);
+      fclose(f_analytical);
+    }
+
+    int x = 1, mu = 1;
+    double *ar_num = (double*)&df_numerical[x][mu];
+    double *ar_an = (double*)&df_analytical[x][mu];
+    fprintf(stderr, "[DEBUG] Comparison of force calculation at [%d][%d]!\n",x,mu);
+    fprintf(stderr, "         numerical force <-> analytical force \n");
+    for (int component = 0; component < 8; ++component)
+      fprintf(stderr, "    [%d]  %+14.12f <-> %+14.12f\n", component, ar_num[component], ar_an[component]); //*/
+
+
+    if(!mnl->decouple) {
+      #ifdef OMP
+      #pragma omp parallel for
+      #endif
+      for(int x = 0; x < VOLUME; ++x) {
+        for(int mu = 0; mu < 4; ++mu) {
+          _add_su3adj(df[x][mu],df_analytical[x][mu]);
+        }
+      }
+    }
+
+    return_adjoint_field(&df_analytical);
+    return_adjoint_field(&df_numerical);
+    ohnohack_remap_df0(df);
+  } else { // mnl->num_deriv
+    if(!mnl->decouple)
+      det_derivative_analytical(id,hf);
+  }
+}
+
+void det_derivative_numerical(const int id, hamiltonian_field_t * const hf) {
+  monomial * mnl = &monomial_list[id];
+  double atime = gettime();
+
+  su3adj rotation;
+  double *ar_rotation = (double*)&rotation;
+  double const eps = num_deriv_eps;
+  double const oneov2eps = 1.0/(2*eps);
+  double const epsilon[2] = {-eps,eps};
+  su3 old_value;
+  su3 mat_rotation;
+  double* xm;
+  su3* link;
+
+  for(int x = 0; x < VOLUME; ++x)
+  {
+    for(int mu = 0; mu < 4; ++mu)
+    {
+      xm=(double*)&hf->derivative[x][mu];
+      for (int component = 0; component < 8; ++component)
+      {
+        double h_rotated[2] = {0.0,0.0};
+        for(int direction = 0; direction < 2; ++direction)
+        {
+          link=&(hf->gaugefield[x][mu]);
+          // save current value of gauge field
+          memmove(&old_value, link, sizeof(su3));
+          /* Introduce a rotation along one of the components */
+          memset(ar_rotation, 0, sizeof(su3adj));
+          ar_rotation[component] = epsilon[direction];
+          exposu3(&mat_rotation, &rotation);
+          _su3_times_su3(*link, mat_rotation, old_value);
+          g_update_gauge_copy = 1;
+          update_backward_gauge(_AS_GAUGE_FIELD_T(hf->gaugefield));
+
+          h_rotated[direction] = det_energy(id,hf);
+
+          // reset modified part of gauge field
+          memmove(link,&old_value, sizeof(su3));
+          g_update_gauge_copy = 1;
+          update_backward_gauge(_AS_GAUGE_FIELD_T(hf->gaugefield));
+        } // direction
+        // calculate force contribution from gauge field due to rotation
+        xm[component] += (h_rotated[1]-h_rotated[0])*oneov2eps;
+      } // component
+    } // mu
+  } // x
+  double etime = gettime();
+  if(g_debug_level > 1 && g_proc_id == 0) {
+    printf("# Time for numerical %s monomial derivative: %e s\n", mnl->name, etime-atime);
+  }
+}
+
+void det_derivative_analytical(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
   double atime, etime;
   atime = gettime();
@@ -185,6 +323,10 @@ void det_heatbath(const int id, hamiltonian_field_t * const hf) {
 			  mnl->csg_N2, &mnl->csg_n2, VOLUME/2);
     }
   }
+
+  if(mnl->decouple) {
+    mnl->energy0 = 0;
+  }
   g_mu = g_mu1;
   boundary(g_kappa);
   etime = gettime();
@@ -242,6 +384,9 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
   g_mu = g_mu1;
   boundary(g_kappa);
   etime = gettime();
+  if(mnl->decouple) {
+    mnl->energy1 = 0;
+  }
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
       printf("# Time for %s monomial acc step: %e s\n", mnl->name, etime-atime);
@@ -252,4 +397,66 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
     }
   }
   return(mnl->energy1 - mnl->energy0);
+}
+
+double det_energy(const int id, hamiltonian_field_t * const hf) {
+  monomial * mnl = &monomial_list[id];
+  int save_sloppy = g_sloppy_precision_flag;
+  double atime, etime;
+  atime = gettime();
+  g_mu = mnl->mu;
+  boundary(mnl->kappa);
+
+  int iter = 0;
+  double energy = 0;
+  
+  if(mnl->even_odd_flag) {
+
+    chrono_guess(mnl->w_fields[0], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+         mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
+    g_sloppy_precision_flag = 0;
+    iter = cg_her(mnl->w_fields[0], mnl->pf, mnl->maxiter, mnl->accprec, g_relative_precision_flag,
+                        VOLUME/2, mnl->Qsq);
+    mnl->Qm(mnl->w_fields[1], mnl->w_fields[0]);
+    g_sloppy_precision_flag = save_sloppy;
+    /* Compute the energy contr. from first field */
+    energy = square_norm(mnl->w_fields[1], VOLUME/2, 1);
+  }
+  else {
+    if(mnl->solver == CG) {
+      chrono_guess(mnl->w_fields[1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+                   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_pm_psi);
+      iter = cg_her(mnl->w_fields[1], mnl->pf,
+                          mnl->maxiter, mnl->accprec, g_relative_precision_flag,
+                          VOLUME, &Q_pm_psi);
+      Q_minus_psi(mnl->w_fields[0], mnl->w_fields[1]);
+      /* Compute the energy contr. from first field */
+      energy = square_norm(mnl->w_fields[0], VOLUME, 1);
+    }
+    else {
+      chrono_guess(mnl->w_fields[0], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+                   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_plus_psi);
+      iter = bicgstab_complex(mnl->w_fields[0], mnl->pf,
+                                     mnl->maxiter, mnl->forceprec, g_relative_precision_flag,
+                                     VOLUME,  &Q_plus_psi);
+      energy = square_norm(mnl->w_fields[0], VOLUME, 1);
+    }
+  }
+  g_mu = g_mu1;
+  boundary(g_kappa);
+  etime = gettime();
+  mnl->energy1=0;
+  if(g_proc_id == 0) {
+    if(iter == -1) {
+      printf("WARNING: solver for monomial %s in energy computation did not converge!\n",mnl->name);
+    }
+    if(g_debug_level > 1) {
+      printf("# Time for %s monomial acc step: %e s\n", mnl->name, etime-atime);
+    }
+    if(g_debug_level > 3) {
+      printf("called det_energy for id %d H_det = %1.10e\n",
+             id, energy);
+    }
+  }
+  return(energy);
 }

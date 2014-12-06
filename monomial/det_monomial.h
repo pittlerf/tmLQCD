@@ -23,7 +23,10 @@
 #include "hamiltonian_field.h"
 
 void det_derivative(const int no, hamiltonian_field_t * const hf);
+void det_derivative_numerical(const int no, hamiltonian_field_t * const hf);
+void det_derivative_analytical(const int no, hamiltonian_field_t * const hf);
 void det_heatbath(const int no, hamiltonian_field_t * const hf);
 double det_acc(const int no, hamiltonian_field_t * const hf);
+double det_energy(const int id, hamiltonian_field_t * const hf);
 
 #endif

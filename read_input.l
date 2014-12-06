@@ -149,6 +149,8 @@ EQL {SPC}*={SPC}*
   int device_num;
   double innersolver_precision;
 
+  double num_deriv_eps;
+
   double innersolver_precision_abs;
   double innersolver_precision_rel;
   int innersolver_precision_check_abs;
@@ -421,6 +423,8 @@ EQL {SPC}*={SPC}*
 %x SMEARING_STOUT_3D
 %x SMEARING_UNITARY
 
+%x NUMDERIVEPS
+
 %%
 ^SourceFilename{EQL}               BEGIN(SOURCEFILE);
 ^T{EQL}                            BEGIN(TT);
@@ -512,7 +516,11 @@ EQL {SPC}*={SPC}*
 
 ^BeginGPU                          BEGIN(INITGPU);
 
+^NumDerivEps{EQL}                  BEGIN(NUMDERIVEPS);
 
+<NUMDERIVEPS>{FLT}  {                                                                                                                                                                                            num_deriv_eps=atof(yytext);
+  if(myverbose!=0) printf("num_deriv_eps=%lf \n", num_deriv_eps);
+}
 
 <INITGPU>Init{SPC}* {
  if(myverbose) printf("Initialising GPU line %d\n", line_of_file); 
@@ -1040,6 +1048,22 @@ EQL {SPC}*={SPC}*
   {SPC}*SmearingID{EQL}{DIGIT}+ {
     sscanf(yytext, "%*[^=]= %d", &mnl->smearing);
     if(myverbose) printf("  smearing id set to %d line %d monomial %d\n", line_of_file, current_monomial, mnl->smearing);
+  }
+  {SPC}*Decouple{EQL}yes {
+    mnl->decouple = 1;
+    if(myverbose) printf("  Decoupled monomial %d from dynamics in line %d\n", current_monomial, line_of_file);
+  }
+  {SPC}*Decouple{EQL}no {
+    mnl->decouple = 0;
+    if(myverbose) printf("  No decoupling of monomial %d from dynamics in line %d\n", current_monomial, line_of_file);
+  }
+  {SPC}*NumDeriv{EQL}yes {
+    mnl->num_deriv = 1;
+    if(myverbose) printf("  Compute numerical derivative for monomial %d in line %d\n", current_monomial, line_of_file);
+  }
+  {SPC}*NumDeriv{EQL}no {
+    mnl->num_deriv = 0;
+    if(myverbose) printf("  Do not compute numerical derivative for monomial %d in line %d\n", current_monomial, line_of_file);
   }
   {SPC}*Name{EQL} {
     name_caller = YY_START;
@@ -2542,7 +2566,9 @@ int read_input(char * conf_file){
   smearing_declarations->id = 0;
   smearing_declarations->set[0] = 1;
   no_smearings_declared = 1;
-  
+ 
+  num_deriv_eps = _default_num_deriv_eps;
+ 
   if(verbose && g_proc_id == 0) {
     myverbose = 1;
   }

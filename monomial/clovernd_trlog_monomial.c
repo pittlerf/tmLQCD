@@ -57,8 +57,9 @@ void clovernd_trlog_heatbath(const int id, hamiltonian_field_t * const hf) {
   sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
   /*compute the contribution from the clover trlog term */
   mnl->energy0 = -sw_trace_nd(EE, mnl->mubar, mnl->epsbar);
-  // HACK: decouple monomial completely
-  mnl->energy0 = 0;
+  if(mnl->decouple) {
+    mnl->energy0 = 0;
+  }
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {
@@ -79,8 +80,9 @@ double clovernd_trlog_acc(const int id, hamiltonian_field_t * const hf) {
   sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
   /*compute the contribution from the clover trlog term */
   mnl->energy1 = -sw_trace_nd(EE, mnl->mubar, mnl->epsbar);
-  // HACK: decouple monomial completely
-  mnl->energy1 = 0;
+  if(mnl->decouple) {
+    mnl->energy1 = 0;
+  }
   etime = gettime();
   if(g_proc_id == 0) {
     if(g_debug_level > 1) {

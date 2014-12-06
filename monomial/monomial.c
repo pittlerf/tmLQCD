@@ -121,6 +121,9 @@ int add_monomial(const int type) {
   monomial_list[no_monomials].rat.crange[0] = 0;
   monomial_list[no_monomials].rat.crange[1] = 11;
 
+  monomial_list[no_monomials].decouple = 0;
+  monomial_list[no_monomials].num_deriv = 0;
+
   monomial_list[no_monomials].initialised = 1;
   if(monomial_list[no_monomials].type == NDDETRATIO) {
     monomial_list[no_monomials].timescale = -5;
@@ -454,6 +457,8 @@ int init_monomials(const int V, const int even_odd_flag) {
       monomial_list[no_monomials-1].c_sw = monomial_list[clover_monomials[j]].c_sw;
       monomial_list[no_monomials-1].mu = monomial_list[clover_monomials[j]].mu;
       monomial_list[no_monomials-1].kappa = monomial_list[clover_monomials[j]].kappa;
+      monomial_list[no_monomials-1].decouple = monomial_list[clover_monomials[j]].decouple;
+      monomial_list[no_monomials-1].num_deriv = 0;
       monomial_list[no_monomials-1].hbfunction = &clover_trlog_heatbath;
       monomial_list[no_monomials-1].accfunction = &clover_trlog_acc;
       monomial_list[no_monomials-1].derivativefunction = NULL;
@@ -477,6 +482,8 @@ int init_monomials(const int V, const int even_odd_flag) {
       monomial_list[no_monomials-1].mubar = monomial_list[clovernd_monomials[j]].mubar;
       monomial_list[no_monomials-1].epsbar = monomial_list[clovernd_monomials[j]].epsbar;
       monomial_list[no_monomials-1].kappa = monomial_list[clovernd_monomials[j]].kappa;
+      monomial_list[no_monomials-1].decouple = monomial_list[clovernd_monomials[j]].decouple;
+      monomial_list[no_monomials-1].num_deriv = 0;
       monomial_list[no_monomials-1].hbfunction = &clovernd_trlog_heatbath;
       monomial_list[no_monomials-1].accfunction = &clovernd_trlog_acc;
       monomial_list[no_monomials-1].derivativefunction = NULL;

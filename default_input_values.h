@@ -134,6 +134,8 @@
 #define _default_mstarsq 0.01
 #define _default_no_sources_z2 1
 
+#define _default_num_deriv_eps 1.e-6
+
 /* sf default values */
 #define _default_g_eta 0.
 #define _default_g_Tbsf 3
