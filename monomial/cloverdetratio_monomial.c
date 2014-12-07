@@ -44,7 +44,73 @@
 #include "boundary.h"
 #include "cloverdetratio_monomial.h"
 
+#include "dirty_shameful_business.h"
+#include "expo.h"
+#include "buffers/gauge.h"
+#include "buffers/adjoint.h"
+#include "measure_gauge_action.h"
+#include "update_backward_gauge.h"
+#include "operator/clover_leaf.h"
+#include "read_input.h"
+
 /* think about chronological solver ! */
+void cloverdetratio_derivative(const int id, hamiltonian_field_t * const hf) {
+  static short first = 1;
+  monomial * mnl = &monomial_list[id];
+
+  if(mnl->write_deriv) {
+    char filename[100];
+    char mode[2] = {'a','\0'};
+    if( first == 1 ) {
+      mode[0] = 'w';
+      first = 0;
+    }
+    
+    adjoint_field_t df_analytical = get_adjoint_field();
+    zero_adjoint_field(&df_analytical);
+    ohnohack_remap_df0(df_analytical);
+    cloverdetratio_derivative_analytical(id,hf);
+
+    snprintf(filename,100,"%s_%02d_f_analytical.bin",mnl->name,mnl->timescale);
+    write_deriv_file(filename, mode, df_analytical, mnl);
+    
+    if(mnl->num_deriv) {
+      adjoint_field_t df_numerical  = get_adjoint_field();
+      zero_adjoint_field(&df_numerical);
+      ohnohack_remap_df0(df_numerical);
+      cloverdetratio_derivative_numerical(id,hf);
+      snprintf(filename,100,"%s_%02d_f_numerical.bin",mnl->name,mnl->timescale);
+      write_deriv_file(filename, mode, df_numerical, mnl);
+      
+      int x = 1, mu = 1;
+      double *ar_num = (double*)&df_numerical[x][mu];
+      double *ar_an = (double*)&df_analytical[x][mu];
+      fprintf(stderr, "[DEBUG] Comparison of force calculation at [%d][%d]!\n",x,mu);
+      fprintf(stderr, "         numerical force <-> analytical force \n");
+      for (int component = 0; component < 8; ++component)
+        fprintf(stderr, "    [%d]  %+14.12f <-> %+14.12f\n", component, ar_num[component], ar_an[component]); //*/
+      
+      return_adjoint_field(&df_numerical);
+    }
+    
+    if(!mnl->decouple) {
+      #ifdef OMP
+      #pragma omp parallel for
+      #endif
+      for(int x = 0; x < VOLUME; ++x) {
+        for(int mu = 0; mu < 4; ++mu) {
+          _add_su3adj(df[x][mu],df_analytical[x][mu]);
+        }
+      }
+    }
+    return_adjoint_field(&df_analytical);
+    ohnohack_remap_df0(df);
+    
+  } else { // write_deriv
+    if(!mnl->decouple)
+      cloverdetratio_derivative_analytical(id,hf);
+  }
+}
 
 void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[no];
@@ -149,7 +215,7 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
 }
 
 
-void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
+void cloverdetratio_derivative_analytical(const int no, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[no];
   double atime, etime;
   atime = gettime();
@@ -233,6 +299,59 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   return;
 }
 
+void cloverdetratio_derivative_numerical(const int id, hamiltonian_field_t * const hf) {
+  monomial * mnl = &monomial_list[id];
+  double atime = gettime();
+
+  su3adj rotation;
+  double *ar_rotation = (double*)&rotation;
+  double const eps = num_deriv_eps;
+  double const oneov2eps = 1.0/(2*eps);
+  double const epsilon[2] = {-eps,eps};
+  su3 old_value;
+  su3 mat_rotation;
+  double* xm;
+  su3* link;
+
+  for(int x = 0; x < VOLUME; ++x)
+  {
+    for(int mu = 0; mu < 4; ++mu)
+    {
+      xm=(double*)&hf->derivative[x][mu];
+      for (int component = 0; component < 8; ++component)
+      {
+        double h_rotated[2] = {0.0,0.0};
+        for(int direction = 0; direction < 2; ++direction)
+        {
+          link=&(hf->gaugefield[x][mu]);
+          // save current value of gauge field
+          memmove(&old_value, link, sizeof(su3));
+          /* Introduce a rotation along one of the components */
+          memset(ar_rotation, 0, sizeof(su3adj));
+          ar_rotation[component] = epsilon[direction];
+          exposu3(&mat_rotation, &rotation);
+          _su3_times_su3(*link, mat_rotation, old_value);
+          g_update_gauge_copy = 1;
+          update_backward_gauge(_AS_GAUGE_FIELD_T(hf->gaugefield));
+
+          h_rotated[direction] = cloverdetratio_energy(id,hf);
+
+          // reset modified part of gauge field
+          memmove(link,&old_value, sizeof(su3));
+          g_update_gauge_copy = 1;
+          update_backward_gauge(_AS_GAUGE_FIELD_T(hf->gaugefield));
+        } // direction
+        // calculate force contribution from gauge field due to rotation
+        xm[component] += (h_rotated[1]-h_rotated[0])*oneov2eps;
+      } // component
+    } // mu
+  } // x
+  double etime = gettime();
+  if(g_debug_level > 1 && g_proc_id == 0) {
+    printf("# Time for numerical %s monomial derivative: %e s\n", mnl->name, etime-atime);
+  }
+}
+
 
 void cloverdetratio_heatbath(const int id, hamiltonian_field_t * const hf) {
   monomial * mnl = &monomial_list[id];
@@ -252,6 +371,10 @@ void cloverdetratio_heatbath(const int id, hamiltonian_field_t * const hf) {
 
   random_spinor_field_eo(mnl->w_fields[0], mnl->rngrepro, RN_GAUSS);
   mnl->energy0  = square_norm(mnl->w_fields[0], VOLUME/2, 1);
+  
+  if(mnl->decouple){
+    mnl->energy0 = 0;
+  }
   
   g_mu3 = mnl->rho;
   mnl->Qp(mnl->w_fields[1], mnl->w_fields[0]);
@@ -305,6 +428,10 @@ double cloverdetratio_acc(const int id, hamiltonian_field_t * const hf) {
 
   /* Compute the energy contr. from second field */
   mnl->energy1 = square_norm(mnl->w_fields[0], VOLUME/2, 1);
+  
+  if(mnl->decouple){
+    mnl->energy1 = 0;
+  }
 
   g_mu = g_mu1;
   g_mu3 = 0.;
@@ -320,4 +447,50 @@ double cloverdetratio_acc(const int id, hamiltonian_field_t * const hf) {
     }
   }
   return(mnl->energy1 - mnl->energy0);
+}
+
+double cloverdetratio_energy(const int id, hamiltonian_field_t * const hf) {
+  monomial * mnl = &monomial_list[id];
+  int save_sloppy = g_sloppy_precision_flag, iter;
+  double atime, etime, energy;
+  atime = gettime();
+  g_mu = mnl->mu;
+  boundary(mnl->kappa);
+
+  sw_term( (const su3**) hf->gaugefield, mnl->kappa, mnl->c_sw); 
+  sw_invert(EE, mnl->mu);
+  
+  g_mu3 = mnl->rho2;
+  mnl->Qp(mnl->w_fields[1], mnl->pf);
+  g_mu3 = mnl->rho;
+
+  chrono_guess(mnl->w_fields[0], mnl->w_fields[1], mnl->csg_field, mnl->csg_index_array, 
+         mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_plus_psi);
+  g_sloppy_precision_flag = 0;    
+  iter = cg_her(mnl->w_fields[0], mnl->w_fields[1], mnl->maxiter, mnl->accprec,  
+          g_relative_precision_flag, VOLUME/2, mnl->Qsq);
+  mnl->Qm(mnl->w_fields[0], mnl->w_fields[0]);
+
+  g_sloppy_precision_flag = save_sloppy;
+
+  /* Compute the energy contr. from second field */
+  energy = square_norm(mnl->w_fields[0], VOLUME/2, 1);
+
+  g_mu = g_mu1;
+  g_mu3 = 0.;
+  boundary(g_kappa);
+  etime = gettime();
+  if(g_proc_id == 0) {
+    if(iter == -1) {
+      printf("WARNING: solver for monomial %s in energy computation did not converge!\n",mnl->name);
+    }
+    if(g_debug_level > 1) {
+      printf("# Time for %s monomial energy computation: %e s\n", mnl->name, etime-atime);
+    }
+    if(g_debug_level > 3) {
+      printf("called cloverdetratio_energy for id %d H_cdetratio = %1.10e\n", 
+       id, energy);
+    }
+  }
+  return(energy);
 }

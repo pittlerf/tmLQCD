@@ -150,6 +150,7 @@ EQL {SPC}*={SPC}*
   double innersolver_precision;
 
   double num_deriv_eps;
+  int sample_deriv;
 
   double innersolver_precision_abs;
   double innersolver_precision_rel;
@@ -424,6 +425,7 @@ EQL {SPC}*={SPC}*
 %x SMEARING_UNITARY
 
 %x NUMDERIVEPS
+%x SAMPLEDERIV
 
 %%
 ^SourceFilename{EQL}               BEGIN(SOURCEFILE);
@@ -517,9 +519,21 @@ EQL {SPC}*={SPC}*
 ^BeginGPU                          BEGIN(INITGPU);
 
 ^NumDerivEps{EQL}                  BEGIN(NUMDERIVEPS);
+^SampleDeriv{EQL}                  BEGIN(SAMPLEDERIV);
 
-<NUMDERIVEPS>{FLT}  {                                                                                                                                                                                            num_deriv_eps=atof(yytext);
+<NUMDERIVEPS>{FLT}  {
+  num_deriv_eps=atof(yytext);
   if(myverbose!=0) printf("num_deriv_eps=%lf \n", num_deriv_eps);
+}
+
+<SAMPLEDERIV>{DIGIT}+ {
+  sample_deriv=atoi(yytext);
+  if(myverbose!=0) printf(" Sample sample_deriv=%d components of the derivative. \n", sample_deriv);
+}
+
+<SAMPLEDERIV>no {
+  sample_deriv=0;
+  if(myverbose!=0) printf("When writing derivative, write whole volume and all components to file. \n", sample_deriv);
 }
 
 <INITGPU>Init{SPC}* {
@@ -1065,6 +1079,14 @@ EQL {SPC}*={SPC}*
     mnl->num_deriv = 0;
     if(myverbose) printf("  Do not compute numerical derivative for monomial %d in line %d\n", current_monomial, line_of_file);
   }
+  {SPC}*WriteDeriv{EQL}yes {
+    mnl->write_deriv = 1;
+    if(myverbose) printf("  Write derivative(s) for monomial %d in line %d to file\n", current_monomial, line_of_file);
+  }
+  {SPC}*WriteDeriv{EQL}no {
+    mnl->write_deriv = 0;
+    if(myverbose) printf("  Do not write derivative(s) for monomial %d in line %d to file\n", current_monomial, line_of_file);
+  }  
   {SPC}*Name{EQL} {
     name_caller = YY_START;
     BEGIN(MNAME);
@@ -2568,6 +2590,7 @@ int read_input(char * conf_file){
   no_smearings_declared = 1;
  
   num_deriv_eps = _default_num_deriv_eps;
+  sample_deriv = _default_sample_deriv;
  
   if(verbose && g_proc_id == 0) {
     myverbose = 1;

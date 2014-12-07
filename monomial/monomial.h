@@ -67,6 +67,7 @@ typedef struct {
   int use_rectangles;
   int decouple;
   int num_deriv;
+  int write_deriv;
   /* trlog */
   int trlog;
   int * csg_index_array, *csg_index_array2;
@@ -152,6 +153,8 @@ extern int no_gauge_monomials;
 /* number of ndpoly monomials, currently 0 or 1 */
 extern int no_ndpoly_monomials;
 
+extern int * write_deriv_indices;
+
 /* add a new monomial to the list of monomials */
 int add_monomial(const int type);
 /* initialise all monomials in the list */
@@ -161,6 +164,8 @@ void free_monomials();
 
 /* initialisation function for a poly monomial */
 int init_poly_monomial(const int V,const int id);
+
+void write_deriv_file(const char * filename, const char * mode, adjoint_field_t derivative, const monomial * mnl);
 
 
 /* some dummy functions */

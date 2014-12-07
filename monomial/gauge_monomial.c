@@ -56,31 +56,22 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
   static short first = 1;
   monomial * mnl = &monomial_list[id];
 
-  if(mnl->num_deriv) {
+  if(mnl->write_deriv) {
+    char filename[100];
     char mode[2] = {'a','\0'};
     if( first == 1 ) {
       mode[0] = 'w';
       first = 0;
     }
-
+    
     adjoint_field_t df_analytical = get_adjoint_field();
     zero_adjoint_field(&df_analytical);
     ohnohack_remap_df0(df_analytical);
     gauge_derivative_analytical(id,hf);
 
-    char filename[100];
-    snprintf(filename,100,"%s_f_analytical.bin",mnl->name);
-    FILE * f_analytical = fopen(filename,mode);
-    if( f_analytical != NULL ) {
-      if( mode[0] == 'w' ) {
-        fwrite((const void *) &mnl->accprec, sizeof(double), 1, f_analytical);
-        fwrite((const void *) &mnl->forceprec, sizeof(double), 1, f_analytical);
-        fwrite((const void *) &num_deriv_eps, sizeof(double), 1, f_analytical);
-      }
-      fwrite((const void *) df_analytical, sizeof(double), 8*4*VOLUME, f_analytical);
-      fclose(f_analytical);
-    }
-
+    snprintf(filename,100,"%s_%02d_f_analytical.bin",mnl->name,mnl->timescale);
+    write_deriv_file(filename, mode, df_analytical, mnl);
+    
     if(!mnl->decouple) {
       #ifdef OMP
       #pragma omp parallel for
@@ -91,10 +82,12 @@ void gauge_derivative(const int id, hamiltonian_field_t * const hf) {
         }
       }
     }
-    ohnohack_remap_df0(df);
     return_adjoint_field(&df_analytical);
-  } else {
-    gauge_derivative_analytical(id,hf);
+    ohnohack_remap_df0(df);
+    
+  } else { // write_deriv
+    if(!mnl->decouple)
+      gauge_derivative_analytical(id,hf);
   }
 }
 

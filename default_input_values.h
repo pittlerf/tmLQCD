@@ -135,6 +135,7 @@
 #define _default_no_sources_z2 1
 
 #define _default_num_deriv_eps 1.e-6
+#define _default_sample_deriv 512
 
 /* sf default values */
 #define _default_g_eta 0.

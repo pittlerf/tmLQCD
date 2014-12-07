@@ -83,58 +83,41 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
   static short first = 1;
   monomial * mnl = &monomial_list[id];
 
-  if(mnl->num_deriv) {
+  if(mnl->write_deriv) {
+    char filename[100];
     char mode[2] = {'a','\0'};
     if( first == 1 ) {
       mode[0] = 'w';
       first = 0;
     }
-
+    
     adjoint_field_t df_analytical = get_adjoint_field();
-    adjoint_field_t df_numerical  = get_adjoint_field();
-
     zero_adjoint_field(&df_analytical);
-    zero_adjoint_field(&df_numerical);
-
     ohnohack_remap_df0(df_analytical);
-
     ndrat_derivative_analytical(id,hf);
 
-    ohnohack_remap_df0(df_numerical);
-
-    ndrat_derivative_numerical(id,hf);
-
-    FILE * f_numerical = fopen("f_numerical.bin",mode);
-    if( f_numerical != NULL ) {
-      if( mode[0] == 'w' ) {
-        fwrite((const void *) &mnl->accprec, sizeof(double), 1, f_numerical);
-        fwrite((const void *) &mnl->forceprec, sizeof(double), 1, f_numerical);
-        fwrite((const void *) &num_deriv_eps, sizeof(double), 1, f_numerical);
-      }
-      fwrite((const void *) df_numerical, sizeof(double), 8*4*VOLUME, f_numerical);
-      fclose(f_numerical);
+    snprintf(filename,100,"%s_%02d_f_analytical.bin",mnl->name,mnl->timescale);
+    write_deriv_file(filename, mode, df_analytical, mnl);
+    
+    if(mnl->num_deriv) {
+      adjoint_field_t df_numerical  = get_adjoint_field();
+      zero_adjoint_field(&df_numerical);
+      ohnohack_remap_df0(df_numerical);
+      ndrat_derivative_numerical(id,hf);
+      snprintf(filename,100,"%s_%02d_f_numerical.bin",mnl->name,mnl->timescale);
+      write_deriv_file(filename, mode, df_numerical, mnl);
+      
+      int x = 1, mu = 1;
+      double *ar_num = (double*)&df_numerical[x][mu];
+      double *ar_an = (double*)&df_analytical[x][mu];
+      fprintf(stderr, "[DEBUG] Comparison of force calculation at [%d][%d]!\n",x,mu);
+      fprintf(stderr, "         numerical force <-> analytical force \n");
+      for (int component = 0; component < 8; ++component)
+        fprintf(stderr, "    [%d]  %+14.12f <-> %+14.12f\n", component, ar_num[component], ar_an[component]); //*/
+      
+      return_adjoint_field(&df_numerical);
     }
-
-    FILE * f_analytical = fopen("f_analytical.bin",mode);
-    if( f_analytical != NULL ) {
-      if( mode[0] == 'w' ) {
-        fwrite((const void *) &mnl->accprec, sizeof(double), 1, f_analytical);
-        fwrite((const void *) &mnl->forceprec, sizeof(double), 1, f_analytical);
-        fwrite((const void *) &num_deriv_eps, sizeof(double), 1, f_analytical);
-      }
-      fwrite((const void *) df_analytical, sizeof(double), 8*4*VOLUME, f_analytical);
-      fclose(f_analytical);
-    }
-
-    int x = 1, mu = 1;
-    double *ar_num = (double*)&df_numerical[x][mu];
-    double *ar_an = (double*)&df_analytical[x][mu];
-    fprintf(stderr, "[DEBUG] Comparison of force calculation at [%d][%d]!\n",x,mu);
-    fprintf(stderr, "         numerical force <-> analytical force \n");
-    for (int component = 0; component < 8; ++component)
-      fprintf(stderr, "    [%d]  %+14.12f <-> %+14.12f\n", component, ar_num[component], ar_an[component]); //*/
-
-
+    
     if(!mnl->decouple) {
       #ifdef OMP
       #pragma omp parallel for
@@ -145,11 +128,10 @@ void ndrat_derivative(const int id, hamiltonian_field_t * const hf) {
         }
       }
     }
-
     return_adjoint_field(&df_analytical);
-    return_adjoint_field(&df_numerical);
     ohnohack_remap_df0(df);
-  } else { // mnl->num_deriv
+    
+  } else { // write_deriv
     if(!mnl->decouple)
       ndrat_derivative_analytical(id,hf);
   }

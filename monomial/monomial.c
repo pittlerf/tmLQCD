@@ -51,6 +51,7 @@ int no_clovernd_monomials = 0;
 static spinor * _pf;
 spinor ** w_fields;
 const int no_wfields = 6;
+int * write_deriv_indices = (int*) NULL;
 
 int add_monomial(const int type) {
   
@@ -123,6 +124,7 @@ int add_monomial(const int type) {
 
   monomial_list[no_monomials].decouple = 0;
   monomial_list[no_monomials].num_deriv = 0;
+  monomial_list[no_monomials].write_deriv = 0;
 
   monomial_list[no_monomials].initialised = 1;
   if(monomial_list[no_monomials].type == NDDETRATIO) {
@@ -140,6 +142,19 @@ int init_monomials(const int V, const int even_odd_flag) {
   spinor * __pf = NULL;
   double sw_mu=0., sw_k=0., sw_c=0.;
   double swn_mubar=0., swn_epsbar = 0., swn_k=0., swn_c=0.;
+  
+  // initialize indices for sampling of derivative if we don't want to store full volume
+  if(sample_deriv > 0) {
+    double rn[3];
+    write_deriv_indices = calloc(3*sample_deriv, sizeof(int));
+    for(int i = 0; i < sample_deriv; ++i) {
+      ranlxd(rn,3);
+      write_deriv_indices[3*i] = (int)(rn[0]*VOLUME) % VOLUME;
+      write_deriv_indices[3*i+1] = (int)(rn[1]*4) % 4;
+      write_deriv_indices[3*i+2] = (int)(rn[2]*8) % 8;
+    }
+  }
+  
   for(int i = 0; i < no_monomials; i++) {
     if((monomial_list[i].type != GAUGE) && (monomial_list[i].type != SFGAUGE)) no++;
     /* non-degenerate monomials need two pseudo fermion fields */
@@ -500,8 +515,35 @@ int init_monomials(const int V, const int even_odd_flag) {
 
 void free_monomials() {
   
+  if( (void*)write_deriv_indices != NULL ) {
+    free(write_deriv_indices);
+  }
+  
   free(_pf);
   return;
+}
+
+void write_deriv_file(const char * filename, const char * mode, adjoint_field_t derivative, const monomial * mnl) {
+  FILE * file = fopen(filename,mode);
+  
+  double * ar_deriv;
+  
+  if( file != NULL ) {
+    if( mode[0] == 'w' ) {
+      fwrite((const void *) &mnl->accprec, sizeof(double), 1, file);
+      fwrite((const void *) &mnl->forceprec, sizeof(double), 1, file);
+      fwrite((const void *) &num_deriv_eps, sizeof(double), 1, file);
+    }
+    if(!sample_deriv) {
+      fwrite((const void *) derivative, sizeof(double), 8*4*VOLUME, file);
+    } else {
+      for(int i = 0; i < sample_deriv; ++i) {
+        ar_deriv = (double*)&derivative[write_deriv_indices[3*i]][write_deriv_indices[3*i+1]];
+        fwrite((const void*) &ar_deriv[write_deriv_indices[3*i+2]], sizeof(double), 1, file);
+      }
+    }
+    fclose(file);
+  }
 }
 
 

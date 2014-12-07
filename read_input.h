@@ -112,6 +112,7 @@ extern "C"
   extern int nblocks_t, nblocks_x, nblocks_y, nblocks_z;
 
   extern double num_deriv_eps;
+  extern int sample_deriv;
 
   int read_input(char *);
   int reread_input(char *);

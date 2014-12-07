@@ -24,7 +24,10 @@
 #include "hamiltonian_field.h"
 
 void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf);
+void cloverdetratio_derivative_analytical(const int no, hamiltonian_field_t * const hf);
+void cloverdetratio_derivative_numerical(const int no, hamiltonian_field_t * const hf);
 double cloverdetratio_acc(const int no, hamiltonian_field_t * const hf);
+double cloverdetratio_energy(const int no, hamiltonian_field_t * const hf);
 void cloverdetratio_heatbath(const int no, hamiltonian_field_t * const hf);
 
 #endif
