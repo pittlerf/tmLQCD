@@ -143,7 +143,7 @@ void _initQuda( int verbose )
   inv_param = newQudaInvertParam();
   
   // *** QUDA parameters begin here (may be modified)
-  QudaDslashType dslash_type = QUDA_TWISTED_MASS_DSLASH;
+  QudaDslashType dslash_type = QUDA_WILSON_DSLASH;
   QudaPrecision cpu_prec  = QUDA_DOUBLE_PRECISION;
   QudaPrecision cuda_prec = QUDA_DOUBLE_PRECISION;
   QudaPrecision cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
@@ -197,14 +197,14 @@ void _initQuda( int verbose )
   double offset[4] = {0.01, 0.02, 0.03, 0.04};
   for (int i=0; i<inv_param.num_offset; i++) inv_param.offset[i] = offset[i];
 
-  inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN_ASYMMETRIC;
-  inv_param.solution_type = QUDA_MAT_SOLUTION;
+  inv_param.matpc_type = QUDA_MATPC_EVEN_EVEN;// QUDA_MATPC_EVEN_EVEN_ASYMMETRIC;
+  inv_param.solution_type = QUDA_MAT_SOLUTION;//QUDA_MAT_SOLUTION;
 
   inv_param.dagger = QUDA_DAG_NO;
   inv_param.mass_normalization = QUDA_KAPPA_NORMALIZATION;
   inv_param.solver_normalization = QUDA_DEFAULT_NORMALIZATION;
   inv_param.solve_type = QUDA_NORMOP_PC_SOLVE;
-  inv_param.inv_type = QUDA_CG_INVERTER;
+  inv_param.inv_type = QUDA_CG_INVERTER;//QUDA_CG_INVERTER;
 
   inv_param.pipeline = 0;
   inv_param.gcrNkrylov = 10;
@@ -549,7 +549,7 @@ int invert_quda(spinor * const P, spinor * const Q, const int max_iter, double e
   int iteration;
 //  rn = getResidualDD(k,l,&nrm2);
 //  double tol = res*rn;
-  inv_param.tol = rel_prec;
+  inv_param.tol = sqrt(rel_prec);
 
   // these can be set individually
   for (int i=0; i<inv_param.num_offset; i++) {
@@ -560,7 +560,7 @@ int invert_quda(spinor * const P, spinor * const Q, const int max_iter, double e
   inv_param.mu = fabs(g_mu);
   inv_param.epsilon = 0.0;
   // IMPORTANT: use opposite TM flavor since gamma5 -> -gamma5 (until LXLYLZT prob. resolved)
-  inv_param.twist_flavor = (g_mu < 0.0 ? QUDA_TWIST_PLUS : QUDA_TWIST_MINUS);
+//  inv_param.twist_flavor = (g_mu < 0.0 ? QUDA_TWIST_PLUS : QUDA_TWIST_MINUS);
   inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ||
        inv_param.twist_flavor == QUDA_TWIST_DEG_DOUBLET ) ? 2 : 1;
 

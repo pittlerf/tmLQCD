@@ -11,7 +11,7 @@
 *
 *
 *******************************************************************************/
-#define TEST_INVERSION 0   // if 0, then test only Dslash
+#define TEST_INVERSION 1   // if 0, then test only Dslash
 #define TIMESLICE_SOURCE 0 // if 0, then volume source
 
 #ifdef HAVE_CONFIG_H
@@ -422,22 +422,22 @@ int main(int argc,char *argv[])
 		}
 	  }
 
-//	// get pion
-//	printf("\n# pion1: \n");
-//	double pionr[T];
-//	double pioni[T];
-//	for( int t = 0; t < T; t++ )
-//	{
-//		pionr[t] = 0.0;
-//		pioni[t] = 0.0;
-//		j = g_ipt[t][0][0][0];
-//    	for( int i = j; i < j+LX*LY*LZ; i++ )
-//    	{
-//    		pionr[t] += _spinor_prod_re( g_spinor_field[0][i], g_spinor_field[0][i] );
-//    		pioni[t] += _spinor_prod_im( g_spinor_field[0][i], g_spinor_field[0][i] );
-//    	}
-//    	printf("%i\t%f\t%f\n", t, pionr[t], pioni[t]);
-//	}
+	// get pion
+	printf("\n# pion1: \n");
+	double pionr[T];
+	double pioni[T];
+	for( int t = 0; t < T; t++ )
+	{
+		pionr[t] = 0.0;
+		pioni[t] = 0.0;
+		j = g_ipt[t][0][0][0];
+    	for( int i = j; i < j+LX*LY*LZ; i++ )
+    	{
+    		pionr[t] += _spinor_prod_re( g_spinor_field[0][i], g_spinor_field[0][i] );
+    		pioni[t] += _spinor_prod_im( g_spinor_field[0][i], g_spinor_field[0][i] );
+    	}
+    	printf("%i\t%f\t%f\n", t, pionr[t], pioni[t]);
+	}
 
 #else
 	if(even_odd_flag)
@@ -524,20 +524,20 @@ int main(int argc,char *argv[])
 		}
 	  }
 
-//	// get pion
-//	printf("\n# pion2: \n");
-//	for( int t = 0; t < T; t++ )
-//	{
-//		pionr[t] = 0.0;
-//		pioni[t] = 0.0;
-//		j = g_ipt[t][0][0][0];
-//    	for( int i = j; i < j+LX*LY*LZ; i++ )
-//    	{
-//    		pionr[t] += _spinor_prod_re( g_spinor_field[2][i], g_spinor_field[2][i] );
-//    		pioni[t] += _spinor_prod_im( g_spinor_field[2][i], g_spinor_field[2][i] );
-//    	}
-//    	printf("%i\t%f\t%f\n", t, pionr[t], pioni[t]);
-//	}
+	// get pion
+	printf("\n# pion2: \n");
+	for( int t = 0; t < T; t++ )
+	{
+		pionr[t] = 0.0;
+		pioni[t] = 0.0;
+		j = g_ipt[t][0][0][0];
+    	for( int i = j; i < j+LX*LY*LZ; i++ )
+    	{
+    		pionr[t] += _spinor_prod_re( g_spinor_field[2][i], g_spinor_field[2][i] );
+    		pioni[t] += _spinor_prod_im( g_spinor_field[2][i], g_spinor_field[2][i] );
+    	}
+    	printf("%i\t%f\t%f\n", t, pionr[t], pioni[t]);
+	}
 #else
 	if(even_odd_flag)
 		M_full_quda(g_spinor_field[4], g_spinor_field[5],
