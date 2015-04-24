@@ -143,7 +143,7 @@ void _initQuda( int verbose )
   inv_param = newQudaInvertParam();
   
   // *** QUDA parameters begin here (may be modified)
-  QudaDslashType dslash_type = QUDA_WILSON_DSLASH;
+  QudaDslashType dslash_type = QUDA_CLOVER_WILSON_DSLASH;
   QudaPrecision cpu_prec  = QUDA_DOUBLE_PRECISION;
   QudaPrecision cuda_prec = QUDA_DOUBLE_PRECISION;
   QudaPrecision cuda_prec_sloppy = QUDA_SINGLE_PRECISION;

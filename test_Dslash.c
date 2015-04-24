@@ -245,7 +245,7 @@ int main(int argc,char *argv[])
   init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
 
   if(even_odd_flag) {
-    j = init_spinor_field(VOLUMEPLUSRAND/2, 4*k_max+2);
+    j = init_spinor_field(VOLUMEPLUSRAND, 4*k_max+2);
   }
   else {
     j = init_spinor_field(VOLUMEPLUSRAND, 2*k_max+2);
@@ -336,12 +336,15 @@ int main(int argc,char *argv[])
 	/*initialize the spinor fields*/
 	j_max=1;
 	sdt=0.;
-	if(even_odd_flag)
-		for( int k=0; k<4*k_max; k++ )
-			random_spinor_field_eo(g_spinor_field[k], reproduce_randomnumber_flag, RN_GAUSS);
-	else
-		for( int k=0; k<2*k_max; k++ )
+
+	for( int k=0; k<2*k_max; k++ )
 			random_spinor_field_lexic(g_spinor_field[k], reproduce_randomnumber_flag, RN_GAUSS);
+
+	if(even_odd_flag)
+		for( int k=2*k_max-1; k>=0; k-=2 )
+			convert_lexic_to_eo(g_spinor_field[2*k],g_spinor_field[2*k+1],g_spinor_field[k]);
+//			random_spinor_field_eo(g_spinor_field[k], reproduce_randomnumber_flag, RN_GAUSS);
+
 
 
 #if TIMESLICE_SOURCE
