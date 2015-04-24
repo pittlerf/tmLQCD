@@ -564,6 +564,18 @@ int invert_quda(spinor * const P, spinor * const Q, const int max_iter, double e
   inv_param.Ls = (inv_param.twist_flavor == QUDA_TWIST_NONDEG_DOUBLET ||
        inv_param.twist_flavor == QUDA_TWIST_DEG_DOUBLET ) ? 2 : 1;
 
+  if (inv_param.dslash_type == QUDA_CLOVER_WILSON_DSLASH || inv_param.dslash_type == QUDA_TWISTED_CLOVER_DSLASH) {
+    inv_param.clover_cpu_prec = QUDA_DOUBLE_PRECISION;
+    inv_param.clover_cuda_prec = QUDA_DOUBLE_PRECISION;
+    inv_param.clover_cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
+    inv_param.clover_cuda_prec_precondition = QUDA_HALF_PRECISION;
+    inv_param.clover_order = QUDA_PACKED_CLOVER_ORDER;
+    inv_param.clover_coeff = g_c_sw;
+
+    loadCloverQuda(NULL, NULL, &inv_param);
+    printf("kappa = %f, c_sw = %f\n", inv_param.kappa, inv_param.clover_coeff);
+  }
+
   // reorder spinor
   reorder_spinor_toQuda( (double*)spinorIn, inv_param.cpu_prec );
 

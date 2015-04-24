@@ -12,7 +12,7 @@
 *
 *******************************************************************************/
 #define TEST_INVERSION 1   // if 0, then test only Dslash
-#define TIMESLICE_SOURCE 0 // if 0, then volume source
+#define TIMESLICE_SOURCE 1 // if 0, then volume source
 
 #ifdef HAVE_CONFIG_H
 # include<config.h>
@@ -48,6 +48,7 @@
 #include "operator/Hopping_Matrix.h"
 #include "operator/Hopping_Matrix_nocom.h"
 #include "operator/tm_operators.h"
+#include "operator/clovertm_operators.h"
 #include "operator.h"
 #include "solver/cg_her.h"
 #include "gamma.h"
@@ -60,6 +61,9 @@
 #include "linalg/square_norm.h"
 #include "linalg/assign_add_mul_r.h"
 #include "prepare_source.h"
+#include "operator/clovertm_operators.h"
+#include "operator/clover_leaf.h"
+#include "invert_clover_eo.h"
 #include "quda_interface.h"
 
 #ifdef PARALLELT
@@ -90,6 +94,27 @@ void _Q_pm_psi(spinor * const l, spinor * const k)
   gamma5(l, l, VOLUME);
 }
 
+void _Qsw_pm_psi(spinor * const l, spinor * const k) {
+  /* \hat Q_{-} */
+  Hopping_Matrix(EO, g_spinor_field[8+1], k);
+  clover_inv(g_spinor_field[8+1], -1, g_mu);
+  Hopping_Matrix(OE, g_spinor_field[8], g_spinor_field[8+1]);
+  clover_gamma5(OO, g_spinor_field[8], k, g_spinor_field[8], -(g_mu + g_mu3));
+  /* \hat Q_{+} */
+  Hopping_Matrix(EO, l, g_spinor_field[8]);
+  clover_inv(l, +1, g_mu);
+  Hopping_Matrix(OE, g_spinor_field[8+1], l);
+  clover_gamma5(OO, l, g_spinor_field[8], g_spinor_field[8+1], +(g_mu + g_mu3));
+}
+
+// this is the twisted clover Qhat with -mu
+void _Qsw_minus_psi(spinor * const l, spinor * const k) {
+  Hopping_Matrix(EO, g_spinor_field[8+1], k);
+  clover_inv(g_spinor_field[8+1], -1, g_mu);
+  Hopping_Matrix(OE, g_spinor_field[8], g_spinor_field[8+1]);
+  clover_gamma5(OO, l, k, g_spinor_field[8], -(g_mu + g_mu3));
+}
+
 void _M_full(spinor * const Even_new, spinor * const Odd_new,
 	    spinor * const Even, spinor * const Odd) {
   /* Even sites */
@@ -100,6 +125,19 @@ void _M_full(spinor * const Even_new, spinor * const Odd_new,
   /* Odd sites */
   Hopping_Matrix(OE, g_spinor_field[8], Even);
   assign_mul_one_pm_imu(Odd_new, Odd, 1., VOLUME/2);
+  assign_add_mul_r(Odd_new, g_spinor_field[8], -1., VOLUME/2);
+}
+
+void _Msw_full(spinor * const Even_new, spinor * const Odd_new,
+	      spinor * const Even, spinor * const Odd) {
+  /* Even sites */
+  Hopping_Matrix(EO, g_spinor_field[8], Odd);
+  assign_mul_one_sw_pm_imu(EE, Even_new, Even, +g_mu);
+  assign_add_mul_r(Even_new, g_spinor_field[8], -1., VOLUME/2);
+
+  /* Odd sites */
+  Hopping_Matrix(OE, g_spinor_field[8], Even);
+  assign_mul_one_sw_pm_imu(OO, Odd_new, Odd, +g_mu);
   assign_add_mul_r(Odd_new, g_spinor_field[8], -1., VOLUME/2);
 }
 
@@ -207,10 +245,10 @@ int main(int argc,char *argv[])
   init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
 
   if(even_odd_flag) {
-    j = init_spinor_field(VOLUMEPLUSRAND/2, 4*k_max+1);
+    j = init_spinor_field(VOLUMEPLUSRAND/2, 4*k_max+2);
   }
   else {
-    j = init_spinor_field(VOLUMEPLUSRAND, 2*k_max+1);
+    j = init_spinor_field(VOLUMEPLUSRAND, 2*k_max+2);
   }
 
   if ( j!= 0) {
@@ -287,6 +325,13 @@ int main(int argc,char *argv[])
 #ifdef QUDA
   _loadGaugeQuda();
 #endif
+
+  //clover
+  init_sw_fields(VOLUME);
+  sw_term( (const su3**) g_gauge_field, g_kappa, g_c_sw);
+  /* this must be EE here!   */
+  /* to match clover_inv in Qsw_psi */
+  sw_invert(EE, g_mu);
 
 	/*initialize the spinor fields*/
 	j_max=1;
@@ -380,6 +425,8 @@ int main(int argc,char *argv[])
 //  operator_list[0].prop1 = g_spinor_field[3];
 //#endif
 
+	solver_params_t solver_params;
+
 	/************************** D_psi on CPU **************************/
 	if(g_proc_id==0)
 		printf("\n# Operator 1:\n");
@@ -392,9 +439,39 @@ int main(int argc,char *argv[])
 #if TEST_INVERSION
       if(even_odd_flag)
       {
-    	  if(g_proc_id==0)
-    		  printf("\n# Test combination TEST_INVERSION and even_odd_flag is not implemented...\n");
-      	  return 0;
+    	  invert_clover_eo(g_spinor_field[0], g_spinor_field[1],
+    			  	    g_spinor_field[2], g_spinor_field[3],
+					    1.0e-10, 1000,
+					    1, 10e-10, solver_params,
+					    &g_gauge_field, &_Qsw_pm_psi, &_Qsw_minus_psi);
+    	  /* check result */
+    	  _Msw_full(g_spinor_field[4], g_spinor_field[5], g_spinor_field[0], g_spinor_field[1]);
+
+//    	  convert_eo_to_lexic(g_spinor_field[0], g_spinor_field[2], g_spinor_field[3]);
+
+    	for(int ix=0; ix<VOLUME/2; ix++ )
+		{
+			_vector_sub_assign( g_spinor_field[4][ix].s0, g_spinor_field[2][ix].s0 );
+			_vector_sub_assign( g_spinor_field[4][ix].s1, g_spinor_field[2][ix].s1 );
+			_vector_sub_assign( g_spinor_field[4][ix].s2, g_spinor_field[2][ix].s2 );
+			_vector_sub_assign( g_spinor_field[4][ix].s3, g_spinor_field[2][ix].s3 );
+
+			_vector_sub_assign( g_spinor_field[5][ix].s0, g_spinor_field[3][ix].s0 );
+			_vector_sub_assign( g_spinor_field[5][ix].s1, g_spinor_field[3][ix].s1 );
+			_vector_sub_assign( g_spinor_field[5][ix].s2, g_spinor_field[3][ix].s2 );
+			_vector_sub_assign( g_spinor_field[5][ix].s3, g_spinor_field[3][ix].s3 );
+		}
+
+		squarenorm = square_norm(g_spinor_field[4], VOLUME/2, 1);
+		if(g_proc_id==0) {
+			printf("\n# ||Ax-b||^2_e = %e\n", squarenorm);
+			fflush(stdout);
+		}
+		squarenorm = square_norm(g_spinor_field[5], VOLUME/2, 1);
+		if(g_proc_id==0) {
+			printf("\n# ||Ax-b||^2_o = %e\n\n", squarenorm);
+			fflush(stdout);
+		}
       }
 	  else
 	  {
@@ -423,6 +500,9 @@ int main(int argc,char *argv[])
 	  }
 
 	// get pion
+      if(even_odd_flag)
+    	  convert_eo_to_lexic(g_spinor_field[4], g_spinor_field[0], g_spinor_field[1]);
+
 	printf("\n# pion1: \n");
 	double pionr[T];
 	double pioni[T];
@@ -433,8 +513,13 @@ int main(int argc,char *argv[])
 		j = g_ipt[t][0][0][0];
     	for( int i = j; i < j+LX*LY*LZ; i++ )
     	{
-    		pionr[t] += _spinor_prod_re( g_spinor_field[0][i], g_spinor_field[0][i] );
-    		pioni[t] += _spinor_prod_im( g_spinor_field[0][i], g_spinor_field[0][i] );
+    		if(even_odd_flag) {
+    			pionr[t] += _spinor_prod_re( g_spinor_field[4][i], g_spinor_field[4][i] );
+    			pioni[t] += _spinor_prod_im( g_spinor_field[4][i], g_spinor_field[4][i] );
+    		} else {
+    			pionr[t] += _spinor_prod_re( g_spinor_field[0][i], g_spinor_field[0][i] );
+    			pioni[t] += _spinor_prod_im( g_spinor_field[0][i], g_spinor_field[0][i] );
+    		}
     	}
     	printf("%i\t%f\t%f\n", t, pionr[t], pioni[t]);
 	}
@@ -498,9 +583,39 @@ int main(int argc,char *argv[])
 #if TEST_INVERSION
       if(even_odd_flag)
       {
-    	  if(g_proc_id==0)
-    		  printf("\n# Test combination TEST_INVERSION and even_odd_flag is not implemented...\n");
-      	  return 0;
+    	  // invert
+    	convert_eo_to_lexic(g_spinor_field[0],g_spinor_field[2], g_spinor_field[3]);
+		invert_quda(g_spinor_field[4], g_spinor_field[0], 1000, 1.0e-10, 1.0e-10 );
+		convert_lexic_to_eo(g_spinor_field[0],g_spinor_field[1],g_spinor_field[4]);
+
+		/* check result */
+    	  _Msw_full(g_spinor_field[4], g_spinor_field[5], g_spinor_field[0], g_spinor_field[1]);
+
+//    	  convert_eo_to_lexic(g_spinor_field[0], g_spinor_field[2], g_spinor_field[3]);
+
+    	for(int ix=0; ix<VOLUME/2; ix++ )
+		{
+			_vector_sub_assign( g_spinor_field[4][ix].s0, g_spinor_field[2][ix].s0 );
+			_vector_sub_assign( g_spinor_field[4][ix].s1, g_spinor_field[2][ix].s1 );
+			_vector_sub_assign( g_spinor_field[4][ix].s2, g_spinor_field[2][ix].s2 );
+			_vector_sub_assign( g_spinor_field[4][ix].s3, g_spinor_field[2][ix].s3 );
+
+			_vector_sub_assign( g_spinor_field[5][ix].s0, g_spinor_field[3][ix].s0 );
+			_vector_sub_assign( g_spinor_field[5][ix].s1, g_spinor_field[3][ix].s1 );
+			_vector_sub_assign( g_spinor_field[5][ix].s2, g_spinor_field[3][ix].s2 );
+			_vector_sub_assign( g_spinor_field[5][ix].s3, g_spinor_field[3][ix].s3 );
+		}
+
+		squarenorm = square_norm(g_spinor_field[4], VOLUME/2, 1);
+		if(g_proc_id==0) {
+			printf("\n# ||Ax-b||^2_e = %e\n", squarenorm);
+			fflush(stdout);
+		}
+		squarenorm = square_norm(g_spinor_field[5], VOLUME/2, 1);
+		if(g_proc_id==0) {
+			printf("\n# ||Ax-b||^2_o = %e\n\n", squarenorm);
+			fflush(stdout);
+		}
       }
 	  else
 	  {
@@ -525,6 +640,9 @@ int main(int argc,char *argv[])
 	  }
 
 	// get pion
+      if(even_odd_flag)
+    	  convert_eo_to_lexic(g_spinor_field[4], g_spinor_field[0], g_spinor_field[1]);
+
 	printf("\n# pion2: \n");
 	for( int t = 0; t < T; t++ )
 	{
@@ -533,8 +651,13 @@ int main(int argc,char *argv[])
 		j = g_ipt[t][0][0][0];
     	for( int i = j; i < j+LX*LY*LZ; i++ )
     	{
-    		pionr[t] += _spinor_prod_re( g_spinor_field[2][i], g_spinor_field[2][i] );
-    		pioni[t] += _spinor_prod_im( g_spinor_field[2][i], g_spinor_field[2][i] );
+    		if(even_odd_flag) {
+    			pionr[t] += _spinor_prod_re( g_spinor_field[4][i], g_spinor_field[4][i] );
+    			pioni[t] += _spinor_prod_im( g_spinor_field[4][i], g_spinor_field[4][i] );
+    		} else {
+    			pionr[t] += _spinor_prod_re( g_spinor_field[2][i], g_spinor_field[2][i] );
+    			pioni[t] += _spinor_prod_im( g_spinor_field[2][i], g_spinor_field[2][i] );
+    		}
     	}
     	printf("%i\t%f\t%f\n", t, pionr[t], pioni[t]);
 	}
