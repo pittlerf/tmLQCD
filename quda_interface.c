@@ -570,7 +570,7 @@ int invert_quda(spinor * const P, spinor * const Q, const int max_iter, double e
     inv_param.clover_cuda_prec_sloppy = QUDA_SINGLE_PRECISION;
     inv_param.clover_cuda_prec_precondition = QUDA_HALF_PRECISION;
     inv_param.clover_order = QUDA_PACKED_CLOVER_ORDER;
-    inv_param.clover_coeff = g_c_sw;
+    inv_param.clover_coeff = g_c_sw*g_kappa;
 
     loadCloverQuda(NULL, NULL, &inv_param);
     printf("kappa = %f, c_sw = %f\n", inv_param.kappa, inv_param.clover_coeff);
