@@ -60,11 +60,12 @@
 #include "mpi_init.h"
 #include "linalg/square_norm.h"
 #include "linalg/assign_add_mul_r.h"
+#include "linalg/convert_eo_to_lexic.h"
 #include "prepare_source.h"
 #include "operator/clovertm_operators.h"
 #include "operator/clover_leaf.h"
 #include "invert_clover_eo.h"
-#include "quda_interface.h"
+#include "qphix_interface.h"
 
 #ifdef PARALLELT
 #  define SLICE (LX*LY*LZ/2)
@@ -191,7 +192,7 @@ int main(int argc,char *argv[])
 #ifdef QUDA
   if(g_proc_id==0)
 	  printf("# We're using QUDA!\n");
-  _initQuda(3);
+  _initQphix(3);
 #endif
 
   if(g_proc_id==0) {
@@ -323,7 +324,7 @@ int main(int argc,char *argv[])
 #endif
 
 #ifdef QUDA
-  _loadGaugeQuda();
+  _loadGaugeQphix();
 #endif
 
   //clover
@@ -574,7 +575,7 @@ int main(int argc,char *argv[])
     }
 
 
-	/************************** D_psi_quda on GPU **************************/
+	/************************** D_psi_qphix on AVX/MIC **************************/
 	if(g_proc_id==0)
 		printf("\n# Operator 2:\n");
 
@@ -588,7 +589,7 @@ int main(int argc,char *argv[])
       {
     	  // invert
     	convert_eo_to_lexic(g_spinor_field[0],g_spinor_field[2], g_spinor_field[3]);
-		invert_quda(g_spinor_field[4], g_spinor_field[0], 1000, 1.0e-10, 1.0e-10 );
+		invert_qphix(g_spinor_field[4], g_spinor_field[0], 1000, 1.0e-10, 1.0e-10 );
 		convert_lexic_to_eo(g_spinor_field[0],g_spinor_field[1],g_spinor_field[4]);
 
 		/* check result */
@@ -623,7 +624,7 @@ int main(int argc,char *argv[])
 	  else
 	  {
 		// invert
-		invert_quda(g_spinor_field[2], g_spinor_field[3], 1000, 1.0e-10, 1.0e-10 );
+		invert_qphix(g_spinor_field[2], g_spinor_field[3], 1000, 1.0e-10, 1.0e-10 );
 
 		// check inversion
 		D_psi(g_spinor_field[1], g_spinor_field[2]);
@@ -666,10 +667,10 @@ int main(int argc,char *argv[])
 	}
 #else
 	if(even_odd_flag)
-		M_full_quda(g_spinor_field[4], g_spinor_field[5],
+		M_full_qphix(g_spinor_field[4], g_spinor_field[5],
 	                g_spinor_field[6], g_spinor_field[7]);
 	else
-		D_psi_quda(g_spinor_field[2], g_spinor_field[3]);
+		D_psi_qphix(g_spinor_field[2], g_spinor_field[3]);
 #endif
 
       t2 = gettime();
@@ -764,7 +765,7 @@ int main(int argc,char *argv[])
 	// ---------------
 
 #ifdef QUDA
-  _endQuda(3);
+  _endQphix(3);
 #endif
 #ifdef OMP
   free_omp_accumulators();

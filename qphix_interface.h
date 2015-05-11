@@ -20,7 +20,7 @@
  ***********************************************************************/
 /***********************************************************************
 *
-* File quda_interface.h
+* File qphix_interface.h
 *
 * Author: Mario Schroeck <mario.schroeck@roma3.infn.it>
 * 
@@ -31,19 +31,19 @@
 *
 * The externally accessible functions are
 *
-*   void _initQuda( int verbose )  
+*   void _initQphix( int verbose )
 *     Initializes the QUDA library. Carries over the lattice size and the 
 *     MPI process grid and thus must be called after initializing MPI (and 
 *     after 'read_infile(argc,argv)').
 *     Memory for the QUDA gaugefield on the host is allocated but not filled 
-*     yet (the latter is done in _loadGaugeQuda(), see below). 
+*     yet (the latter is done in _loadGaugeQphix(), see below).
 *     Performance critical settings are done here and can be changed.
 *     Input parameter: verbose (0=SILENT, 1=SUMMARIZE, 2=VERBOSE).
 *
-*   void _endQuda()
+*   void _endQphix()
 *     Finalizes the QUDA library. Call before MPI_Finalize().
 *
-*   void _loadGaugeQuda()
+*   void _loadGaugeQphix()
 *     Copies and reorders the gaugefield on the host and copies it to the GPU.
 *     Must be called between last changes on the gaugefield (smearing, flip 
 *     boundary conditions, etc.) and first call of the inverter.
@@ -71,24 +71,23 @@
 *
 **************************************************************************/
 
-#ifndef QUDA_INTERFACE_H_
-#define QUDA_INTERFACE_H_
+#ifndef QPHIX_INTERFACE_H_
+#define QPHIX_INTERFACE_H_
 
 #include "su3.h"
 
-// pointer to the QUDA gaugefield, alloc. in dd_initQuda()
-double *gauge_quda[4];
+double *gauge_qphix[4];
 
 // wrapper functions
-void _initQuda( int verbose );
-void _endQuda();
-void _loadGaugeQuda();
+void _initQphix( int verbose );
+void _endQphix();
+void _loadGaugeQphix();
 
 // to be called instead of tmcgne to use the QUDA inverter
-int invert_quda(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, const int rel_prec );
+int invert_qphix(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, const int rel_prec );
 
 // apply the TM operator using QUDA
-void M_full_quda(spinor * const Even_new, spinor * const Odd_new,  spinor * const Even, spinor * const Odd);
-void D_psi_quda(spinor * const P, spinor * const Q);
+void M_full_qphix(spinor * const Even_new, spinor * const Odd_new,  spinor * const Even, spinor * const Odd);
+void D_psi_qphix(spinor * const P, spinor * const Q);
 
-#endif /* QUDA_INTERFACE_H_ */
+#endif /* QPHIX_INTERFACE_H_ */
