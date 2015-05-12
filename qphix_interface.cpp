@@ -81,7 +81,11 @@
 #include "global.h"
 #include "boundary.h"
 #include "linalg/convert_eo_to_lexic.h"
-//#include "qphix.h"
+
+//#include "qphix/wilson.h"
+//#include "qphix/invcg.h"
+//#include "qphix/invbicgstab.h"
+//#include "qphix/inv_richardson_multiprec.h"
 
 // define order of the spatial indices
 // default is LX-LY-LZ-T, see below def. of local lattice size, this is related to

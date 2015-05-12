@@ -13,7 +13,9 @@ subdir = .
 AR = @AR@
 RANLIB = @RANLIB@
 CC = @CC@
+CXX = @CXX@
 CCDEP = @CCDEP@
+CXXDEP = @CXXDEP@
 CFLAGS = @CFLAGS@
 LDFLAGS = @LDFLAGS@
 DEPFLAGS = @DEPFLAGS@
@@ -35,6 +37,7 @@ INCLUDES = @INCLUDES@
 LINK = $(CCLD) -o $@ ${LDFLAGS}
 
 COMPILE = ${CC} ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
+CXXCOMPILE = ${CXX} ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
 
 SMODULES = 
 
@@ -54,7 +57,9 @@ MODULES = read_input gamma measure_gauge_action start \
 	online_measurement update_momenta integrator  phmc \
 	little_D block operator measurements pion_norm \
 	temporalgauge spinor_fft X_psi P_M_eta \
-	jacobi fatal_error invert_clover_eo gettime qphix_interface @SPI_FILES@
+	jacobi fatal_error invert_clover_eo gettime @SPI_FILES@
+	
+CXXMODULES = qphix_interface
 
 ## the GPU modules (all .cu files in $GPUDIR)
 GPUSOURCES := $(wildcard $(srcdir)/$(GPUDIR)/*.cu)
@@ -85,6 +90,7 @@ ${top_srcdir}/git_hash.h:
 	@ ( cd @srcdir@ && sh GIT-VERSION-GEN )
 
 -include $(addsuffix .d,$(ALLOBJ))
+-include $(addsuffix .d,$(CXXMODULES))
 
 include ${top_srcdir}/Makefile.global
 
@@ -116,11 +122,15 @@ ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir
 
 ${PROGRAMS}: %: %.o libhmc.a $(SUBDIRS)
 	 ${LINK} $@.o $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS)
+	 
+# C++ modules
+$(addsuffix .o,$(filter ${NOOPTMOD},${CXXMODULES})): %.o: ${srcdir}/%.cpp %.d Makefile $(abs_top_builddir)/config.h
+	${CXXCOMPILE} -c $<
 
 # The rules for unit tests are kept in a separate file for tidyness
 include ${top_srcdir}/Makefile.tests
 
-dep: $(addsuffix .d,$(ALLOBJ))
+dep: $(addsuffix .d,$(ALLOBJ)) $(addsuffix .d,$(CXXMODULES))
 	@ echo "...dependency files built"
 
 install: Makefile
