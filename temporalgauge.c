@@ -9,7 +9,7 @@
 #include "temporalgauge.h"
 #include "stdio.h"
 #include "stdlib.h"
-#ifdef MPI
+#ifdef _MPI
   #include<mpi.h>
   #include "mpi_init.h"
 #endif
@@ -54,7 +54,7 @@ void copy_gauge_field (su3 ** to, su3 ** from)
 */
 int init_temporalgauge_trafo (const int V, su3** gfield) {
 
-#ifndef MPI
+#ifndef _MPI
 
    int it, iz, iy, ix;
    
@@ -274,7 +274,7 @@ int init_temporalgauge_trafo (const int V, su3** gfield) {
 
 // MPI implementation									// was merged into init_temporalgauge_without_mpi()
 
-#ifdef MPI
+#ifdef _MPI
 
 int init_temporalgauge_trafo_mpi (const int V, su3 ** gfield) {				// will initialize  g_trafo[]  as the transformation matrices
 											//	and  g_tempgauge_field  as a copy of  g_gauge_field
@@ -468,7 +468,7 @@ void finalize_temporalgauge() {
   free(tempgauge_field);
   free(g_tempgauge_field);
   
-  #ifdef MPI
+  #ifdef _MPI
     free(left);
     free(right);
   #endif
@@ -545,7 +545,7 @@ void apply_gtrafo (su3 ** gfield, su3 * trafofield) {
       for (iy = 0; iy < LY; iy++) {
         for (iz = 0; iz < LZ; iz++) {
         
-          #ifdef MPI				// this is the MPI implementation of the GLOBAL TEMPORALGAUGE
+          #ifdef _MPI				// this is the MPI implementation of the GLOBAL TEMPORALGAUGE
           
             pos = g_ipt[it][ix][iy][iz];
             

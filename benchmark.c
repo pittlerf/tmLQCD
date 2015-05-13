@@ -34,7 +34,7 @@
 #if (defined BGL && !defined BGP)
 #  include <rts.h>
 #endif
-#ifdef MPI
+#ifdef _MPI
 # include <mpi.h>
 # ifdef HAVE_LIBLEMON
 #  include <io/params.h>
@@ -93,7 +93,7 @@ int main(int argc,char *argv[])
   static double t1,t2,dt,sdt,dts,qdt,sqdt;
   double antioptaway=0.0;
 
-#ifdef MPI
+#ifdef _MPI
   static double dt2;
   
   DUM_DERI = 6;
@@ -163,7 +163,7 @@ int main(int argc,char *argv[])
     printf("# The code was compiled for persistent MPI calls (halfspinor only)\n");
 #  endif
 #endif
-#ifdef MPI
+#ifdef _MPI
 #  ifdef _NON_BLOCKING
     printf("# The code was compiled for non-blocking MPI calls (spinor and gauge)\n");
 #  endif
@@ -241,14 +241,14 @@ int main(int argc,char *argv[])
     fprintf(stderr, "Checking of geometry failed. Unable to proceed.\nAborting....\n");
     exit(1);
   }
-#if (defined MPI && !(defined _USE_SHMEM))
+#if (defined _MPI && !(defined _USE_SHMEM))
   check_xchange(); 
 #endif
 
   start_ranlux(1, 123456);
   random_gauge_field(reproduce_randomnumber_flag, g_gauge_field);
 
-#ifdef MPI
+#ifdef _MPI
   /*For parallelization: exchange the gaugefield */
   xchange_gauge(g_gauge_field);
 #endif
@@ -262,7 +262,7 @@ int main(int argc,char *argv[])
     }
     
     while(sdt < 30.) {
-#ifdef MPI
+#ifdef _MPI
       MPI_Barrier(MPI_COMM_WORLD);
 #endif
       t1 = gettime();
@@ -276,13 +276,13 @@ int main(int argc,char *argv[])
       }
       t2 = gettime();
       dt = t2-t1;
-#ifdef MPI
+#ifdef _MPI
       MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
       sdt = dt;
 #endif
       qdt=dt*dt;
-#ifdef MPI
+#ifdef _MPI
       MPI_Allreduce (&qdt, &sqdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
       sqdt = qdt;
@@ -307,7 +307,7 @@ int main(int argc,char *argv[])
       fflush(stdout);
     }
     
-#ifdef MPI
+#ifdef _MPI
     /* isolated computation */
     t1 = gettime();
     antioptaway=0.0;
@@ -360,7 +360,7 @@ int main(int argc,char *argv[])
     }
     
     while(sdt < 3.) {
-#ifdef MPI
+#ifdef _MPI
       MPI_Barrier(MPI_COMM_WORLD);
 #endif
       t1 = gettime();
@@ -372,13 +372,13 @@ int main(int argc,char *argv[])
       }
       t2 = gettime();
       dt=t2-t1;
-#ifdef MPI
+#ifdef _MPI
       MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
       sdt = dt;
 #endif
       qdt=dt*dt;
-#ifdef MPI
+#ifdef _MPI
       MPI_Allreduce (&qdt, &sqdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
       sqdt = qdt;
@@ -423,7 +423,7 @@ int main(int argc,char *argv[])
   free_geometry_indices();
   free_spinor_field();
   free_moment_field();
-#ifdef MPI
+#ifdef _MPI
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 #endif

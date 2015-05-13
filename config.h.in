@@ -55,9 +55,6 @@
 /* lapack available */
 #undef HAVE_LAPACK
 
-/* Define to 1 if you have the `cudart' library (-lcudart). */
-#undef HAVE_LIBCUDART
-
 /* Define to 1 if you have the <libintl.h> header file. */
 #undef HAVE_LIBINTL_H
 
@@ -66,9 +63,6 @@
 
 /* Define to 1 if you have the `lime' library (-llime). */
 #undef HAVE_LIBLIME
-
-/* Define to 1 if you have the `quda' library (-lquda). */
-#undef HAVE_LIBQUDA
 
 /* Define to 1 if you have the `rt' library (-lrt). */
 #undef HAVE_LIBRT
@@ -121,9 +115,6 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* Compile with MPI support */
-#undef MPI
-
 /* Fortran has no extra _ */
 #undef NOF77_
 
@@ -175,8 +166,8 @@
 /* XYZT parallelisation */
 #undef PARALLELXYZT
 
-/* Using QUDA GPU */
-#undef QUDA
+/* Using QPhiX */
+#undef QPHIX
 
 /* Define as the return type of signal handlers (`int' or `void'). */
 #undef RETSIGTYPE
@@ -235,6 +226,9 @@
 
 /* Define for large files, on AIX-style hosts. */
 #undef _LARGE_FILES
+
+/* Compile with MPI support */
+#undef _MPI
 
 /* use non-blocking MPI calls for spinor ang gauge */
 #undef _NON_BLOCKING

@@ -35,7 +35,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
-#ifdef MPI
+#ifdef _MPI
 # include <mpi.h>
 #endif
 #ifdef OMP
@@ -164,7 +164,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   /* the random number is only taken at node zero and then distributed to 
      the other sites */
   ranlxd(yy,1);
-#ifdef MPI
+#ifdef _MPI
   MPI_Bcast(&yy[0], 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
 
@@ -260,7 +260,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
     ret_gauge_diff = kc;
 #endif
 
-#ifdef MPI
+#ifdef _MPI
     tmp = ret_gauge_diff;
     MPI_Reduce(&tmp, &ret_gauge_diff, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 #endif
@@ -329,7 +329,7 @@ int update_tm(double *plaquette_energy, double *rectangle_energy,
   }
   hf.update_gauge_copy = 1;
   g_update_gauge_copy = 1;
-#ifdef MPI
+#ifdef _MPI
   xchange_gauge(hf.gaugefield);
 #endif
   etime=gettime();

@@ -28,7 +28,7 @@
 
 
 /*
-//#ifdef MPI
+//#ifdef _MPI
   #ifdef ALTERNATE_HOPPING_MATRIX
 
 // allocates memory for the fields for the alternative way of addressing positions in dev_Hopping_Matrix_alternate()
@@ -101,7 +101,7 @@ void free_gpu_indexfields() {
 
 
 /*
-//#ifdef MPI
+//#ifdef _MPI
   #ifdef ALTERNATE_HOPPING_MATRIX
 
 // applies the Hopping Part Even-Odd !

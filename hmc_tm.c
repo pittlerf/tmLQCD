@@ -36,7 +36,7 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
-#ifdef MPI
+#ifdef _MPI
 # include <mpi.h>
 #endif
 #ifdef OMP
@@ -52,7 +52,7 @@
 #include "start.h"
 #include "measure_gauge_action.h"
 #include "measure_rectangles.h"
-#ifdef MPI
+#ifdef _MPI
 # include "xchange/xchange.h"
 #endif
 #include "read_input.h"
@@ -125,7 +125,7 @@ int main(int argc,char *argv[]) {
   verbose = 1;
   g_use_clover_flag = 0;
 
-#ifdef MPI
+#ifdef _MPI
 
 #  ifdef OMP
   int mpi_thread_provided;
@@ -183,7 +183,7 @@ int main(int argc,char *argv[]) {
     }
   }
   
-#ifndef MPI
+#ifndef _MPI
   g_dbw2rand = 0;
 #endif
   
@@ -320,7 +320,7 @@ int main(int argc,char *argv[]) {
   }
 
   /*For parallelization: exchange the gaugefield */
-#ifdef MPI
+#ifdef _MPI
   xchange_gauge(g_gauge_field);
 #endif
 
@@ -482,7 +482,7 @@ int main(int argc,char *argv[]) {
             fprintf(stdout, "# Will attempt to write again in %d seconds.\n", io_timeout);
           
           sleep(io_timeout);
-#ifdef MPI
+#ifdef _MPI
           MPI_Barrier(MPI_COMM_WORLD);
 #endif
         }
@@ -519,7 +519,7 @@ int main(int argc,char *argv[]) {
       verbose = 0;
     }
 
-#ifdef MPI
+#ifdef _MPI
     MPI_Barrier(MPI_COMM_WORLD);
 #endif
     if(ix == 0 && g_proc_id == 0) {
@@ -555,7 +555,7 @@ int main(int argc,char *argv[]) {
   }
   free(input_filename);
   free(filename);
-#ifdef MPI
+#ifdef _MPI
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 #endif
