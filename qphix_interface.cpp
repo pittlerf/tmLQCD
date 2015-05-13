@@ -572,5 +572,7 @@ int invert_qphix(spinor * const P, spinor * const Q, const int max_iter, double 
 //
 //  if(iteration >= max_iter) return(-1);
 //  	  return(iteration);
+
+	return 0;
 }
 

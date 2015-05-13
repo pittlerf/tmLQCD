@@ -101,9 +101,9 @@ else
 	$(error Unable to find (f)lex, read_input.c not built. Please install (f)lex!)
 endif
 
-libhmc.a: ${addsuffix .o, ${MODULES} ${SMODULES}} Makefile
+libhmc.a: ${addsuffix .o, ${MODULES} ${SMODULES} ${CXXMODULES}} Makefile
 	@rm -f libhmc.a
-	@${AR} cru libhmc.a ${addsuffix .o, ${MODULES} ${SMODULES}}
+	@${AR} cru libhmc.a ${addsuffix .o, ${MODULES} ${SMODULES} ${CXXMODULES}}
 	@$(RANLIB) libhmc.a
 	@cp libhmc.a ${top_builddir}/lib/libhmc.a
 
@@ -117,15 +117,16 @@ $(addsuffix .o,$(filter ${NOOPTMOD},${MODULES})): %.o: ${srcdir}/%.c %.d Makefil
 ${addsuffix .o, ${SMODULES}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h
 	${COMPILE} ${SOPTARGS} -c $<
 
+# C++ modules
+$(addsuffix .o,${CXXMODULES}): %.o: ${srcdir}/%.cpp %.d Makefile $(abs_top_builddir)/config.h
+	${CXXCOMPILE} -c $<
+	
 ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h ${top_srcdir}/git_hash.h
 	${COMPILE} ${OPTARGS} -c $<
 
 ${PROGRAMS}: %: %.o libhmc.a $(SUBDIRS)
 	 ${LINK} $@.o $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS)
-	 
-# C++ modules
-$(addsuffix .o,$(filter ${NOOPTMOD},${CXXMODULES})): %.o: ${srcdir}/%.cpp %.d Makefile $(abs_top_builddir)/config.h
-	${CXXCOMPILE} -c $<
+
 
 # The rules for unit tests are kept in a separate file for tidyness
 include ${top_srcdir}/Makefile.tests
