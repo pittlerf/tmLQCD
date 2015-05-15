@@ -78,6 +78,10 @@
 
 double *gauge_qphix[4];
 
+#ifdef __cplusplus /* If this is a C++ compiler, use C linkage */
+extern "C" {
+#endif
+
 // wrapper functions
 void _initQphix( int verbose );
 void _endQphix();
@@ -90,4 +94,7 @@ int invert_qphix(spinor * const P, spinor * const Q, const int max_iter, double 
 void M_full_qphix(spinor * const Even_new, spinor * const Odd_new,  spinor * const Even, spinor * const Odd);
 void D_psi_qphix(spinor * const P, spinor * const Q);
 
+#ifdef __cplusplus /* If this is a C++ compiler, end C linkage */
+}
+#endif
 #endif /* QPHIX_INTERFACE_H_ */
