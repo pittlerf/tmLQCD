@@ -37,7 +37,7 @@ INCLUDES = @INCLUDES@
 LINK = $(CCLD) -o $@ ${LDFLAGS}
 
 COMPILE = ${CC} ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
-CXXCOMPILE = ${CXX} ${DEFS} ${INCLUDES} -o $@ ${CFLAGS}
+CXXCOMPILE = ${CXX} ${DEFS} ${INCLUDES} -o $@ ${CFLAGS} ${LDFLAGS}
 
 SMODULES = 
 
@@ -101,9 +101,9 @@ else
 	$(error Unable to find (f)lex, read_input.c not built. Please install (f)lex!)
 endif
 
-libhmc.a: ${addsuffix .o, ${MODULES} ${SMODULES} ${CXXMODULES}} Makefile
+libhmc.a: ${addsuffix .o, ${MODULES} ${SMODULES}} Makefile
 	@rm -f libhmc.a
-	@${AR} cru libhmc.a ${addsuffix .o, ${MODULES} ${SMODULES} ${CXXMODULES}}
+	@${AR} cru libhmc.a ${addsuffix .o, ${MODULES} ${SMODULES}}
 	@$(RANLIB) libhmc.a
 	@cp libhmc.a ${top_builddir}/lib/libhmc.a
 
@@ -124,8 +124,8 @@ $(addsuffix .o,${CXXMODULES}): %.o: ${srcdir}/%.cpp %.d Makefile $(abs_top_build
 ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/config.h ${top_srcdir}/git_hash.h
 	${COMPILE} ${OPTARGS} -c $<
 
-${PROGRAMS}: %: %.o libhmc.a $(SUBDIRS)
-	 ${LINK} $@.o $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS)
+${PROGRAMS}: %: %.o libhmc.a $(SUBDIRS) $(addsuffix .o,${CXXMODULES})
+	 ${LINK} $@.o $(addsuffix .o,${CXXMODULES}) $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS) ${LDFLAGS}
 
 
 # The rules for unit tests are kept in a separate file for tidyness

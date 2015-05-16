@@ -881,13 +881,28 @@ AC_ARG_WITH(qphixdir,
               AC_DEFINE(QPHIX,1,Using QPhiX)
               qphix_dir=$withval
               LDFLAGS="$LDFLAGS -L${qphix_dir}/lib -lqphix_solver"
-              INCLUDES="$INCLUDES -I${qphix_dir}/include/"
-#              AC_MSG_CHECKING([where to search for QDP++ libs])
-#						  AC_ARG_WITH(qdpxxdir,
-#						    AS_HELP_STRING([--with-qdpxxdir[=dir]], [if using QPhiX, then set QDP++ lib dir]),
-#						    qdpxx_dir=$withval)
-#						  AC_MSG_RESULT($qdpxx_dir)
-#						  LDFLAGS="$LDFLAGS -L$qdpxx_dir"
+              INCLUDES="$INCLUDES -I${qphix_dir}/include/ -I${qphix_dir}/../../tests/"
+              
+              # QDP++
+              AC_MSG_CHECKING([where to search for QDP++ libs])
+						  AC_ARG_WITH(qdpxxdir,
+						    AS_HELP_STRING([--with-qdpxxdir[=dir]], [if using QPhiX, then set QDP++ lib dir]),
+						    qdpxx_dir=$withval
+						    LDFLAGS="$LDFLAGS -L${qdpxx_dir}/lib -lqdp -lXPathReader -lxmlWriter -lqio -llime -lxml2 -lz -lm -ldl -lqmp -lqmp -lfiledb -lfilehash"
+						    INCLUDES="$INCLUDES -I${qdpxx_dir}/include/"
+						  )
+						  AC_MSG_RESULT($qdpxx_dir)
+						  
+						  # QMP
+              AC_MSG_CHECKING([where to search for QMP libs])
+						  AC_ARG_WITH(qmpdir,
+						    AS_HELP_STRING([--with-qmpdir[=dir]], [if using QPhiX, then set QMP lib dir]),
+						    qmp_dir=$withval
+						    LDFLAGS="$LDFLAGS -L${qmp_dir}/lib -lqmp"
+						    INCLUDES="$INCLUDES -I${qmp_dir}/include/"
+						  )
+						  AC_MSG_RESULT($qmp_dir)
+						  
 #              AC_CHECK_LIB([cudart],
 #                           [cudaMalloc],
 #                           [],
