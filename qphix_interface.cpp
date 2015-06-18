@@ -74,46 +74,30 @@
 **************************************************************************/
 
 #include "qphix_interface.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
+
+#undef SEEK_SET
+#undef SEEK_CUR
+#undef SEEK_END
+
 #include "global.h"
 #include "boundary.h"
 #include "linalg/convert_eo_to_lexic.h"
 
-#include "testDslashFull.h"
-#undef SEEK_SET
-#undef SEEK_CUR
-#undef SEEK_END
-#include "qdp.h"
-using namespace QDP;
+#include <iostream>
+#include <cstdio>
+#include <cstring>
 
-#ifndef DSLASH_M_W_H
-#include "dslashm_w.h"
-#endif
+using namespace std;
+#include "qphix/qphix_config.h"
+#include "qphix/print_utils.h"
+#include "qphix/threadbind.h"
 
-#ifndef REUNIT_H
-#include "reunit.h"
-#endif
-
-#include "qphix/geometry.h"
-#include "qphix/qdp_packer.h"
-#include "qphix/blas_new_c.h"
-// Disabling Full M and CG tests until vectorized dslash
-// works better
-#include "qphix/wilson.h"
-#include "qphix/invcg.h"
-#include "qphix/invbicgstab.h"
-#include "qphix/inv_richardson_multiprec.h"
-#if 1
-#include "./invbicgstab_test.h"
+#ifdef QPHIX_QMP_COMMS
+#include "qmp.h"
 #endif
 
 #include <omp.h>
-#if 0
-#include "qphix/memmap.h"
-#endif
+#include "timeDslashNoQDP.h"
 
 // define order of the spatial indices
 // default is LX-LY-LZ-T, see below def. of local lattice size, this is related to
