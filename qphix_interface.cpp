@@ -80,8 +80,13 @@
 //#undef SEEK_END
 
 #include "global.h"
+extern "C" {
 #include "boundary.h"
 #include "linalg/convert_eo_to_lexic.h"
+#include "solver/solver.h"
+#include "solver/solver_field.h"
+#include "gettime.h"
+}
 
 #include "timeDslashNoQDP.h"
 #include <omp.h>
@@ -773,6 +778,129 @@ runTest(const int lattSize[], const int qmp_geom[])
 
 }
 
+#if 0
+  template<typename FT, int veclen, int soalen, bool compress, typename QDPGauge>
+    void qdp_pack_gauge(const QDPGauge& u,
+			typename Geometry<FT,veclen,soalen,compress>::SU3MatrixBlock *u_cb0,
+			typename Geometry<FT,veclen,soalen,compress>::SU3MatrixBlock *u_cb1,
+			Geometry<FT,veclen,soalen,compress>& s)
+  {
+    // Get the subgrid latt size.
+    int Nt = s.Nt();
+    int Nz = s.Nz();
+    int Ny = s.Ny();
+    int nvecs = s.nVecs();
+    int nyg = s.nGY();
+    int Pxy = s.getPxy();
+    int Pxyz = s.getPxyz();
+
+
+    // Shift the lattice to get U(x-mu)
+    QDPGauge u_minus(4);
+    for(int mu=0; mu < 4; mu++) {
+      u_minus[mu] = shift(u[mu], BACKWARD, mu);
+    }
+
+
+#pragma omp parallel for collapse(4)
+    for(int t = 0; t < Nt; t++) {
+      for(int z = 0; z < Nz; z++) {
+	for(int y = 0; y < Ny; y++) {
+	  for(int s = 0; s < nvecs; s++) {
+	    for(int mu = 0; mu < 4; mu++) {
+	      int outer_c = 3;
+	      if ( compress ) {
+		outer_c = 2;
+	      }
+	      for(int c = 0; c < outer_c; c++) {
+		for(int c2 = 0; c2 < 3; c2++) {
+		  for(int x = 0; x < soalen; x++) {
+
+		    //#ifndef USE_PACKED_GAUGES
+		    //int xx = x;
+		    //int block = ((t*Nz+z)*Ny+y)*nvecs+s;
+
+		    //#endif
+		    //#else // USE_PACKED_GAUGES
+		    int block = (t*Pxyz+z*Pxy)/nyg+(y/nyg)*nvecs+s;
+		    int xx = (y%nyg)*soalen+x;
+		    // #endif // USE_PACKED_GAUGES
+
+		    int qdpsite = x + soalen*(s + nvecs*(y + Ny*(z + Nz*t)));
+		    u_cb0[block][2*mu][c][c2][0][xx] = u_minus[mu].elem(rb[0].start() + qdpsite).elem().elem(c2,c).real();
+		    u_cb0[block][2*mu][c][c2][1][xx] = u_minus[mu].elem(rb[0].start() + qdpsite).elem().elem(c2,c).imag();
+		    u_cb0[block][2*mu+1][c][c2][0][xx] = u[mu].elem(rb[0].start() + qdpsite).elem().elem(c2,c).real();
+		    u_cb0[block][2*mu+1][c][c2][1][xx] = u[mu].elem(rb[0].start() + qdpsite).elem().elem(c2,c).imag();
+
+
+		    u_cb1[block][2*mu][c][c2][0][xx] = u_minus[mu].elem(rb[1].start() + qdpsite).elem().elem(c2,c).real();
+		    u_cb1[block][2*mu][c][c2][1][xx] = u_minus[mu].elem(rb[1].start() + qdpsite).elem().elem(c2,c).imag();
+		    u_cb1[block][2*mu+1][c][c2][0][xx] = u[mu].elem(rb[1].start() + qdpsite).elem().elem(c2,c).real();
+		    u_cb1[block][2*mu+1][c][c2][1][xx] = u[mu].elem(rb[1].start() + qdpsite).elem().elem(c2,c).imag();
+		  }
+		}
+	      }
+	    }
+	  }
+	}
+      }
+    }
+  }
+#endif
+
+  template<typename FT, int veclen, int soalen, bool compress>
+  void qdp_pack_cb_spinor(const double** psi_in,
+			  typename Geometry<FT,veclen,soalen, compress>::FourSpinorBlock* psi,
+			  Geometry<FT,veclen,soalen,compress>& s,
+			  int cb)
+  {
+    // Get the subgrid latt size.
+    int Nt = s.Nt();
+    int Nz = s.Nz();
+    int Ny = s.Ny();
+    int Nxh = s.Nxh();
+    int nvecs = s.nVecs();
+    int Pxy = s.getPxy();
+    int Pxyz = s.getPxyz();
+
+#pragma omp parallel for collapse(4)
+      for(int t=0; t < Nt; t++) {
+	for(int z=0; z < Nz; z++) {
+	  for(int y=0; y < Ny; y++) {
+	    for(int s=0; s < nvecs; s++) {
+	      for(int col=0; col < 3; col++)  {
+		for(int spin=0; spin < 4; spin++) {
+		  for(int x=0; x < soalen; x++) {
+
+		    int ind = t*Pxyz+z*Pxy+y*nvecs+s; //((t*Nz+z)*Ny+y)*nvecs+s;
+		    int x_coord = s*soalen + x;
+		    int qdp_ind = ((t*Nz + z)*Ny + y)*Nxh + x_coord;
+
+		    psi[ind][col][spin][0][x] = psi_in[cb][24*qdp_ind+6*spin+2*col+0];
+		    		//psi_in.elem(rb[cb].start()+qdp_ind).elem(spin).elem(col).real();
+		    psi[ind][col][spin][1][x] = psi_in[cb][24*qdp_ind+6*spin+2*col+1];
+		    		//psi_in.elem(rb[cb].start()+qdp_ind).elem(spin).elem(col).imag();
+
+		  }
+		}
+	      }
+	    }
+	  }
+	}
+      }
+
+  }
+
+  template<typename FT, int veclen, int soalen, bool compress>
+  void qdp_pack_spinor(const double** psi_in,
+		       typename Geometry<FT,veclen,soalen, compress>::FourSpinorBlock* psi_even,
+		       typename Geometry<FT,veclen,soalen, compress>::FourSpinorBlock* psi_odd,
+		       Geometry<FT,veclen,soalen,compress>& s)
+  {
+    qdp_pack_cb_spinor(psi_in,psi_even,s,0);
+    qdp_pack_cb_spinor(psi_in,psi_odd,s,1);
+  }
+
 template<typename FT, int V, int S, bool compress>
 void
 invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, const int rel_prec )
@@ -825,7 +953,7 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
   // Create Scalar Dslash Class
   Geometry<FT,V,S,compress> geom(subLattSize, By, Bz, NCores, Sy, Sz, PadXY, PadXYZ, MinCt);
 
-  Dslash<FT,V,S,compress> D32(&geom, t_boundary, coeff_s,coeff_t);
+//  Dslash<FT,V,S,compress> D32(&geom, t_boundary, coeff_s,coeff_t);
 
 
   // Allocate data for the gauges
@@ -836,6 +964,10 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
   Gauge* u_packed[2];
   u_packed[0] = packed_gauge_cb0;
   u_packed[1] = packed_gauge_cb1;
+
+#if 0
+  qdp_pack_gauge<>(g_gauge_field, packed_gauge_cb0,packed_gauge_cb1, geom);
+#else
 
   double factor=0.08;
 
@@ -1028,8 +1160,9 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
 
   double end = omp_get_wtime();
   masterPrintf(" %g sec\n", end - start);
-  // Allocate data for the spinors
+#endif
 
+  // Allocate data for the spinors
   Spinor* p_even=(Spinor*)geom.allocCBFourSpinor();
   Spinor* p_odd=(Spinor*)geom.allocCBFourSpinor();
   Spinor* c_even=(Spinor*)geom.allocCBFourSpinor();
@@ -1041,6 +1174,15 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
   Spinor *chi_s[2] = { c_even, c_odd };
 
 
+#if 1
+  spinor ** solver_field = NULL;
+  const int nr_sf = 2;
+  init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
+// if !eo
+  convert_lexic_to_eo(solver_field[0], solver_field[1], Q);
+
+  qdp_pack_spinor<>((const double**)solver_field, p_even, p_odd, geom);
+#else
   masterPrintf("Filling Input spinor: ");
 
 
@@ -1073,6 +1215,7 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
 
   end = omp_get_wtime();
   masterPrintf(" %g sec\n", end - start);
+#endif
 
   masterPrintf("Zeroing output spinor: ");
   start = omp_get_wtime();
@@ -1317,6 +1460,7 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
 
   masterPrintf("Cleaning up\n");
 
+  finalize_solver(solver_field, nr_sf);
 
   geom.free(packed_gauge_cb0);
   geom.free(packed_gauge_cb1);
@@ -1324,7 +1468,6 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
   geom.free(p_odd);
   geom.free(c_even);
   geom.free(c_odd);
-
 
 }
 
