@@ -484,7 +484,7 @@ int main(int argc,char *argv[])
 	//      operator_list[0].inverter(0, 0, 1);
 		  gamma5(g_spinor_field[1], g_spinor_field[3], VOLUME);
 		  cg_her(g_spinor_field[2], g_spinor_field[1], 1000, 1.0e-10,
-				  1.0e-10, VOLUME, &_Q_pm_psi);
+				  0, VOLUME, &_Q_pm_psi);
 		  Q_minus_psi(g_spinor_field[0], g_spinor_field[2]);
 
 		  // check inversion
@@ -626,6 +626,11 @@ int main(int argc,char *argv[])
 	  {
 		// invert
 		invert_qphix(g_spinor_field[2], g_spinor_field[3], 1000, 1.0e-10, 1.0e-10 );
+
+//		  gamma5(g_spinor_field[1], g_spinor_field[3], VOLUME);
+//		  cg_her(g_spinor_field[0], g_spinor_field[1], 1000, 1.0e-10,
+//				  0, VOLUME, &_Q_pm_psi);
+//		  Q_minus_psi(g_spinor_field[2], g_spinor_field[0]);
 
 		// check inversion
 		D_psi(g_spinor_field[1], g_spinor_field[2]);
