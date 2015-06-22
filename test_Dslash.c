@@ -164,7 +164,8 @@ int main(int argc,char *argv[])
 
 #  ifdef OMP
   int mpi_thread_provided;
-  MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
+//  MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
+  _initQphix(argc, argv, 8, 8, 16, 1, 1, 1, 0, 2, 1, QPHIX_DOUBLE_PREC);
 #  else
   MPI_Init(&argc, &argv);
 #  endif

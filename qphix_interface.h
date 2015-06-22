@@ -78,12 +78,18 @@
 
 double *gauge_qphix[4];
 
+typedef enum QphixPrec {
+	QPHIX_FLOAT_PREC=0,
+	QPHIX_HALF_PREC,
+	QPHIX_DOUBLE_PREC
+} QphixPrec;
+
 #ifdef __cplusplus /* If this is a C++ compiler, use C linkage */
 extern "C" {
 #endif
 
 // wrapper functions
-void _initQphix( int verbose );
+void _initQphix(int argc, char **argv, int By_, int Bz_, int NCores_, int Sy_, int Sz_, int PadXY_, int PadXYZ_, int MinCt_, int c12, QphixPrec precision_);
 void _endQphix();
 void _loadGaugeQphix();
 
