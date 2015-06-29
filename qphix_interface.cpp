@@ -217,6 +217,7 @@ int commsMap(const int *coords, void *fdata)
   return rank;
 }
 
+#if 0
 template<typename FT, int V, int S, bool compress>
 void
 runTest(const int lattSize[], const int qmp_geom[])
@@ -774,9 +775,8 @@ runTest(const int lattSize[], const int qmp_geom[])
   geom.free(p_odd);
   geom.free(c_even);
   geom.free(c_odd);
-
-
 }
+#endif
 
 #if 0
   template<typename FT, int veclen, int soalen, bool compress, typename QDPGauge>
@@ -876,9 +876,15 @@ runTest(const int lattSize[], const int qmp_geom[])
 		    int x_coord = s*soalen + x;
 		    int qdp_ind = ((t*Nz + z)*Ny + y)*Nxh + x_coord;
 
-		    psi[ind][col][spin][0][x] = psi_in[cb][24*qdp_ind+6*spin+2*col+0];
+		    if( t==0 && y==0 && z==0 )
+		    	masterPrintf("s=%d, soalen=%d, x=%d, x_coord=%d\n", s, soalen, x, x_coord);
+
+		    int tm_ix = g_ipt[t][x_coord+cb*Nxh][y][z];
+		    int tm_i  = g_lexic2eosub[ tm_ix ];
+
+		    psi[ind][col][spin][0][x] = psi_in[cb][24*tm_i+6*spin+2*col+0];
 		    		//psi_in.elem(rb[cb].start()+qdp_ind).elem(spin).elem(col).real();
-		    psi[ind][col][spin][1][x] = psi_in[cb][24*qdp_ind+6*spin+2*col+1];
+		    psi[ind][col][spin][1][x] = psi_in[cb][24*tm_i+6*spin+2*col+1];
 		    		//psi_in.elem(rb[cb].start()+qdp_ind).elem(spin).elem(col).imag();
 
 		  }
@@ -899,6 +905,86 @@ runTest(const int lattSize[], const int qmp_geom[])
   {
     qdp_pack_cb_spinor(psi_in,psi_even,s,0);
     qdp_pack_cb_spinor(psi_in,psi_odd,s,1);
+  }
+
+  template<typename FT, int veclen, int soalen, bool compress>
+    void qdp_unpack_cb_spinor(typename Geometry<FT,veclen,soalen,compress>::FourSpinorBlock* chi_packed,
+			      double* chi,
+			      Geometry<FT,veclen,soalen,compress>& s,
+			      int cb)
+  {
+    int Nt = s.Nt();
+    int Nz = s.Nz();
+    int Ny = s.Ny();
+    int Nxh = s.Nxh();
+    int nvecs = s.nVecs();
+    int Pxy = s.getPxy();
+    int Pxyz = s.getPxyz();
+
+    double pionr[Nt];
+    for( int t = 0; t < Nt; t++ )
+		pionr[t] = 0.0;
+
+#pragma omp parallel for collapse(4)
+    for(int t=0; t < Nt; t++) {
+      for(int z=0; z < Nz; z++) {
+	for(int y=0; y < Ny; y++) {
+	  for(int s=0; s < nvecs; s++) {
+	    for(int spin=0; spin < 4; spin++) {
+	      for(int col=0; col < 3; col++)  {
+		for(int x=0; x < soalen; x++) {
+
+		  int ind = t*Pxyz+z*Pxy+y*nvecs+s; //((t*Nz+z)*Ny+y)*nvecs+s;
+		  int x_coord = s*soalen + x;
+		  int qdp_ind = ((t*Nz + z)*Ny + y)*Nxh + x_coord;
+
+		  int tm_t = t;
+		  int tm_z = z;
+		  int tm_y = y;
+		  int tm_x = x_coord*2+cb;
+
+		  if( tm_t%2 != cb ) tm_z++;
+		  if( tm_z%2 != cb ) tm_y++;
+		  if( tm_y%2 != cb ) tm_x++;
+
+		  int tm_idx = g_ipt[tm_t][tm_x][tm_y][tm_z];
+//		  int tm_ieo = g_lexic2eosub[ tm_idx ];
+
+//		  if( tm_x==0 && tm_y==0 && tm_z==0 ) {
+//			if(  col==0 && spin==0 )
+		  if( cb== 1)
+//			  masterPrintf("%d\t%e\tcb=%d, t=%d,x=%d,y=%d,z=%d\n",t,chi_packed[ind][col][spin][0][x]*chi_packed[ind][col][spin][0][x]
+//										   +chi_packed[ind][col][spin][1][x]*chi_packed[ind][col][spin][1][x],cb, t,tm_x,tm_y,tm_z);
+
+			  pionr[tm_t] = chi_packed[ind][col][spin][0][x]*chi_packed[ind][col][spin][0][x]
+				         +chi_packed[ind][col][spin][1][x]*chi_packed[ind][col][spin][1][x];
+//		  }
+
+		  //chi.elem(rb[cb].start()+qdp_ind).elem(spin).elem(col).real()
+		  chi[24*tm_idx+6*spin+2*col+0] = chi_packed[ind][col][spin][0][x];
+		  //chi.elem(rb[cb].start()+qdp_ind).elem(spin).elem(col).imag()
+		  chi[24*tm_idx+6*spin+2*col+1] = chi_packed[ind][col][spin][1][x];
+
+		}
+	      }
+	    }
+	  }
+	}
+      }
+    }
+    for( int t = 0; t < Nt; t++ )
+    	printf("%i\t%e\n", t, pionr[t]);
+
+  }
+
+  template<typename FT, int veclen, int soalen, bool compress>
+    void qdp_unpack_spinor(typename Geometry<FT,veclen,soalen,compress>::FourSpinorBlock* chi_even,
+			   typename Geometry<FT,veclen,soalen,compress>::FourSpinorBlock* chi_odd,
+			   double* chi,
+			   Geometry<FT,veclen,soalen,compress>& s)
+  {
+    qdp_unpack_cb_spinor(chi_even,chi,s,0);
+    qdp_unpack_cb_spinor(chi_odd,chi,s,1);
   }
 
 template<typename FT, int V, int S, bool compress>
@@ -1000,16 +1086,16 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
 		  double d4=factor*(drand48()-0.5);
 
 		  if( c == c2 ) {
-		    u_packed[0][block][mu][c][c2][RE][xx]=rep<FT,double>((double)1 + d1);
-		    u_packed[1][block][mu][c][c2][RE][xx]=rep<FT,double>((double)1 + d3);
+		    u_packed[0][block][mu][c][c2][RE][xx]=rep<FT,double>((double)1);//rep<FT,double>((double)1 + d1);
+		    u_packed[1][block][mu][c][c2][RE][xx]=rep<FT,double>((double)1);//rep<FT,double>((double)1 + d3);
 		  }
 		  else {
-		     u_packed[0][block][mu][c][c2][RE][xx]=rep<FT,double>(d1);
-		     u_packed[1][block][mu][c][c2][RE][xx]=rep<FT,double>(d3);
+		     u_packed[0][block][mu][c][c2][RE][xx]=rep<FT,double>((double)0);//rep<FT,double>(d1);
+		     u_packed[1][block][mu][c][c2][RE][xx]=rep<FT,double>((double)0);//rep<FT,double>(d3);
 		  }
 
-		  u_packed[0][block][mu][c][c2][IM][xx]=rep<FT,double>(d2);
-		  u_packed[1][block][mu][c][c2][IM][xx]=rep<FT,double>(d4);
+		  u_packed[0][block][mu][c][c2][IM][xx]=rep<FT,double>((double)0);//rep<FT,double>(d2);
+		  u_packed[1][block][mu][c][c2][IM][xx]=rep<FT,double>((double)0);//rep<FT,double>(d4);
 
 		}
 	      }
@@ -1167,19 +1253,22 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
   Spinor* p_odd=(Spinor*)geom.allocCBFourSpinor();
   Spinor* c_even=(Spinor*)geom.allocCBFourSpinor();
   Spinor* c_odd=(Spinor*)geom.allocCBFourSpinor();
+  Spinor* prep_p_even=(Spinor*)geom.allocCBFourSpinor();
+  Spinor* prep_p_odd=(Spinor*)geom.allocCBFourSpinor();
 
 
   // Point to the second block of the array. Now there is padding on both ends.
   Spinor *psi_s[2] = { p_even, p_odd };
   Spinor *chi_s[2] = { c_even, c_odd };
+  Spinor *prep_psi_s[2] = { prep_p_even, prep_p_odd };
 
-
-#if 1
   spinor ** solver_field = NULL;
   const int nr_sf = 2;
   init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
-// if !eo
-  convert_lexic_to_eo(solver_field[0], solver_field[1], Q);
+
+#if 0
+// if(eo) convert to lexic
+//  convert_lexic_to_eo(solver_field[0], solver_field[1], Q);
 
   qdp_pack_spinor<>((const double**)solver_field, p_even, p_odd, geom);
 #else
@@ -1201,10 +1290,13 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
 		double d4=drand48()-0.5;
 
 		int ind = t*Pxyz+z*Pxy+y*nvecs+s; //((t*Nz+z)*Ny+y)*nvecs+s;
-		psi_s[0][ind][col][spin][0][x] = rep<FT,double>(d1);
-		psi_s[0][ind][col][spin][1][x] = rep<FT,double>(d2);
-		psi_s[1][ind][col][spin][0][x] = rep<FT,double>(d3);
-		psi_s[1][ind][col][spin][1][x] = rep<FT,double>(d4);
+		psi_s[0][ind][col][spin][0][x] = rep<FT,double>(0/*d1*/);
+		psi_s[0][ind][col][spin][1][x] = rep<FT,double>(0/*d2*/);
+		psi_s[1][ind][col][spin][0][x] = rep<FT,double>(0/*d3*/);
+		psi_s[1][ind][col][spin][1][x] = rep<FT,double>(0/*d4*/);
+
+		if( ind==0 && col==0 && spin==0 && x==0 )
+			psi_s[0][ind][col][spin][0][x] = rep<FT,double>(1);
 	      }
 	    }
 	  }
@@ -1243,86 +1335,16 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
   end = omp_get_wtime();
   masterPrintf(" %g sec\n", end -start);
 
-#if 0
-  // Go through the test cases -- apply SSE dslash versus, QDP Dslash
-  for(int isign=1; isign >= -1; isign -=2) {
-    for(int cb=0; cb < 2; cb++) {
-      int source_cb = 1 - cb;
-      int target_cb = cb;
-      masterPrintf("Timing on cb=%d isign=%d\n", cb, isign);
-      masterPrintf("=============================\n");
-
-      for(int repeat=0; repeat < 3; repeat++) {
-	double start = omp_get_wtime();
-
-	for(int i=0; i < iters; i++) {
-	  // Apply Optimized Dslash
-	  D32.dslash(chi_s[target_cb],
-		     psi_s[source_cb],
-		     u_packed[target_cb],
-		     isign,
-		     target_cb);
-	}
-
-	double end = omp_get_wtime();
-	double time = end - start;
-	CommsUtils::sumDouble(&time);
-	time /= (double)CommsUtils::numNodes();
-
-	masterPrintf("\t timing %d of 3\n", repeat);
-	masterPrintf("\t %d iterations in %e seconds\n", iters, time);
-	masterPrintf("\t %e usec/iteration\n", 1.0e6*time/(double)iters);
-	double Gflops = 1320.0f*(double)(iters)*(double)(X1h*Ny*Nz*Nt)/1.0e9;
-	double perf = Gflops/time;
-	masterPrintf("\t Performance: %g GFLOPS total\n", perf);
-      }
-    }
-  }
-#endif
-
 
 #if 1
   masterPrintf("Creating Wilson Op\n");
-  EvenOddWilsonOperator<FT, V, S,compress> M(g_kappa, u_packed, &geom, t_boundary, coeff_s, coeff_t);
-
-//  // Go through the test cases -- apply SSE dslash versus, QDP Dslash
-//  for(int isign=1; isign >= -1; isign -=2) {
-//
-//    masterPrintf("Timing M: isign=%d\n",  isign);
-//    masterPrintf("=============================\n");
-//
-//    for(int repeat=0; repeat < 3; repeat++) {
-//      double start = omp_get_wtime();
-//
-//      for(int i=0; i < iters; i++) {
-//	// Apply Optimized Dslash
-//	M(chi_s[0],
-//	  psi_s[0],
-//	  isign);
-//      }
-//
-//      double end = omp_get_wtime();
-//      double time = end - start;
-//
-//      CommsUtils::sumDouble(&time);
-//      time /= (double)CommsUtils::numNodes();
-//
-//      masterPrintf("\t timing %d of 3\n", repeat);
-//      masterPrintf("\t %d iterations in %e seconds\n", iters, time);
-//      masterPrintf("\t %e usec/iteration\n", 1.0e6*time/(double)iters);
-//      double flops_per_iter = 1320.0f*2.0 + 24.0*3.0;
-//      double Gflops = flops_per_iter*(double)(iters)*(double)(X1h*Ny*Nz*Nt)/1.0e9;
-//      double perf = Gflops/time;
-//      masterPrintf("\t Performance: %g GFLOPS total\n", perf);
-//      masterPrintf("\t              %g GFLOPS / node\n", perf/(double)CommsUtils::numNodes());
-//
-//    }
-//
-//  }
+  double Mass = 1.0/(2.0*g_kappa) - 4.0;
+  masterPrintf("kappa=%f => Mass=%f\n",g_kappa,Mass);
+  EvenOddWilsonOperator<FT, V, S,compress> M(Mass, u_packed, &geom, t_boundary, coeff_s, coeff_t);
 #endif
 
 #if 1
-  double rsd_target=rsdTarget<FT>::value;
+//  double rsd_target=rsdTarget<FT>::value;
 //  int max_iters=5000;
   int niters;
   double rsd_final;
@@ -1341,46 +1363,72 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
       unsigned long site_flops=0;
       unsigned long mv_apps=0;
 
-      FT *psi_0 = (FT *)psi_s[0];
-#if defined(__INTEL_COMPILER)
-#pragma simd
-#endif
-#pragma omp parallel for
-      for(int i=0; i < len; i++) {
-	c_s0[i] = rep<FT,double>(0);
-      psi_0[i]= rep<FT,double>(0);
-      }
+//      FT *psi_0 = (FT *)psi_s[0];
+//#if defined(__INTEL_COMPILER)
+//#pragma simd
+//#endif
+//#pragma omp parallel for
+//      for(int i=0; i < len; i++) {
+//	c_s0[i] = rep<FT,double>(0);
+//      psi_0[i]= rep<FT,double>(0);
+//      }
+//
+//#pragma omp parallel for collapse(4)
+//      for(int t=0; t < lT; t++) {
+//	for(int z=0; z < lZ; z++) {
+//	  for(int y=0; y < lY; y++) {
+//	    for(int s=0; s < nvecs; s++) {
+//	      for(int spin=0; spin < 4; spin++) {
+//		for(int col=0; col < 3; col++)  {
+//		  for(int x=0; x < S; x++) {
+//
+//		    int ind = t*Pxyz+z*Pxy+y*nvecs+s; //((t*Nz+z)*Ny+y)*nvecs+s;
+//		    int x_coord = s*S + x;
+//		    double d1 = drand48()-0.5;
+//		    double d2 = drand48()-0.5;
+//		    double d3 = drand48()-0.5;
+//		    double d4 = drand48()-0.5;
+//
+//		    psi_s[0][ind][col][spin][0][x] = rep<FT,double>(d1);
+//		    psi_s[0][ind][col][spin][1][x] = rep<FT,double>(d2);
+//		    psi_s[1][ind][col][spin][0][x] = rep<FT,double>(d3);
+//		    psi_s[1][ind][col][spin][1][x] = rep<FT,double>(d4);
+//		  }
+//		}
+//	      }
+//	    }
+//	  }
+//	}
+//      }
 
-#pragma omp parallel for collapse(4)
-      for(int t=0; t < lT; t++) {
-	for(int z=0; z < lZ; z++) {
-	  for(int y=0; y < lY; y++) {
-	    for(int s=0; s < nvecs; s++) {
-	      for(int spin=0; spin < 4; spin++) {
-		for(int col=0; col < 3; col++)  {
-		  for(int x=0; x < S; x++) {
 
-		    int ind = t*Pxyz+z*Pxy+y*nvecs+s; //((t*Nz+z)*Ny+y)*nvecs+s;
-		    int x_coord = s*S + x;
-		    double d1 = drand48()-0.5;
-		    double d2 = drand48()-0.5;
-		    double d3 = drand48()-0.5;
-		    double d4 = drand48()-0.5;
+      // Prepare the source for preconditioning
+      Spinor* tmp_even=(Spinor*)geom.allocCBFourSpinor();
+      Spinor* tmp_odd=(Spinor*)geom.allocCBFourSpinor();
+      Spinor *tmp_s[2] = { tmp_even, tmp_odd };
 
-		    psi_s[0][ind][col][spin][0][x] = rep<FT,double>(d1);
-		    psi_s[0][ind][col][spin][1][x] = rep<FT,double>(d2);
-		    psi_s[1][ind][col][spin][0][x] = rep<FT,double>(d3);
-		    psi_s[1][ind][col][spin][1][x] = rep<FT,double>(d4);
-		  }
-		}
-	      }
-	    }
-	  }
-	}
-      }
+      // p_even -> M_{ee}^{-1} p_even
+      p_even *= 1.0/(4.0+Mass); // TODO refactor
 
+      // tmp_odd = M_{oe} p_even
+      int target_cb = 1, source_cb = 0;
+      M->dslash(tmp_s[target_cb], p_even, u_packed[target_cb], 1, target_cb);
+      tmp_s[target_cb] *= -0.5;
+
+      // this is now p_odd' = p_odd - M_{oe} M_{ee}^{-1} p_even
+      psi_s[1] -= tmp_s[1];
+      // i.e. we have psi' = L^{-1} psi
+
+      // trivially solve for c_even'
+      // c_even' = M_{ee}^{-1} p_even
+      chi_s[0] = 1.0/(4.0+Mass) * psi_s[0]; // TODO refactor
+
+      // prepare source for CG: psi' -> M^\dagger psi'
+      M(prep_psi_s[1], psi_s[1] , -1);
+
+      // solve for c_odd'
       start = omp_get_wtime();
-      solver(chi_s[0], psi_s[0], eps_sq, niters, rsd_final, site_flops, mv_apps,1,verbose);
+      solver(chi_s[1], prep_psi_s[1], eps_sq, niters, rsd_final, site_flops, mv_apps,1,verbose);
       end = omp_get_wtime();
 
 
@@ -1389,74 +1437,26 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
       masterPrintf("Solver Time=%g(s)\n", (end-start));
       masterPrintf("CG GFLOPS=%g\n", 1.0e-9*(double)(total_flops)/(end -start));
 
+      // need to reconstruct solution (preconditioning)
+      // tmp_even = M_{eo} c_odd
+      target_cb = 0; source_cb = 1;
+      M->dslash(tmp_s[target_cb], chi_s[source_cb], u_packed[target_cb], 1, target_cb);
+      tmp_s[target_cb] *= -0.5;
+
+      // tmp_even -> M_{ee}^{-1} tmp_even
+      tmp_s[0] *= 1.0/(4.0+Mass); // TODO refactor
+
+      chi_s[0] -= tmp_s[0];
+
+      // unpack
+      qdp_unpack_spinor<>(chi_s[0], chi_s[1], (double*)P, geom); //(const double**)solver_field, p_even, p_odd,
+//      convert_eo_to_lexic(P, solver_field[0], solver_field[1]); //solver_field[0], solver_field[1], Q);
+      //if(eo) convert from lexic to eo
     }
   } // Solver
 #endif
 
-#if 0
-  {
-    masterPrintf("Creating BiCGStab Solver\n");
-    InvBiCGStab<FT,V,S,compress> solver2(M, max_iters);
-    masterPrintf("Tuning BiCGStab Solver\n");
-    solver2.tune();
 
-    for(int solve =0; solve < 5; solve++) {
-      unsigned long site_flops;
-      unsigned long mv_apps;
-
-      FT *psi_0 = (FT *)psi_s[0];
-#if defined(__INTEL_COMPILER)
-#pragma simd
-#endif
-#pragma omp parallel for
-      for(int i=0; i < len; i++) {
-	c_s0[i] = rep<FT,double>(0);
-	psi_0[i]= rep<FT,double>(0);
-      }
-
-#pragma omp parallel for collapse(4)
-      for(int t=0; t < lT; t++) {
-	for(int z=0; z < lZ; z++) {
-	  for(int y=0; y < lY; y++) {
-	    for(int s=0; s < nvecs; s++) {
-	      for(int spin=0; spin < 4; spin++) {
-		for(int col=0; col < 3; col++)  {
-		  for(int x=0; x < S; x++) {
-
-		    int ind = t*Pxyz+z*Pxy+y*nvecs+s; //((t*Nz+z)*Ny+y)*nvecs+s;
-		    int x_coord = s*S + x;
-
-		    double d1 = drand48()-0.5;
-		    double d2 = drand48()-0.5;
-		    double d3 = drand48()-0.5;
-		    double d4 = drand48()-0.5;
-
-		    psi_s[0][ind][col][spin][0][x] = rep<FT,double>(d1);
-		    psi_s[0][ind][col][spin][1][x] = rep<FT,double>(d2);
-		    psi_s[1][ind][col][spin][0][x] = rep<FT,double>(d3);
-		    psi_s[1][ind][col][spin][1][x] = rep<FT,double>(d4);
-
-		  }
-		}
-	      }
-	    }
-	  }
-	}
-      }
-
-      start = omp_get_wtime();
-      solver2(chi_s[0], psi_s[0], rsd_target, niters, rsd_final, site_flops, mv_apps,1,verbose);
-      end = omp_get_wtime();
-
-
-      unsigned long num_cb_sites=X1h*Ny*Nz*Nt;
-      unsigned long total_flops = (site_flops + (72+2*1320)*mv_apps)*num_cb_sites;
-
-      masterPrintf("Solver Time=%g(s)\n", (end-start));
-      masterPrintf("BICGSTAB GFLOPS=%g\n", 1.0e-9*(double)(total_flops)/(end -start));
-    }
-  }
-#endif
 
   masterPrintf("Cleaning up\n");
 
@@ -1468,6 +1468,8 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
   geom.free(p_odd);
   geom.free(c_even);
   geom.free(c_odd);
+  geom.free(prep_p_even);
+  geom.free(prep_p_odd);
 
 }
 

@@ -142,6 +142,23 @@ void _Msw_full(spinor * const Even_new, spinor * const Odd_new,
   assign_add_mul_r(Odd_new, g_spinor_field[8], -1., VOLUME/2);
 }
 
+void printPion(spinor* sp) {
+	double pionr[T];
+	double pioni[T];
+	for( int t = 0; t < T; t++ )
+	{
+		pionr[t] = 0.0;
+		pioni[t] = 0.0;
+		int j = g_ipt[t][0][0][0];
+    	for( int i = j; i < j+1/*LX*LY*LZ*/; i++ )
+    	{
+    		pionr[t] += _spinor_prod_re( sp[i], sp[i] );
+    		pioni[t] += _spinor_prod_im( sp[i], sp[i] );
+    	}
+    	printf("%i\t%e\t%e\n", t, pionr[t], pioni[t]);
+	}
+}
+
 int main(int argc,char *argv[])
 {
   int j,j_max,k;
@@ -165,7 +182,7 @@ int main(int argc,char *argv[])
 #  ifdef OMP
   int mpi_thread_provided;
 //  MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
-  _initQphix(argc, argv, 8, 8, 16, 1, 1, 1, 0, 2, 1, QPHIX_DOUBLE_PREC);
+  _initQphix(argc, argv, 8, 8, 16, 1, 1, 1, 0, 2, 0/*c12*/, QPHIX_DOUBLE_PREC);
 #  else
   MPI_Init(&argc, &argv);
 #  endif
@@ -316,8 +333,8 @@ int main(int argc,char *argv[])
 //#endif
 
   start_ranlux(1, 123456);
-  random_gauge_field(reproduce_randomnumber_flag, g_gauge_field);
-//  unit_g_gauge_field();
+//  random_gauge_field(reproduce_randomnumber_flag, g_gauge_field);
+  unit_g_gauge_field();
 
 #ifdef _MPI
   /*For parallelization: exchange the gaugefield */
@@ -359,10 +376,11 @@ int main(int argc,char *argv[])
 			_spinor_null(g_spinor_field[3][ix]);
 		}
 	else
-		for(int ix=LX*LY*LZ; ix<VOLUME; ix++ )
+		for(int ix=0/*LX*LY*LZ*/; ix<VOLUME; ix++ )
 		{
 			_spinor_null(g_spinor_field[1][ix]);
 		}
+		g_spinor_field[1][0].s0.c0 = 1.0;
 #endif
 
 	// copy
@@ -509,25 +527,30 @@ int main(int argc,char *argv[])
     	  convert_eo_to_lexic(g_spinor_field[4], g_spinor_field[0], g_spinor_field[1]);
 
 	printf("\n# pion1: \n");
-	double pionr[T];
-	double pioni[T];
-	for( int t = 0; t < T; t++ )
-	{
-		pionr[t] = 0.0;
-		pioni[t] = 0.0;
-		j = g_ipt[t][0][0][0];
-    	for( int i = j; i < j+LX*LY*LZ; i++ )
-    	{
-    		if(even_odd_flag) {
-    			pionr[t] += _spinor_prod_re( g_spinor_field[4][i], g_spinor_field[4][i] );
-    			pioni[t] += _spinor_prod_im( g_spinor_field[4][i], g_spinor_field[4][i] );
-    		} else {
-    			pionr[t] += _spinor_prod_re( g_spinor_field[0][i], g_spinor_field[0][i] );
-    			pioni[t] += _spinor_prod_im( g_spinor_field[0][i], g_spinor_field[0][i] );
-    		}
-    	}
-    	printf("%i\t%f\t%f\n", t, pionr[t], pioni[t]);
-	}
+	if(even_odd_flag)
+		printPion(g_spinor_field[4]);
+	else
+		printPion(g_spinor_field[0]);
+
+//	double pionr[T];
+//	double pioni[T];
+//	for( int t = 0; t < T; t++ )
+//	{
+//		pionr[t] = 0.0;
+//		pioni[t] = 0.0;
+//		j = g_ipt[t][0][0][0];
+//    	for( int i = j; i < j+1/*LX*LY*LZ*/; i++ )
+//    	{
+//    		if(even_odd_flag) {
+//    			pionr[t] += _spinor_prod_re( g_spinor_field[4][i], g_spinor_field[4][i] );
+//    			pioni[t] += _spinor_prod_im( g_spinor_field[4][i], g_spinor_field[4][i] );
+//    		} else {
+//    			pionr[t] += _spinor_prod_re( g_spinor_field[0][i], g_spinor_field[0][i] );
+//    			pioni[t] += _spinor_prod_im( g_spinor_field[0][i], g_spinor_field[0][i] );
+//    		}
+//    	}
+//    	printf("%i\t%e\t%e\n", t, pionr[t], pioni[t]);
+//	}
 
 #else
 	if(even_odd_flag)
@@ -654,23 +677,30 @@ int main(int argc,char *argv[])
     	  convert_eo_to_lexic(g_spinor_field[4], g_spinor_field[0], g_spinor_field[1]);
 
 	printf("\n# pion2: \n");
-	for( int t = 0; t < T; t++ )
-	{
-		pionr[t] = 0.0;
-		pioni[t] = 0.0;
-		j = g_ipt[t][0][0][0];
-    	for( int i = j; i < j+LX*LY*LZ; i++ )
-    	{
-    		if(even_odd_flag) {
-    			pionr[t] += _spinor_prod_re( g_spinor_field[4][i], g_spinor_field[4][i] );
-    			pioni[t] += _spinor_prod_im( g_spinor_field[4][i], g_spinor_field[4][i] );
-    		} else {
-    			pionr[t] += _spinor_prod_re( g_spinor_field[2][i], g_spinor_field[2][i] );
-    			pioni[t] += _spinor_prod_im( g_spinor_field[2][i], g_spinor_field[2][i] );
-    		}
-    	}
-    	printf("%i\t%f\t%f\n", t, pionr[t], pioni[t]);
-	}
+	if(even_odd_flag)
+		printPion(g_spinor_field[4]);
+	else
+		printPion(g_spinor_field[2]);
+
+//	for( int t = 0; t < T; t++ )
+//	{
+//		pionr[t] = 0.0;
+//		pioni[t] = 0.0;
+//		j = g_ipt[t][0][0][0];
+//    	for( int i = j; i < j+1/*LX*LY*LZ*/; i++ )
+//    	{
+//    		if(even_odd_flag) {
+//    			pionr[t] += _spinor_prod_re( g_spinor_field[4][i], g_spinor_field[4][i] );
+//    			pioni[t] += _spinor_prod_im( g_spinor_field[4][i], g_spinor_field[4][i] );
+//    		} else {
+//    			pionr[t] += creal(g_spinor_field[2][i].s0.c0)*creal(g_spinor_field[2][i].s0.c0)
+//    					   +cimag(g_spinor_field[2][i].s0.c0)*cimag(g_spinor_field[2][i].s0.c0);
+//    					//_spinor_prod_re( g_spinor_field[2][i], g_spinor_field[2][i] );
+//    			pioni[t] += _spinor_prod_im( g_spinor_field[2][i], g_spinor_field[2][i] );
+//    		}
+//    	}
+//    	printf("%i\t%e\t%e\n", t, pionr[t], pioni[t]);
+//	}
 #else
 	if(even_odd_flag)
 		M_full_qphix(g_spinor_field[4], g_spinor_field[5],
