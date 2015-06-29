@@ -65,6 +65,7 @@
 #include "operator/clovertm_operators.h"
 #include "operator/clover_leaf.h"
 #include "invert_clover_eo.h"
+#include "invert_eo.h"
 #include "qphix_interface.h"
 
 #ifdef PARALLELT
@@ -84,6 +85,8 @@
 #endif
 
 int check_xchange();
+
+#include "operator/tm_operators.c"
 
 void _Q_pm_psi(spinor * const l, spinor * const k)
 {
@@ -368,19 +371,26 @@ int main(int argc,char *argv[])
 
 #if TIMESLICE_SOURCE
 	if(even_odd_flag)
-		for(int ix=LX*LY*LZ/2; ix<VOLUME/2; ix++ )
+	{
+		for(int ix=0/*LX*LY*LZ/2*/; ix<VOLUME/2; ix++ )
 		{
 			// even
 			_spinor_null(g_spinor_field[2][ix]);
 			// odd
 			_spinor_null(g_spinor_field[3][ix]);
 		}
+		//point source
+		g_spinor_field[2][0].s0.c0 = 1.0;
+		g_spinor_field[3][0].s0.c0 = 1.0; //TODO
+	}
 	else
+	{
 		for(int ix=0/*LX*LY*LZ*/; ix<VOLUME; ix++ )
 		{
 			_spinor_null(g_spinor_field[1][ix]);
 		}
 		g_spinor_field[1][0].s0.c0 = 1.0;
+	}
 #endif
 
 	// copy
@@ -462,15 +472,30 @@ int main(int argc,char *argv[])
 #if TEST_INVERSION
       if(even_odd_flag)
       {
+#if 0 //clover
     	  invert_clover_eo(g_spinor_field[0], g_spinor_field[1],
     			  	    g_spinor_field[2], g_spinor_field[3],
 					    1.0e-10, 1000,
-					    1, 10e-10, solver_params,
+					    1, 1, solver_params,
 					    &g_gauge_field, &_Qsw_pm_psi, &_Qsw_minus_psi);
     	  /* check result */
     	  _Msw_full(g_spinor_field[4], g_spinor_field[5], g_spinor_field[0], g_spinor_field[1]);
-
 //    	  convert_eo_to_lexic(g_spinor_field[0], g_spinor_field[2], g_spinor_field[3]);
+#else
+//		invert_eo(g_spinor_field[0], g_spinor_field[1],
+//				  g_spinor_field[2], g_spinor_field[3],
+//				  1.0e-10, 1000,
+//				  1, 1,
+//				  0, even_odd_flag,
+//				  0, NULL, solver_params,
+//				  0 );
+
+    	cg_her(g_spinor_field[1], g_spinor_field[3], 1000, 1.0e-10, 1, VOLUME/2, &Qtm_pm_psi);
+
+		M_full(g_spinor_field[4], g_spinor_field[5],
+	                g_spinor_field[6], g_spinor_field[7]);
+#endif
+
 
     	for(int ix=0; ix<VOLUME/2; ix++ )
 		{

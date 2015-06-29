@@ -75,9 +75,9 @@
 
 #include "qphix_interface.h"
 
-//#undef SEEK_SET
-//#undef SEEK_CUR
-//#undef SEEK_END
+#undef SEEK_SET
+#undef SEEK_CUR
+#undef SEEK_END
 
 #include "global.h"
 extern "C" {
@@ -1401,7 +1401,7 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
 //	}
 //      }
 
-
+#if 0
       // Prepare the source for preconditioning
       Spinor* tmp_even=(Spinor*)geom.allocCBFourSpinor();
       Spinor* tmp_odd=(Spinor*)geom.allocCBFourSpinor();
@@ -1422,6 +1422,7 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
       // trivially solve for c_even'
       // c_even' = M_{ee}^{-1} p_even
       chi_s[0] = 1.0/(4.0+Mass) * psi_s[0]; // TODO refactor
+#endif
 
       // prepare source for CG: psi' -> M^\dagger psi'
       M(prep_psi_s[1], psi_s[1] , -1);
@@ -1437,6 +1438,7 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
       masterPrintf("Solver Time=%g(s)\n", (end-start));
       masterPrintf("CG GFLOPS=%g\n", 1.0e-9*(double)(total_flops)/(end -start));
 
+#if 0
       // need to reconstruct solution (preconditioning)
       // tmp_even = M_{eo} c_odd
       target_cb = 0; source_cb = 1;
@@ -1447,6 +1449,7 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
       tmp_s[0] *= 1.0/(4.0+Mass); // TODO refactor
 
       chi_s[0] -= tmp_s[0];
+#endif
 
       // unpack
       qdp_unpack_spinor<>(chi_s[0], chi_s[1], (double*)P, geom); //(const double**)solver_field, p_even, p_odd,
