@@ -35,7 +35,7 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
-#ifdef _MPI
+#ifdef MPI
 #  include <mpi.h>
 #endif
 #ifdef FIXEDVOLUME
@@ -214,7 +214,7 @@ EXTERN int g_dflgcr_flag;
 EXTERN int g_N_s;
 EXTERN int * index_block_eo;
 
-#ifdef _MPI
+#ifdef MPI
 EXTERN MPI_Status status;
 EXTERN MPI_Request req1,req2,req3,req4;
 EXTERN MPI_Comm g_cart_grid;

@@ -202,7 +202,7 @@ extern "C" int dev_cg_eo_half(
 
   //use full volume here as we need the complete gauge field!!!
   int Vol;
-   #ifndef _MPI
+   #ifndef MPI
      Vol = VOLUME;
    #else
      Vol = VOLUME+RAND;
@@ -285,10 +285,10 @@ extern "C" int dev_cg_eo_half(
  for(i=0;i<maxit;i++){ //MAIN LOOP
   
   // Q_{-}Q{+}
-  #ifndef _MPI
+  #ifndef MPI
     dev_Qtm_pm_psi_half(spin2, spin2_norm, spin3, spin3_norm, griddim3, blockdim3, griddim4, blockdim4);
   #else
-    dev_Qtm_pm_psi_half_mpi(spin2, spin2_norm, spin3, spin3_norm, griddim3, blockdim3, griddim4, blockdim4);
+    dev_Qtm_pm_psi_halfMPI(spin2, spin2_norm, spin3, spin3_norm, griddim3, blockdim3, griddim4, blockdim4);
   #endif
   if((cudaerr=cudaGetLastError()) != cudaSuccess){
     printf("%s\n", cudaGetErrorString(cudaerr));
@@ -367,10 +367,10 @@ extern "C" int dev_cg_eo_half(
     // DO NOT USE tm_dirac_dagger_kappa here, otherwise spin2 will be overwritten!!!
       
     // Q_{-}Q{+}
-    #ifndef _MPI
+    #ifndef MPI
       dev_Qtm_pm_psi_half(spin1, spin1_norm, spin3, spin3_norm, griddim3, blockdim3, griddim4, blockdim4);
     #else
-      dev_Qtm_pm_psi_half_mpi(spin1, spin1_norm, spin3, spin3_norm, griddim3, blockdim3, griddim4, blockdim4);
+      dev_Qtm_pm_psi_halfMPI(spin1, spin1_norm, spin3, spin3_norm, griddim3, blockdim3, griddim4, blockdim4);
     #endif
     if((cudaerr=cudaGetLastError()) != cudaSuccess){
       printf("%s\n", cudaGetErrorString(cudaerr));

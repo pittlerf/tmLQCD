@@ -23,7 +23,7 @@ void close_reader_record(READER *reader)
 {
   if (reader != NULL)
     ReaderCloseRecord(reader);
-  #ifdef _MPI
+  #ifdef MPI
   MPI_Barrier(g_cart_grid);
   #endif
 }

@@ -29,7 +29,7 @@
 #include <endian.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#ifdef _MPI
+#ifdef MPI
 # include <mpi.h>
 #endif
 #include <unistd.h>

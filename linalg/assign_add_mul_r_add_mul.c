@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#ifdef _MPI
+#ifdef MPI
 #include <mpi.h>
 #endif
 #ifdef OMP

@@ -20,7 +20,7 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
-#ifdef _MPI
+#ifdef MPI
 # include<mpi.h>
 #endif
 #include <stdlib.h>
@@ -38,7 +38,7 @@
 double assign_mul_add_r_and_square(spinor * const R, const double c, spinor * const S, 
 				   const int N, const int parallel) {
   double ALIGN res = 0.0;
-#ifdef _MPI
+#ifdef MPI
   double ALIGN mres;
 #endif
 
@@ -128,7 +128,7 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, spinor * co
   res = ds;
 #endif
 
-#  ifdef _MPI
+#  ifdef MPI
   if(parallel) {
     MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     return(mres);
@@ -145,7 +145,7 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, spinor * co
 double assign_mul_add_r_and_square(spinor * const R, const double c, const spinor * const S, 
 				   const int N, const int parallel) {
   double ALIGN res = 0.0;
-#ifdef _MPI
+#ifdef MPI
   double ALIGN mres;
 #endif
 
@@ -206,7 +206,7 @@ double assign_mul_add_r_and_square(spinor * const R, const double c, const spino
   res = ds;
 #endif
 
-#  ifdef _MPI
+#  ifdef MPI
   if(parallel) {
     MPI_Allreduce(&res, &mres, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     return(mres);

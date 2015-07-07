@@ -36,7 +36,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <string.h>
-#ifdef _MPI
+#ifdef MPI
 # include <mpi.h>
 #endif
 #ifdef OMP
@@ -98,7 +98,7 @@ int main(int argc,char *argv[]) {
   L=0;
   T=0;
   
-#ifdef _MPI
+#ifdef MPI
   MPI_Init(&argc, &argv);
 #endif
 
@@ -271,7 +271,7 @@ int main(int argc,char *argv[]) {
     }
   }
 
-#ifdef _MPI
+#ifdef MPI
   MPI_Finalize();
 #endif
   free_geometry_indices();

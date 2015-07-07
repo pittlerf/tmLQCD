@@ -39,7 +39,7 @@
 #include <math.h>
 #include <errno.h>
 #include <time.h>
-#ifdef _MPI
+#ifdef MPI
 # include <mpi.h>
 #endif
 #ifdef OMP

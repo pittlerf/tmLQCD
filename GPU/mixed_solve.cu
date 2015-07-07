@@ -74,7 +74,7 @@ extern "C" {
 #include "../su3spinor.h"
 #include "../solver/solver_field.h"
 
-#ifdef _MPI
+#ifdef MPI
   #include "../xchange.h"
 #endif 
 
@@ -87,8 +87,8 @@ extern "C" {
 #endif
 
 
-#ifdef _MPI
-  #undef _MPI
+#ifdef MPI
+  #undef MPI
   #undef REAL
     #include <mpi.h>
   #define MPI
@@ -268,12 +268,12 @@ __device__  int  dev_LX,dev_LY,dev_LZ,dev_T,dev_VOLUME;
 
 
 
-#ifdef _MPI
+#ifdef MPI
 
 
 // from mixed_solve_eo_nd.cuh
 __device__ int dev_RAND;                        // not used, maybe later ...
-__device__ int dev_VOLUMEPLUSRAND;              // is now used in dev_Hopping_Matrix_mpi()
+__device__ int dev_VOLUMEPLUSRAND;              // is now used in dev_Hopping_MatrixMPI()
 __device__ int dev_rank;
 __device__ int dev_nproc;
 
@@ -346,7 +346,7 @@ EXTERN int g_nb_z_up, g_nb_z_dn;
 // mixed solver, even/odd, non-degenerate two flavour
 #include "mixed_solve_eo_nd.cuh"
 
-#ifdef _MPI
+#ifdef MPI
 // optimization of the communication
   #include "ASYNC.cuh"
 #endif 
@@ -424,7 +424,7 @@ void dev_Qtm_pm_psi(dev_spinorM(RealT)* spinin, dev_spinorM(RealT)* spinout, int
   //spinout == odd
   
   //Q_{-}
-  		#ifdef _MPI
+  		#ifdef MPI
   		  xchange_field_wrapper(spinin, 0);
   		#endif
   #ifdef USETEXTURE
@@ -440,7 +440,7 @@ void dev_Qtm_pm_psi(dev_spinorM(RealT)* spinin, dev_spinorM(RealT)* spinout, int
   #endif
   dev_mul_one_pm_imu_inv<RealT> <<<gridsize2, blocksize2>>>(mixedsolveParameter.dev_spin_eo1,mixedsolveParameter.dev_spin_eo2, -1.);
   
-  		#ifdef _MPI
+  		#ifdef MPI
   		  xchange_field_wrapper(mixedsolveParameter.dev_spin_eo2, 1);
   		#endif
   #ifdef USETEXTURE
@@ -458,7 +458,7 @@ void dev_Qtm_pm_psi(dev_spinorM(RealT)* spinin, dev_spinorM(RealT)* spinout, int
   
   
   //Q_{+}
-  		#ifdef _MPI
+  		#ifdef MPI
   		  xchange_field_wrapper(mixedsolveParameter.dev_spin_eo2, 0);
   		#endif
   #ifdef USETEXTURE
@@ -474,7 +474,7 @@ void dev_Qtm_pm_psi(dev_spinorM(RealT)* spinin, dev_spinorM(RealT)* spinout, int
   #endif
   dev_mul_one_pm_imu_inv<RealT> <<<gridsize2, blocksize2>>>(mixedsolveParameter.dev_spin_eo1,spinout, +1.);
   
-  		#ifdef _MPI
+  		#ifdef MPI
   		  xchange_field_wrapper(spinout, 1);
   		#endif
   #ifdef USETEXTURE
@@ -494,11 +494,11 @@ void dev_Qtm_pm_psi(dev_spinorM(RealT)* spinin, dev_spinorM(RealT)* spinout, int
 
 
 
-#ifdef _MPI
+#ifdef MPI
 // aequivalent to Qtm_pm_psi in tm_operators.c
 // using HOPPING_ASYNC for mpi
 template<class RealT>
-void dev_Qtm_pm_psi_mpi(dev_spinorM(RealT)* spinin, dev_spinorM(RealT)* spinout, int gridsize, int blocksize, int gridsize2, int blocksize2,MixedsolveParameter<RealT>& mixedsolveParameter){
+void dev_Qtm_pm_psiMPI(dev_spinorM(RealT)* spinin, dev_spinorM(RealT)* spinout, int gridsize, int blocksize, int gridsize2, int blocksize2,MixedsolveParameter<RealT>& mixedsolveParameter){
   //spinin == odd
   //spinout == odd
   
@@ -663,10 +663,10 @@ extern "C" void dev_Qtm_pm_psi_half(dev_spinor_half* spinin, float* spinin_norm,
 }
 
 
-#ifdef _MPI
+#ifdef MPI
 
 // aequivalent to Qtm_pm_psi in tm_operators.c for half precision
-extern "C" void dev_Qtm_pm_psi_half_mpi(dev_spinor_half* spinin, float* spinin_norm, dev_spinor_half* spinout, float* spinout_norm, int gridsize, int blocksize, int gridsize2, int blocksize2){
+extern "C" void dev_Qtm_pm_psi_halfMPI(dev_spinor_half* spinin, float* spinin_norm, dev_spinor_half* spinout, float* spinout_norm, int gridsize, int blocksize, int gridsize2, int blocksize2){
   //spinin == odd
   //spinout == odd
   
@@ -828,7 +828,7 @@ extern "C" int find_devices() {
 
   cudaGetDeviceCount(&deviceCount);
     
-  #ifdef _MPI
+  #ifdef MPI
     if (g_cart_id == 0) {
   #endif
     
@@ -888,7 +888,7 @@ extern "C" int find_devices() {
     #endif
     }
     
-    #ifdef _MPI 
+    #ifdef MPI 
       }
     #endif
     
@@ -1303,8 +1303,8 @@ int dev_cg_eo(
   he_cg_init<<< 1, 1 >>> (grid, (REAL) g_kappa, (REAL)(g_mu/(2.0*g_kappa)), h0,h1,h2,h3);
   // BEWARE in dev_tm_dirac_kappa we need the true mu (not 2 kappa mu!)
   
-  #ifdef _MPI
-    he_cg_init_nd_additional_mpi<<<1,1>>>(VOLUMEPLUSRAND, RAND, g_cart_id, g_nproc);
+  #ifdef MPI
+    he_cg_init_nd_additionalMPI<<<1,1>>>(VOLUMEPLUSRAND, RAND, g_cart_id, g_nproc);
     // debug	// check dev_VOLUMEPLUSRAND and dev_RAND on device
   	if (g_proc_id == 0) {
   	  int host_check_VOLUMEPLUSRAND, host_check_RAND;
@@ -1369,7 +1369,7 @@ int dev_cg_eo(
  
 
  //relative precision -> get initial residue
- #ifndef _MPI
+ #ifndef MPI
    sourcesquarenorm = cublasDot (24*VOLUME/2, (const RealT*)spinin, 1, (const RealT*)spinin, 1);
  #else
    sourcesquarenorm = cublasDot_wrapper (24*VOLUME/2, (RealT*)spinin, 1, (RealT*)spinin, 1);
@@ -1391,10 +1391,10 @@ int dev_cg_eo(
  for(i=0;i<maxit;i++){ //MAIN LOOP
   
   // Q_{-}Q{+}
-  #ifndef _MPI
+  #ifndef MPI
     dev_Qtm_pm_psi    <RealT>(spin2, spin3, griddim3, blockdim3, griddim4, blockdim4, mixedsolveParameter);
   #else
-    dev_Qtm_pm_psi_mpi<RealT>(spin2, spin3, griddim3, blockdim3, griddim4, blockdim4, mixedsolveParameter);
+    dev_Qtm_pm_psiMPI<RealT>(spin2, spin3, griddim3, blockdim3, griddim4, blockdim4, mixedsolveParameter);
   #endif
   
   if((cudaerr=cudaGetLastError()) != cudaSuccess){
@@ -1404,7 +1404,7 @@ int dev_cg_eo(
   
   
  //alpha
-  #ifndef _MPI
+  #ifndef MPI
     host_dotprod = cublasDot (24*VOLUME/2, (const RealT*) spin2, 1, (const RealT*) spin3, 1);
   #else
     host_dotprod = cublasDot_wrapper (24*VOLUME/2, (RealT*) spin2, 1, (RealT*) spin3, 1);
@@ -1425,7 +1425,7 @@ int dev_cg_eo(
   }
 
   //Abbruch?
-  #ifndef _MPI
+  #ifndef MPI
     host_dotprod = cublasDot (24*VOLUME/2, (const RealT*) spin0, 1,(const RealT*) spin0, 1);
   #else
     host_dotprod = cublasDot_wrapper (24*VOLUME/2, (RealT*) spin0, 1,(RealT*) spin0, 1);
@@ -1458,10 +1458,10 @@ int dev_cg_eo(
     // DO NOT USE tm_dirac_dagger_kappa here, otherwise spin2 will be overwritten!!!
 
     // Q_{-}Q{+}
-    #ifndef _MPI
+    #ifndef MPI
         dev_Qtm_pm_psi    <RealT>(spin1, spin3, griddim3, blockdim3, griddim4, blockdim4, mixedsolveParameter);
     #else
-        dev_Qtm_pm_psi_mpi<RealT>(spin1, spin3, griddim3, blockdim3, griddim4, blockdim4, mixedsolveParameter);
+        dev_Qtm_pm_psiMPI<RealT>(spin1, spin3, griddim3, blockdim3, griddim4, blockdim4, mixedsolveParameter);
     #endif
     if((cudaerr=cudaGetLastError()) != cudaSuccess){
       printf("%s\n", cudaGetErrorString(cudaerr));
@@ -1725,7 +1725,7 @@ void convert2double_spin (typename dev_spinorT<RealT>::type* spin, spinor* h2d) 
 
   int i, Vol;
   
-  //#ifndef _MPI
+  //#ifndef MPI
     if (even_odd_flag) {
       Vol = VOLUME/2;
     }
@@ -1782,7 +1782,7 @@ void convert2REAL4_spin(spinor* spin, typename dev_spinorT<RealT>::type* h2d){
 
   int i, Vol;
  
-  //#ifndef _MPI
+  //#ifndef MPI
     if (even_odd_flag) {
       Vol = VOLUME/2;
     }
@@ -2004,7 +2004,7 @@ MixedsolveParameter<RealT>* init_mixedsolve_eo(su3** gf){
     }
     
     // try to set active device to device_num given in input file (or mpi rank)
-    #ifndef _MPI
+    #ifndef MPI
     // only if device_num is not the default (-1)
      if(device_num > -1){ 
     	if(device_num < ndev){
@@ -2062,7 +2062,7 @@ MixedsolveParameter<RealT>* init_mixedsolve_eo(su3** gf){
   }
   
   // output
-  #ifdef _MPI
+  #ifdef MPI
     if (g_cart_id == 0) {
   #endif
   
@@ -2078,11 +2078,11 @@ MixedsolveParameter<RealT>* init_mixedsolve_eo(su3** gf){
   	  printf("Using GF 12 reconstruction.\n");
   	#endif
   
-  #ifdef _MPI
+  #ifdef MPI
     }
   #endif
   
-  #ifndef _MPI
+  #ifndef MPI
   	#ifdef GF_8
   	  /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
   	  size_t dev_gfsize = 2*4*VOLUME * sizeof(dev_su3_8M(RealT));
@@ -2106,7 +2106,7 @@ MixedsolveParameter<RealT>* init_mixedsolve_eo(su3** gf){
     exit(200);
   }   // Allocate array on device
   else {
-    #ifndef _MPI
+    #ifndef MPI
       printf("Allocated memory for gauge field on device.\n");
     #else
       if (g_cart_id == 0) printf("Allocated memory for gauge field on devices.\n");
@@ -2125,7 +2125,7 @@ MixedsolveParameter<RealT>* init_mixedsolve_eo(su3** gf){
   
   
   #ifdef HALF
-    #ifndef _MPI
+    #ifndef MPI
       #ifdef GF_8
         /* allocate 8 floats for gf = 2*4*VOLUME float4's*/
         printf("Using half precision GF 8 reconstruction\n");
@@ -2169,7 +2169,7 @@ MixedsolveParameter<RealT>* init_mixedsolve_eo(su3** gf){
   cudaMalloc((void **) &dev_nn_eo, nnsize/2);
   cudaMalloc((void **) &dev_nn_oe, nnsize/2);
   
-  #ifndef _MPI
+  #ifndef MPI
     size_t idxsize = VOLUME/2*sizeof(int);
   #else
     size_t idxsize = (VOLUME+RAND)/2*sizeof(int);
@@ -2179,13 +2179,13 @@ MixedsolveParameter<RealT>* init_mixedsolve_eo(su3** gf){
   cudaMalloc((void **) &dev_eoidx_even, idxsize);
   cudaMalloc((void **) &dev_eoidx_odd, idxsize);
   
-  #ifndef _MPI
+  #ifndef MPI
     initnn();
     initnn_eo();
     //shownn_eo();
   #else
-    init_nnspinor_eo_mpi();
-    init_idxgauge_mpi();
+    init_nnspinor_eoMPI();
+    init_idxgaugeMPI();
   #endif
   
   //shownn();
@@ -2212,7 +2212,7 @@ MixedsolveParameter<RealT>* init_mixedsolve_eo(su3** gf){
   	  printf("Could not allocate memory for mixedsolveParameter.h2d_spin. Aborting...\n");
   	  exit(200);
   	} // Allocate float conversion spinor on host
-  	#ifdef _MPI
+  	#ifdef MPI
   	  size_t dev_spinsize_ext =  6*(VOLUME+RAND)/2*sizeof(dev_spinorM(RealT));
   	#endif
   #else
@@ -2226,14 +2226,14 @@ MixedsolveParameter<RealT>* init_mixedsolve_eo(su3** gf){
   	  printf("Could not allocate memory for mixedsolveParameter.h2d_spin_norm. Aborting...\n");
   	  exit(200);
   	} // Allocate float conversion norm on host 
-  	#ifdef _MPI
+  	#ifdef MPI
   	  size_t dev_spinsize_ext =  6*(VOLUME+RAND)/2*sizeof(dev_spinor_half);
   	  size_t dev_normsize_ext =  (VOLUME+RAND)/2*sizeof(float);
   	#endif
   #endif
   
   
-  #ifndef _MPI
+  #ifndef MPI
   	cudaMalloc((void **) &mixedsolveParameter.dev_spin1, dev_spinsize);   // Allocate array spin1 on device
   	cudaMalloc((void **) &mixedsolveParameter.dev_spin2, dev_spinsize);   // Allocate array spin2 on device
   	cudaMalloc((void **) &mixedsolveParameter.dev_spin3, dev_spinsize);   // Allocate array spin3 on device
@@ -2312,7 +2312,7 @@ MixedsolveParameter<RealT>* init_mixedsolve_eo(su3** gf){
   }
   
 
-  #ifdef _MPI
+  #ifdef MPI
     /*  for async communication */
     // page-locked memory
    #ifndef HALF 
@@ -2466,7 +2466,7 @@ void finalize_mixedsolve(MixedsolveParameter<RealT>* mixedsolveParameterP){
     
   #endif
   
-#ifdef _MPI
+#ifdef MPI
   cudaFreeHost(RAND1);
   cudaFreeHost(RAND3);
   
@@ -2679,7 +2679,7 @@ void benchmark(spinor * const Q,MixedsolveParameter<RealT>& mixedsolveParameter)
   cudaMemcpy(mixedsolveParameter.dev_spinin, mixedsolveParameter.h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
   
-  #ifndef _MPI
+  #ifndef MPI
     assert((start = clock())!=-1);
   #else
     start = MPI_Wtime();
@@ -2735,7 +2735,7 @@ void benchmark(spinor * const Q,MixedsolveParameter<RealT>& mixedsolveParameter)
   printf("Applying H 1000 times\n");
   for(i=0; i<1000; i++){
   
-      #ifdef _MPI
+      #ifdef MPI
            xchange_field_wrapper(mixedsolveParameter.dev_spinin, 0);
       #endif
       #ifdef USETEXTURE
@@ -2750,7 +2750,7 @@ void benchmark(spinor * const Q,MixedsolveParameter<RealT>& mixedsolveParameter)
       unbind_texture_spin(1);
     #endif
 
-    #ifdef _MPI
+    #ifdef MPI
         xchange_field_wrapper(mixedsolveParameter.dev_spin_eo1, 0);
     #endif
        bind_texture_spin(mixedsolveParameter.dev_spin_eo1,1);
@@ -2769,7 +2769,7 @@ void benchmark(spinor * const Q,MixedsolveParameter<RealT>& mixedsolveParameter)
   
   
   
-  #ifndef _MPI
+  #ifndef MPI
     assert((stop = clock())!=-1);
     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
     // x2 because 2x Hopping per iteration
@@ -2796,7 +2796,7 @@ void benchmark(spinor * const Q,MixedsolveParameter<RealT>& mixedsolveParameter)
 
 
 
-#ifdef _MPI
+#ifdef MPI
 template<class RealT>
 void benchmark2(spinor * const Q,MixedsolveParameter<RealT>& mixedsolveParameter){
   
@@ -2809,7 +2809,7 @@ void benchmark2(spinor * const Q,MixedsolveParameter<RealT>& mixedsolveParameter
   cudaMemcpy(mixedsolveParameter.dev_spinin, mixedsolveParameter.h2d_spin, dev_spinsize, cudaMemcpyHostToDevice);
   printf("%s\n", cudaGetErrorString(cudaGetLastError()));
   
-  #ifndef _MPI
+  #ifndef MPI
     assert((start = clock())!=-1);
   #else
     start = MPI_Wtime();
@@ -2878,9 +2878,9 @@ void benchmark2(spinor * const Q,MixedsolveParameter<RealT>& mixedsolveParameter
   for(i=0; i<100; i++){
   
       
-   dev_Qtm_pm_psi_mpi(mixedsolveParameter.dev_spinin, mixedsolveParameter.dev_spin_eo1, griddim3,blockdim3, griddim4, blockdim4);   
+   dev_Qtm_pm_psiMPI(mixedsolveParameter.dev_spinin, mixedsolveParameter.dev_spin_eo1, griddim3,blockdim3, griddim4, blockdim4);   
    
-   dev_Qtm_pm_psi_mpi(mixedsolveParameter.dev_spin_eo1, mixedsolveParameter.dev_spinin, griddim3,blockdim3, griddim4, blockdim4); 
+   dev_Qtm_pm_psiMPI(mixedsolveParameter.dev_spin_eo1, mixedsolveParameter.dev_spinin, griddim3,blockdim3, griddim4, blockdim4); 
 
   }  
   printf("%s\n", cudaGetErrorString(cudaGetLastError())); 
@@ -2888,7 +2888,7 @@ void benchmark2(spinor * const Q,MixedsolveParameter<RealT>& mixedsolveParameter
   
   
   
-  #ifndef _MPI
+  #ifndef MPI
     assert((stop = clock())!=-1);
     timeelapsed = (double) (stop-start)/CLOCKS_PER_SEC;
     // x8 because 8x Hopping per iteration
@@ -2967,7 +2967,7 @@ int mixed_solve_eoT (spinor * const P, spinor * const Q, const int max_iter,
   #ifndef HALF
   // small benchmark
     assign(solver_field[0],Q,N);
-    #ifndef _MPI
+    #ifndef MPI
       benchmark(solver_field[0]);
     #else
       benchmark2(solver_field[0]); 

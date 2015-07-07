@@ -48,7 +48,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   }
 #endif
 
-#    if (defined _MPI && !(defined _NO_COMM))
+#    if (defined MPI && !(defined _NO_COMM))
   xchange_field(k, ieo);
 #    endif
 

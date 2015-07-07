@@ -33,7 +33,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-#ifdef _MPI
+#ifdef MPI
 # include <mpi.h>
 #endif
 
@@ -54,7 +54,7 @@
 
 void xchange_lexicfield(spinor * const l) {
 
-#ifdef _MPI
+#ifdef MPI
   MPI_Request requests[16];
   MPI_Status status[16];
 #endif
@@ -77,7 +77,7 @@ void xchange_lexicfield(spinor * const l) {
   __alignx(16, l);
 #  endif
 
-#  ifdef _MPI
+#  ifdef MPI
 
 
   ireq=0;
@@ -178,7 +178,7 @@ void xchange_lexicfield(spinor * const l) {
   __alignx(16, l);
 #  endif
 
-#  ifdef _MPI
+#  ifdef MPI
 
 
   /* send the data to the neighbour on the left */
@@ -263,7 +263,7 @@ void xchange_lexicfield(spinor * const l) {
 #pragma pomp inst begin(xchange_lexicfield)
 #endif
 
-#  ifdef _MPI
+#  ifdef MPI
     
 #    if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
   MPI_Status status;
@@ -342,7 +342,7 @@ void xchange_lexicfield(spinor * const l) {
 #pragma pomp inst begin(xchange_lexicfield)
 #endif
 
-#  ifdef _MPI
+#  ifdef MPI
     
   MPI_Status status;
   /* send the data to the neighbour on the left */

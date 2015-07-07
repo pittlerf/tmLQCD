@@ -1,5 +1,5 @@
 
-// matrix_mpi_debug1() and matrix_mpi_debug1() replace matrix_multiplication32_mpi()
+// matrix_mpi_debug1() and matrix_mpi_debug1() replace matrix_multiplication32MPI()
 // matrix_mpi_debug3() replaces Q_Qdagger_ND()
 
 
@@ -42,7 +42,7 @@ extern "C" {
 
 
 
-// replaces matrix_multiplication32_mpi() for debugging !!
+// replaces matrix_multiplication32MPI() for debugging !!
 
 void matrix_mpi_debug1 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
                         dev_spinor * spinin_up , dev_spinor * spinin_dn ,
@@ -579,7 +579,7 @@ void matrix_mpi_debug1 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
 
 
 
-// replaces matrix_multiplication32_mpi() for debugging !!
+// replaces matrix_multiplication32MPI() for debugging !!
 
 // RESULT: twice the memory requirements for some of the auxiliary host/device-interaction fields !!
 
@@ -1001,11 +1001,11 @@ void matrix_mpi_debug2 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
 
 
 
-// replaces matrix_multiplication32_mpi() for debugging !!
+// replaces matrix_multiplication32MPI() for debugging !!
 
 // is for the moment an identical copy of matrix_mpi_debug2()
 //	will be changed for testing the alternative version of the hopping matrix ...
-//	will for now test the xchange_fields_mpi() procedure
+//	will for now test the xchange_fieldsMPI() procedure
 //
 //	one therefore has to turn of the xchange_fields() in the CPU's Hopping_Matrix() routine !!
 //		we are most likely use version 5 of Hopping_Matrix() in Hopping_Matrix.c
@@ -1370,11 +1370,11 @@ void matrix_mpi_debug3 (dev_spinor * spinout_up, dev_spinor * spinout_dn,
 
 
 
-// replaces matrix_multiplication32_mpi() for debugging !!
+// replaces matrix_multiplication32MPI() for debugging !!
 
 // is for the moment an identical copy of matrix_mpi_debug2()
 //	will be changed for testing the alternative version of the hopping matrix ...
-//	will for now test the xchange_fields_mpi() procedure
+//	will for now test the xchange_fieldsMPI() procedure
 //
 //	one therefore has to turn of the xchange_fields() in the CPU's Hopping_Matrix() routine !!
 //		we are most likely use version 5 of Hopping_Matrix() in Hopping_Matrix.c

@@ -11,7 +11,7 @@
 
 #define CUDA_DEBUG		// provides some tests and output specific to the used CUDA code
 #define STUFF_DEBUG		// some stuff
-//#define HOPPING_DEBUG		// enables the Hopping Matrix on the CPU (inside matrix_multiplication32_mpi())
+//#define HOPPING_DEBUG		// enables the Hopping Matrix on the CPU (inside matrix_multiplication32MPI())
 //#define MATRIX_DEBUG		// enables the matrix multiplication on the CPU (in the inner CG solver)
 //#define CG_DEBUG		// enables the CG on the CPU
 
@@ -70,7 +70,7 @@
 
 
 
-#ifndef _MPI	//  non-MPI  ////////////////////////////////////////////////////////////
+#ifndef MPI	//  non-MPI  ////////////////////////////////////////////////////////////
 
 
 

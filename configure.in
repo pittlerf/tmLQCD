@@ -101,8 +101,8 @@ fi
 AC_MSG_CHECKING(whether we want to use MPI)
 AC_ARG_ENABLE(mpi,
   AS_HELP_STRING([--enable-mpi], [enable use of mpi [default=yes]]),
-  enable_mpi=$enableval, enable_mpi=yes)
-if test $enable_mpi = yes; then
+  enableMPI=$enableval, enableMPI=yes)
+if test $enableMPI = yes; then
   AC_MSG_RESULT(yes)
   AC_DEFINE(MPI,1,Compile with MPI support)
 else
@@ -182,7 +182,7 @@ else
   INCLUDES="-I${fftw_lib}/include ${INCLUDES}"
 fi
 
-if test $enable_mpi = yes; then
+if test $enableMPI = yes; then
   AC_MSG_CHECKING(which parallelisation to use for MPI)
   AC_ARG_WITH(mpidimension,
     AS_HELP_STRING([--with-mpidimension[=n]], [use n dimensional parallelisation [default=1]]),
@@ -289,7 +289,7 @@ else
   AC_MSG_ERROR([lapack is needed! Will stop here.])
 fi
 
-if test $enable_mpi = yes; then
+if test $enableMPI = yes; then
   dnl In general one cannot run mpi programs directly
   dnl thats why we need here cross_compiling=yes
   dnl for non CRAY
@@ -585,7 +585,7 @@ dnl the GNU compiler
       AC_DEFINE(_x86_64,1,x86 64 Bit architecture)
     fi
     CCDEP="$CC"
-    if test $enable_mpi = yes; then
+    if test $enableMPI = yes; then
       CCDEP="gcc"
     fi
     DEBUG_FLAG="-g"
@@ -864,7 +864,7 @@ if test $usegpu = yes; then
   if test $usegpu = yes; then  
     GPUCFLAGS="$GPUCFLAGS $cuda_compileargs"
   fi
-  if test $enable_mpi = yes; then
+  if test $enableMPI = yes; then
     GPUMPICOMPILER="--compiler-bindir mpicc"
     if test $withmpidimension != 1; then
       AC_MSG_ERROR(ERROR! The GPU Code is only parallelized in t-direction so far!)
@@ -960,7 +960,7 @@ AC_SUBST([QPHIX_AVAILABLE])
 
 
 AC_MSG_CHECKING(checking consistency)
-if test $enable_mpi = yes ; then
+if test $enableMPI = yes ; then
  if test $enable_iig = yes && test $withpersistent = yes ; then
   AC_MSG_ERROR(ERROR! indexindepgeom is not compatible with persistent communications )
  fi

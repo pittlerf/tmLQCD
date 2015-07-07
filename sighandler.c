@@ -37,7 +37,7 @@
 #endif
 #include <stdlib.h>
 #include <stdio.h>
-#ifdef _MPI
+#ifdef MPI
 #  include <mpi.h>
 #endif
 
@@ -59,7 +59,7 @@ void catch_ill_inst(int s){
   fprintf(stderr, "Please check whether your processor supports SSE1/2/3) instructions!\n");
   fprintf(stderr, "Aborting...\n");
   fflush(stdout);
-#ifdef _MPI
+#ifdef MPI
   MPI_Abort(MPI_COMM_WORLD, 1);
   MPI_Finalize();
 #endif

@@ -31,7 +31,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
-#ifdef _MPI
+#ifdef MPI
 # include <mpi.h>
 #endif
 #include "global.h"

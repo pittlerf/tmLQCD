@@ -33,7 +33,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
-#ifdef _MPI
+#ifdef MPI
 # include <mpi.h>
 #endif
 #include "global.h"
@@ -55,7 +55,7 @@ int ortho_new_vectors(spinor **Vecs, int N, int nv_old, int nv_new, double ortht
     int nadded=0;
     double tmpd;
     
-    #ifdef _MPI
+    #ifdef MPI
     parallel=1;
     #else
     parallel=0;

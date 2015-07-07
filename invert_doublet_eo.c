@@ -56,7 +56,7 @@
 #  include"temporalgauge.h"
 #  include"measure_gauge_action.h"
 int mixedsolve_eo_nd (spinor *, spinor *, spinor *, spinor *, int, double, int);
-int mixedsolve_eo_nd_mpi(spinor *, spinor *, spinor *, spinor *, int, double, int);
+int mixedsolve_eo_ndMPI(spinor *, spinor *, spinor *, spinor *, int, double, int);
 #  ifdef TEMPORALGAUGE
 extern su3* g_trafo;
 #  endif
@@ -135,7 +135,7 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
     if (g_proc_id == 0) printf("\tsquare norm before gauge fixing: %.16e\n", dret1); 
     if (g_proc_id == 0) printf("\tsquare norm after gauge fixing:  %.16e\n", dret2);
     
-#    ifdef _MPI
+#    ifdef MPI
     xchange_gauge(g_gauge_field);
 #    endif
     
@@ -287,7 +287,7 @@ int invert_doublet_eo(spinor * const Even_new_s, spinor * const Odd_new_s,
     
     finalize_temporalgauge();
     
-#    ifdef _MPI
+#    ifdef MPI
     xchange_gauge(g_gauge_field);
 #    endif
     

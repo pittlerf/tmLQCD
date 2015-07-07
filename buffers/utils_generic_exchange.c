@@ -1,6 +1,6 @@
 #include "utils.ih"
 
-#ifndef _MPI /*Let's deal with this case once and for all*/
+#ifndef MPI /*Let's deal with this case once and for all*/
 void generic_exchange(void *field_in, int bytes_per_site)
 {}
 #else /* MPI */

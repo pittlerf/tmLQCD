@@ -27,7 +27,7 @@
 #include <time.h>
 #include <string.h>
 #include <signal.h>
-#ifdef _MPI
+#ifdef MPI
 #include <mpi.h>
 #endif
 #include "global.h"
@@ -36,7 +36,7 @@
 #include "geometry_eo.h"
 #include "start.h"
 #include "measure_gauge_action.h"
-#ifdef _MPI
+#ifdef MPI
 #include "xchange/xchange.h"
 #endif
 #include "read_input.h"
@@ -85,7 +85,7 @@ int main(int argc,char *argv[]) {
 #ifdef _GAUGE_COPY
   int kb=0;
 #endif
-#ifdef _MPI
+#ifdef MPI
   double atime=0., etime=0.;
 #endif
 #ifdef _KOJAK_INST
@@ -104,7 +104,7 @@ int main(int argc,char *argv[]) {
   g_use_clover_flag = 0;
   g_nr_of_psf = 1;
 
-#ifdef _MPI
+#ifdef MPI
   MPI_Init(&argc, &argv);
 #endif
 
@@ -146,7 +146,7 @@ int main(int argc,char *argv[]) {
 
   g_dbw2rand = 0;
 
-#ifndef _MPI
+#ifndef MPI
   g_dbw2rand = 0;
 #endif
 
@@ -219,7 +219,7 @@ int main(int argc,char *argv[]) {
     if (g_proc_id == 0){
       printf("done!\n"); fflush(stdout);
     }
-#ifdef _MPI
+#ifdef MPI
     xchange_gauge(g_gauge_field);
 #endif
 
@@ -295,7 +295,7 @@ int main(int argc,char *argv[]) {
     nstore+=Nsave;
   }
 
-#ifdef _MPI
+#ifdef MPI
   MPI_Finalize();
 #endif
   free_gauge_field();

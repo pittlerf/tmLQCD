@@ -9,7 +9,7 @@
 #include "temporalgauge.h"
 #include "stdio.h"
 #include "stdlib.h"
-#ifdef _MPI
+#ifdef MPI
   #include<mpi.h>
   #include "mpi_init.h"
 #endif
@@ -54,7 +54,7 @@ void copy_gauge_field (su3 ** to, su3 ** from)
 */
 int init_temporalgauge_trafo (const int V, su3** gfield) {
 
-#ifndef _MPI
+#ifndef MPI
 
    int it, iz, iy, ix;
    
@@ -100,12 +100,12 @@ int init_temporalgauge_trafo (const int V, su3** gfield) {
   
   
   if ((void *)(left = (su3 *) calloc(LX*LY*LZ, sizeof(su3))) == NULL ) {		// allocates memory for a time-slice of su3-matrices
-    printf("malloc error in 'init_temporalgauge_trafo_mpi'\n"); 
+    printf("malloc error in 'init_temporalgauge_trafoMPI'\n"); 
     return(-1);
   }
   
   if ((void *)(right = (su3 *) calloc(LX*LY*LZ, sizeof(su3))) == NULL ) {		// allocates memory for a time-slice of su3-matrices
-    printf("malloc error in 'init_temporalgauge_trafo_mpi'\n"); 
+    printf("malloc error in 'init_temporalgauge_trafoMPI'\n"); 
     return(-1);
   }
   
@@ -272,11 +272,11 @@ int init_temporalgauge_trafo (const int V, su3** gfield) {
 
 /*
 
-// MPI implementation									// was merged into init_temporalgauge_without_mpi()
+// MPI implementation									// was merged into init_temporalgauge_withoutMPI()
 
-#ifdef _MPI
+#ifdef MPI
 
-int init_temporalgauge_trafo_mpi (const int V, su3 ** gfield) {				// will initialize  g_trafo[]  as the transformation matrices
+int init_temporalgauge_trafoMPI (const int V, su3 ** gfield) {				// will initialize  g_trafo[]  as the transformation matrices
 											//	and  g_tempgauge_field  as a copy of  g_gauge_field
   int it, iz, iy, ix;
   
@@ -287,12 +287,12 @@ int init_temporalgauge_trafo_mpi (const int V, su3 ** gfield) {				// will initi
   
   
   if ((void *)(left = (su3 *) calloc(LX*LY*LZ, sizeof(su3))) == NULL ) {		// allocates memory for a time-slice of su3-matrices
-    printf("malloc error in 'init_temporalgauge_trafo_mpi'\n"); 
+    printf("malloc error in 'init_temporalgauge_trafoMPI'\n"); 
     return(-1);
   }
   
   if ((void *)(right = (su3 *) calloc(LX*LY*LZ, sizeof(su3))) == NULL ) {		// allocates memory for a time-slice of su3-matrices
-    printf("malloc error in 'init_temporalgauge_trafo_mpi'\n"); 
+    printf("malloc error in 'init_temporalgauge_trafoMPI'\n"); 
     return(-1);
   }
   
@@ -452,7 +452,7 @@ int init_temporalgauge_trafo_mpi (const int V, su3 ** gfield) {				// will initi
   return(0);
   
   
-}//init_temporalgauge_trafo_mpi()
+}//init_temporalgauge_trafoMPI()
 
 #endif //MPI
 
@@ -468,7 +468,7 @@ void finalize_temporalgauge() {
   free(tempgauge_field);
   free(g_tempgauge_field);
   
-  #ifdef _MPI
+  #ifdef MPI
     free(left);
     free(right);
   #endif
@@ -545,7 +545,7 @@ void apply_gtrafo (su3 ** gfield, su3 * trafofield) {
       for (iy = 0; iy < LY; iy++) {
         for (iz = 0; iz < LZ; iz++) {
         
-          #ifdef _MPI				// this is the MPI implementation of the GLOBAL TEMPORALGAUGE
+          #ifdef MPI				// this is the MPI implementation of the GLOBAL TEMPORALGAUGE
           
             pos = g_ipt[it][ix][iy][iz];
             

@@ -8,14 +8,14 @@
 #include <time.h>
 #include <string.h>
 #include <signal.h>
-#ifdef _MPI
+#ifdef MPI
 #include <mpi.h>
 #endif
 #include "global.h"
 #include "su3spinor.h"
 #include "linalg_eo.h"
 #include "start.h"
-#ifdef _MPI
+#ifdef MPI
 # include "xchange/xchange.h"
 #endif
 #include "read_input.h"
