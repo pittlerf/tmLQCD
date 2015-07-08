@@ -86,38 +86,6 @@
 
 int check_xchange();
 
-#include "operator/tm_operators.c"
-
-void _Q_pm_psi(spinor * const l, spinor * const k)
-{
-  g_mu = -g_mu;
-  D_psi(l, k);
-  gamma5(g_spinor_field[4], l, VOLUME);
-  g_mu = -g_mu;
-  D_psi(l, g_spinor_field[4]);
-  gamma5(l, l, VOLUME);
-}
-
-void _Qsw_pm_psi(spinor * const l, spinor * const k) {
-  /* \hat Q_{-} */
-  Hopping_Matrix(EO, g_spinor_field[8+1], k);
-  clover_inv(g_spinor_field[8+1], -1, g_mu);
-  Hopping_Matrix(OE, g_spinor_field[8], g_spinor_field[8+1]);
-  clover_gamma5(OO, g_spinor_field[8], k, g_spinor_field[8], -(g_mu + g_mu3));
-  /* \hat Q_{+} */
-  Hopping_Matrix(EO, l, g_spinor_field[8]);
-  clover_inv(l, +1, g_mu);
-  Hopping_Matrix(OE, g_spinor_field[8+1], l);
-  clover_gamma5(OO, l, g_spinor_field[8], g_spinor_field[8+1], +(g_mu + g_mu3));
-}
-
-// this is the twisted clover Qhat with -mu
-void _Qsw_minus_psi(spinor * const l, spinor * const k) {
-  Hopping_Matrix(EO, g_spinor_field[8+1], k);
-  clover_inv(g_spinor_field[8+1], -1, g_mu);
-  Hopping_Matrix(OE, g_spinor_field[8], g_spinor_field[8+1]);
-  clover_gamma5(OO, l, k, g_spinor_field[8], -(g_mu + g_mu3));
-}
 
 void _M_full(spinor * const Even_new, spinor * const Odd_new,
 	    spinor * const Even, spinor * const Odd) {
@@ -177,10 +145,10 @@ int main(int argc,char *argv[])
 #ifdef MPI
   static double dt2;
 
-  DUM_DERI = 6;
+  DUM_DERI = 10;
   DUM_SOLVER = DUM_DERI+2;
   DUM_MATRIX = DUM_SOLVER+6;
-  NO_OF_SPINORFIELDS = DUM_MATRIX+2;
+  NO_OF_SPINORFIELDS = DUM_MATRIX+4;
 
 #  ifdef OMP
   int mpi_thread_provided;
@@ -267,10 +235,10 @@ int main(int argc,char *argv[])
   init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
 
   if(even_odd_flag) {
-    j = init_spinor_field(VOLUMEPLUSRAND, 4*k_max+2);
+    j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
   }
   else {
-    j = init_spinor_field(VOLUMEPLUSRAND, 2*k_max+2);
+    j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS);
   }
 
   if ( j!= 0) {
@@ -381,7 +349,7 @@ int main(int argc,char *argv[])
 		}
 		//point source
 		g_spinor_field[2][0].s0.c0 = 1.0;
-		g_spinor_field[3][0].s0.c0 = 1.0; //TODO
+//		g_spinor_field[3][0].s0.c0 = 1.0; //TODO
 	}
 	else
 	{
@@ -482,18 +450,17 @@ int main(int argc,char *argv[])
     	  _Msw_full(g_spinor_field[4], g_spinor_field[5], g_spinor_field[0], g_spinor_field[1]);
 //    	  convert_eo_to_lexic(g_spinor_field[0], g_spinor_field[2], g_spinor_field[3]);
 #else
-//		invert_eo(g_spinor_field[0], g_spinor_field[1],
-//				  g_spinor_field[2], g_spinor_field[3],
-//				  1.0e-10, 1000,
-//				  1, 1,
-//				  0, even_odd_flag,
-//				  0, NULL, solver_params,
-//				  0 );
+		invert_eo(g_spinor_field[0], g_spinor_field[1],
+				  g_spinor_field[2], g_spinor_field[3],
+				  1.0e-10, 1000,
+				  1, 1,
+				  0, even_odd_flag,
+				  0, NULL, solver_params, 0,
+				  NO_EXT_INV, SLOPPY_DOUBLE, NO_COMPRESSION);
 
-    	cg_her(g_spinor_field[1], g_spinor_field[3], 1000, 1.0e-10, 1, VOLUME/2, &Qtm_pm_psi);
+		/* check result */
+		_M_full(g_spinor_field[4], g_spinor_field[5], g_spinor_field[0], g_spinor_field[1]);
 
-		M_full(g_spinor_field[4], g_spinor_field[5],
-	                g_spinor_field[6], g_spinor_field[7]);
 #endif
 
 
@@ -525,13 +492,13 @@ int main(int argc,char *argv[])
 	  {
 		  // invert
 	//      operator_list[0].inverter(0, 0, 1);
-		  gamma5(g_spinor_field[1], g_spinor_field[3], VOLUME);
-		  cg_her(g_spinor_field[2], g_spinor_field[1], 1000, 1.0e-10,
-				  0, VOLUME, &_Q_pm_psi);
-		  Q_minus_psi(g_spinor_field[0], g_spinor_field[2]);
-
-		  // check inversion
-		  D_psi(g_spinor_field[1], g_spinor_field[0]);
+//		  gamma5(g_spinor_field[1], g_spinor_field[3], VOLUME);
+//		  cg_her(g_spinor_field[2], g_spinor_field[1], 1000, 1.0e-10,
+//				  0, VOLUME, &_Q_pm_psi);
+//		  Q_minus_psi(g_spinor_field[0], g_spinor_field[2]);
+//
+//		  // check inversion
+//		  D_psi(g_spinor_field[1], g_spinor_field[0]);
 		for(int ix=0; ix<VOLUME; ix++ )
 		{
 			_vector_sub_assign( g_spinor_field[1][ix].s0, g_spinor_field[3][ix].s0 );
@@ -637,12 +604,16 @@ int main(int argc,char *argv[])
       if(even_odd_flag)
       {
     	  // invert
-    	convert_eo_to_lexic(g_spinor_field[0],g_spinor_field[2], g_spinor_field[3]);
-		invert_qphix(g_spinor_field[4], g_spinor_field[0], 1000, 1.0e-10, 1.0e-10 );
-		convert_lexic_to_eo(g_spinor_field[0],g_spinor_field[1],g_spinor_field[4]);
+		invert_eo(g_spinor_field[6], g_spinor_field[7],
+				  g_spinor_field[2], g_spinor_field[3],
+				  1.0e-10, 1000,
+				  1, 1,
+				  0, even_odd_flag,
+				  0, NULL, solver_params, 0,
+				  NO_EXT_INV, SLOPPY_DOUBLE, NO_COMPRESSION);
 
 		/* check result */
-    	  _Msw_full(g_spinor_field[4], g_spinor_field[5], g_spinor_field[0], g_spinor_field[1]);
+    	  _M_full(g_spinor_field[4], g_spinor_field[5], g_spinor_field[6], g_spinor_field[7]);
 
 //    	  convert_eo_to_lexic(g_spinor_field[0], g_spinor_field[2], g_spinor_field[3]);
 
@@ -699,7 +670,7 @@ int main(int argc,char *argv[])
 
 	// get pion
       if(even_odd_flag)
-    	  convert_eo_to_lexic(g_spinor_field[4], g_spinor_field[0], g_spinor_field[1]);
+    	  convert_eo_to_lexic(g_spinor_field[4], g_spinor_field[6], g_spinor_field[7]);
 
 	printf("\n# pion2: \n");
 	if(even_odd_flag)
@@ -752,13 +723,13 @@ int main(int argc,char *argv[])
     if(even_odd_flag)
 	{
     	// even
-		squarenorm = square_norm(g_spinor_field[4], VOLUME/2, 1);
+		squarenorm = square_norm(g_spinor_field[6], VOLUME/2, 1);
 		if(g_proc_id==0) {
 			printf("# ||result2_e||^2 = %e\n", squarenorm);
 			fflush(stdout);
 		}
 		// odd
-		squarenorm = square_norm(g_spinor_field[5], VOLUME/2, 1);
+		squarenorm = square_norm(g_spinor_field[7], VOLUME/2, 1);
 		if(g_proc_id==0) {
 			printf("# ||result2_o||^2 = %e\n\n", squarenorm);
 			fflush(stdout);
@@ -782,15 +753,15 @@ int main(int argc,char *argv[])
 		for(int ix=0; ix<VOLUME/2; ix++ )
 		{
 			// even
-			_vector_sub_assign( g_spinor_field[0][ix].s0, g_spinor_field[4][ix].s0 );
-			_vector_sub_assign( g_spinor_field[0][ix].s1, g_spinor_field[4][ix].s1 );
-			_vector_sub_assign( g_spinor_field[0][ix].s2, g_spinor_field[4][ix].s2 );
-			_vector_sub_assign( g_spinor_field[0][ix].s3, g_spinor_field[4][ix].s3 );
+			_vector_sub_assign( g_spinor_field[0][ix].s0, g_spinor_field[6][ix].s0 );
+			_vector_sub_assign( g_spinor_field[0][ix].s1, g_spinor_field[6][ix].s1 );
+			_vector_sub_assign( g_spinor_field[0][ix].s2, g_spinor_field[6][ix].s2 );
+			_vector_sub_assign( g_spinor_field[0][ix].s3, g_spinor_field[6][ix].s3 );
 			// odd
-			_vector_sub_assign( g_spinor_field[1][ix].s0, g_spinor_field[5][ix].s0 );
-			_vector_sub_assign( g_spinor_field[1][ix].s1, g_spinor_field[5][ix].s1 );
-			_vector_sub_assign( g_spinor_field[1][ix].s2, g_spinor_field[5][ix].s2 );
-			_vector_sub_assign( g_spinor_field[1][ix].s3, g_spinor_field[5][ix].s3 );
+			_vector_sub_assign( g_spinor_field[1][ix].s0, g_spinor_field[7][ix].s0 );
+			_vector_sub_assign( g_spinor_field[1][ix].s1, g_spinor_field[7][ix].s1 );
+			_vector_sub_assign( g_spinor_field[1][ix].s2, g_spinor_field[7][ix].s2 );
+			_vector_sub_assign( g_spinor_field[1][ix].s3, g_spinor_field[7][ix].s3 );
 		}
 
 		// print L2-norm of result1 - result2:
