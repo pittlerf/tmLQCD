@@ -116,17 +116,43 @@ void _Msw_full(spinor * const Even_new, spinor * const Odd_new,
 void printPion(spinor* sp) {
 	double pionr[T];
 	double pioni[T];
+
+	double pmax;
+	int xmax, ymax, zmax;
+
 	for( int t = 0; t < T; t++ )
 	{
 		pionr[t] = 0.0;
 		pioni[t] = 0.0;
-		int j = g_ipt[t][0][0][0];
-    	for( int i = j; i < j+1/*LX*LY*LZ*/; i++ )
+	}
+
+//	for( int t = 0; t < T; t++ )
+	{
+		int t=0;
+//		pionr[t] = 0.0;
+//		pioni[t] = 0.0;
+//		pmax = 0.0;
+//		xmax = ymax = zmax = 0;
+//		int j = g_ipt[t][0][0][0];
+//    	for( int i = j; i < j+1/*LX*LY*LZ*/; i++ )
+		for( int x=0; x<LX; x++ )
+//			for( int y=0; y<LY; y++ )
+//				for( int z=0; z<LZ; z++ )
     	{
-    		pionr[t] += _spinor_prod_re( sp[i], sp[i] );
-    		pioni[t] += _spinor_prod_im( sp[i], sp[i] );
+			int z=0; int y=0;
+			int i = LX*LY*LZ*t + LY*LZ*x + LZ*y + z;
+    		pionr[x] += _spinor_prod_re( sp[i], sp[i] );
+    		pioni[x] += _spinor_prod_im( sp[i], sp[i] );
+//    		if( _spinor_prod_re( sp[i], sp[i] ) > pmax) {
+//    			pmax = _spinor_prod_re( sp[i], sp[i] );
+//    			xmax = x;
+//    			ymax = y;
+//    			zmax = z;
+//    		}
     	}
-    	printf("%i\t%e\t%e\n", t, pionr[t], pioni[t]);
+		for( int x=0; x<LX; x++ )
+    	printf("%i\t%e\t%e\n", x, pionr[x], pioni[x]);
+//		printf("%i\t%e\t(%d,%d,%d,%d)\n", t, pmax, t, xmax, ymax, zmax);
 	}
 }
 
@@ -610,7 +636,7 @@ int main(int argc,char *argv[])
 				  1, 1,
 				  0, even_odd_flag,
 				  0, NULL, solver_params, 0,
-				  NO_EXT_INV, SLOPPY_DOUBLE, NO_COMPRESSION);
+				  QPHIX_INVERTER, SLOPPY_DOUBLE, NO_COMPRESSION);
 
 		/* check result */
     	  _M_full(g_spinor_field[4], g_spinor_field[5], g_spinor_field[6], g_spinor_field[7]);

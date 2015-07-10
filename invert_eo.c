@@ -151,7 +151,13 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 #ifdef QPHIX
     /* NOTE: Qphix does only the solve on the odd sites, unlike Quda! */
   if( inverter==QPHIX_INVERTER ) {
-    iter = invert_qphix(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec);
+      /* Here we invert the hermitean operator squared */
+      mul_one_pm_imu(g_spinor_field[DUM_DERI], +1.);
+      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
+      if(g_proc_id == 0) {printf("# Redoing it with CG!\n"); fflush(stdout);}
+//      iter = cg_her(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME/2, &Qtm_pm_psi);
+      iter = invert_qphix(Odd_new, g_spinor_field[DUM_DERI], max_iter, precision, rel_prec);
+      Qtm_minus_psi(Odd_new, Odd_new);
   }
   else
 #endif

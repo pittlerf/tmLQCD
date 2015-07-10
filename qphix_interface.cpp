@@ -86,7 +86,7 @@ extern "C" {
 #include "boundary.h"
 #include "linalg/convert_eo_to_lexic.h"
 #include "solver/solver.h"
-#include "solver/solver_field.h"
+//#include "solver/solver_field.h"
 #include "gettime.h"
 }
 
@@ -851,7 +851,7 @@ runTest(const int lattSize[], const int qmp_geom[])
 #endif
 
   template<typename FT, int veclen, int soalen, bool compress>
-  void qdp_pack_cb_spinor(const double** psi_in,
+  void qdp_pack_cb_spinor(const double* psi_in,
 			  typename Geometry<FT,veclen,soalen, compress>::FourSpinorBlock* psi,
 			  Geometry<FT,veclen,soalen,compress>& s,
 			  int cb)
@@ -878,15 +878,28 @@ runTest(const int lattSize[], const int qmp_geom[])
 		    int x_coord = s*soalen + x;
 		    int qdp_ind = ((t*Nz + z)*Ny + y)*Nxh + x_coord;
 
-		    if( t==0 && y==0 && z==0 )
-		    	masterPrintf("s=%d, soalen=%d, x=%d, x_coord=%d\n", s, soalen, x, x_coord);
+//		    if( t==0 && y==0 && z==0 )
+//		    	masterPrintf("s=%d, soalen=%d, x=%d, x_coord=%d\n", s, soalen, x, x_coord);
 
-		    int tm_ix = g_ipt[t][x_coord+cb*Nxh][y][z];
-		    int tm_i  = g_lexic2eosub[ tm_ix ];
 
-		    psi[ind][col][spin][0][x] = psi_in[cb][24*tm_i+6*spin+2*col+0];
+		  int oddBit = (t+y+z) & 1;
+		  int evenBit = (oddBit?0:1);
+
+		  int tm_t = t;
+		  int tm_z = z;
+		  int tm_y = y;
+		  int tm_x = x_coord*2+oddBit;
+//
+//		  if( tm_t%2 != cb ) tm_z++;
+//		  if( tm_z%2 != cb ) tm_y++;
+//		  if( tm_y%2 != cb ) tm_x++;
+
+		  int tm_idx = g_ipt[tm_t][tm_x][tm_y][tm_z];
+		  int tm_ieo = g_lexic2eosub[ tm_idx ];
+
+		    psi[ind][col][spin][0][x] = psi_in[24*tm_ieo+6*spin+2*col+0];
 		    		//psi_in.elem(rb[cb].start()+qdp_ind).elem(spin).elem(col).real();
-		    psi[ind][col][spin][1][x] = psi_in[cb][24*tm_i+6*spin+2*col+1];
+		    psi[ind][col][spin][1][x] = psi_in[24*tm_ieo+6*spin+2*col+0];
 		    		//psi_in.elem(rb[cb].start()+qdp_ind).elem(spin).elem(col).imag();
 
 		  }
@@ -899,15 +912,15 @@ runTest(const int lattSize[], const int qmp_geom[])
 
   }
 
-  template<typename FT, int veclen, int soalen, bool compress>
-  void qdp_pack_spinor(const double** psi_in,
-		       typename Geometry<FT,veclen,soalen, compress>::FourSpinorBlock* psi_even,
-		       typename Geometry<FT,veclen,soalen, compress>::FourSpinorBlock* psi_odd,
-		       Geometry<FT,veclen,soalen,compress>& s)
-  {
-    qdp_pack_cb_spinor(psi_in,psi_even,s,0);
-    qdp_pack_cb_spinor(psi_in,psi_odd,s,1);
-  }
+//  template<typename FT, int veclen, int soalen, bool compress>
+//  void qdp_pack_spinor(const double** psi_in,
+//		       typename Geometry<FT,veclen,soalen, compress>::FourSpinorBlock* psi_even,
+//		       typename Geometry<FT,veclen,soalen, compress>::FourSpinorBlock* psi_odd,
+//		       Geometry<FT,veclen,soalen,compress>& s)
+//  {
+//    qdp_pack_cb_spinor(psi_in,psi_even,s,0);
+//    qdp_pack_cb_spinor(psi_in,psi_odd,s,1);
+//  }
 
   template<typename FT, int veclen, int soalen, bool compress>
     void qdp_unpack_cb_spinor(typename Geometry<FT,veclen,soalen,compress>::FourSpinorBlock* chi_packed,
@@ -923,9 +936,9 @@ runTest(const int lattSize[], const int qmp_geom[])
     int Pxy = s.getPxy();
     int Pxyz = s.getPxyz();
 
-    double pionr[Nt];
-    for( int t = 0; t < Nt; t++ )
-		pionr[t] = 0.0;
+//    double pionr[Nt];
+//    for( int t = 0; t < Nt; t++ )
+//		pionr[t] = 0.0;
 
 #pragma omp parallel for collapse(4)
     for(int t=0; t < Nt; t++) {
@@ -940,32 +953,35 @@ runTest(const int lattSize[], const int qmp_geom[])
 		  int x_coord = s*soalen + x;
 		  int qdp_ind = ((t*Nz + z)*Ny + y)*Nxh + x_coord;
 
+		  int oddBit = (t+y+z) & 1;
+		  int evenBit = (oddBit?0:1);
+
 		  int tm_t = t;
 		  int tm_z = z;
 		  int tm_y = y;
-		  int tm_x = x_coord*2+cb;
-
-		  if( tm_t%2 != cb ) tm_z++;
-		  if( tm_z%2 != cb ) tm_y++;
-		  if( tm_y%2 != cb ) tm_x++;
+		  int tm_x = x_coord*2+oddBit;
+//
+//		  if( tm_t%2 != cb ) tm_z++;
+//		  if( tm_z%2 != cb ) tm_y++;
+//		  if( tm_y%2 != cb ) tm_x++;
 
 		  int tm_idx = g_ipt[tm_t][tm_x][tm_y][tm_z];
-//		  int tm_ieo = g_lexic2eosub[ tm_idx ];
+		  int tm_ieo = g_lexic2eosub[ tm_idx ];
 
 //		  if( tm_x==0 && tm_y==0 && tm_z==0 ) {
 //			if(  col==0 && spin==0 )
-		  if( cb== 1)
+//		  if( cb== 1)
 //			  masterPrintf("%d\t%e\tcb=%d, t=%d,x=%d,y=%d,z=%d\n",t,chi_packed[ind][col][spin][0][x]*chi_packed[ind][col][spin][0][x]
 //										   +chi_packed[ind][col][spin][1][x]*chi_packed[ind][col][spin][1][x],cb, t,tm_x,tm_y,tm_z);
 
-			  pionr[tm_t] = chi_packed[ind][col][spin][0][x]*chi_packed[ind][col][spin][0][x]
-				         +chi_packed[ind][col][spin][1][x]*chi_packed[ind][col][spin][1][x];
+//			  pionr[tm_t] = chi_packed[ind][col][spin][0][x]*chi_packed[ind][col][spin][0][x]
+//				         +chi_packed[ind][col][spin][1][x]*chi_packed[ind][col][spin][1][x];
 //		  }
 
 		  //chi.elem(rb[cb].start()+qdp_ind).elem(spin).elem(col).real()
-		  chi[24*tm_idx+6*spin+2*col+0] = chi_packed[ind][col][spin][0][x];
+		  chi[24*tm_ieo+6*spin+2*col+0] = chi_packed[ind][col][spin][0][x];
 		  //chi.elem(rb[cb].start()+qdp_ind).elem(spin).elem(col).imag()
-		  chi[24*tm_idx+6*spin+2*col+1] = chi_packed[ind][col][spin][1][x];
+		  chi[24*tm_ieo+6*spin+2*col+1] = chi_packed[ind][col][spin][1][x];
 
 		}
 	      }
@@ -974,20 +990,20 @@ runTest(const int lattSize[], const int qmp_geom[])
 	}
       }
     }
-    for( int t = 0; t < Nt; t++ )
-    	printf("%i\t%e\n", t, pionr[t]);
+//    for( int t = 0; t < Nt; t++ )
+//    	printf("%i\t%e\n", t, pionr[t]);
 
   }
 
-  template<typename FT, int veclen, int soalen, bool compress>
-    void qdp_unpack_spinor(typename Geometry<FT,veclen,soalen,compress>::FourSpinorBlock* chi_even,
-			   typename Geometry<FT,veclen,soalen,compress>::FourSpinorBlock* chi_odd,
-			   double* chi,
-			   Geometry<FT,veclen,soalen,compress>& s)
-  {
-    qdp_unpack_cb_spinor(chi_even,chi,s,0);
-    qdp_unpack_cb_spinor(chi_odd,chi,s,1);
-  }
+//  template<typename FT, int veclen, int soalen, bool compress>
+//    void qdp_unpack_spinor(typename Geometry<FT,veclen,soalen,compress>::FourSpinorBlock* chi_even,
+//			   typename Geometry<FT,veclen,soalen,compress>::FourSpinorBlock* chi_odd,
+//			   double* chi,
+//			   Geometry<FT,veclen,soalen,compress>& s)
+//  {
+//    qdp_unpack_cb_spinor(chi_even,chi,s,0);
+//    qdp_unpack_cb_spinor(chi_odd,chi,s,1);
+//  }
 
 template<typename FT, int V, int S, bool compress>
 void
@@ -1264,15 +1280,17 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
   Spinor *chi_s[2] = { c_even, c_odd };
   Spinor *prep_psi_s[2] = { prep_p_even, prep_p_odd };
 
-  spinor ** solver_field = NULL;
-  const int nr_sf = 2;
-  init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
+//  spinor ** solver_field = NULL;
+//  const int nr_sf = 2;
+//  init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
 
-#if 0
+#if 1
 // if(eo) convert to lexic
 //  convert_lexic_to_eo(solver_field[0], solver_field[1], Q);
 
-  qdp_pack_spinor<>((const double**)solver_field, p_even, p_odd, geom);
+//  qdp_pack_spinor<>((const double**)solver_field, p_even, p_odd, geom);
+  // need only odd sites
+  qdp_pack_cb_spinor((const double*)Q,p_odd,geom,1);
 #else
   masterPrintf("Filling Input spinor: ");
 
@@ -1427,11 +1445,11 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
 #endif
 
       // prepare source for CG: psi' -> M^\dagger psi'
-      M(prep_psi_s[1], psi_s[1] , -1);
+//      M(prep_psi_s[1], psi_s[1] , -1);
 
       // solve for c_odd'
       start = omp_get_wtime();
-      solver(chi_s[1], prep_psi_s[1], eps_sq, niters, rsd_final, site_flops, mv_apps,1,verbose);
+      solver(chi_s[1], psi_s[1], eps_sq, niters, rsd_final, site_flops, mv_apps,1,verbose);
       end = omp_get_wtime();
 
 
@@ -1454,7 +1472,11 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
 #endif
 
       // unpack
-      qdp_unpack_spinor<>(chi_s[0], chi_s[1], (double*)P, geom); //(const double**)solver_field, p_even, p_odd,
+//      qdp_unpack_spinor<>(chi_s[0], chi_s[1], (double*)P, geom);
+      // only odd sites
+      qdp_unpack_cb_spinor(chi_s[1],(double*)P,geom,1);
+
+      //(const double**)solver_field, p_even, p_odd,
 //      convert_eo_to_lexic(P, solver_field[0], solver_field[1]); //solver_field[0], solver_field[1], Q);
       //if(eo) convert from lexic to eo
     }
@@ -1465,7 +1487,7 @@ invert(spinor * const P, spinor * const Q, const int max_iter, double eps_sq, co
 
   masterPrintf("Cleaning up\n");
 
-  finalize_solver(solver_field, nr_sf);
+//  finalize_solver(solver_field, nr_sf);
 
   geom.free(packed_gauge_cb0);
   geom.free(packed_gauge_cb1);
