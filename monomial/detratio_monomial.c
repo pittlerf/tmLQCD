@@ -42,9 +42,55 @@
 #include "boundary.h"
 #include "detratio_monomial.h"
 
+#include "dirty_shameful_business.h"
+
 /* think about chronological solver ! */
 
 void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
+  static short first = 1;
+  double atime, etime;
+  monomial * mnl = &monomial_list[no];
+  
+  atime = gettime();
+  mnl->forcefactor = 1.;
+
+  if(mnl->write_deriv) {
+    char filename[100];
+    char mode[2] = {'a','\0'};
+    if( first == 1 ){
+      mode[0] = 'w';
+      first = 0;
+    }
+    
+    adjoint_field_t df_analytical = get_adjoint_field();
+    zero_adjoint_field(&df_analytical);
+    ohnohack_remap_df0(df_analytical);
+    detratio_derivative_analytical(no,hf);
+    
+    snprintf(filename,100,"%s_%02d_f_analytical.bin",mnl->name,mnl->timescale);
+    write_deriv_file(filename, mode, df_analytical, mnl);
+    if(!mnl->decouple) {
+      #ifdef OMP
+      #pragma omp parallel for
+      #endif
+      for(int x = 0; x < VOLUME; ++x) {
+        for(int mu = 0; mu < 4; ++mu) {
+          _add_su3adj(df[x][mu],df_analytical[x][mu]);
+        }
+      }
+    }
+    return_adjoint_field(&df_analytical);
+    ohnohack_remap_df0(df);    
+    
+  } else { // if(write_deriv)
+    if(!mnl->decouple)
+      detratio_derivative_analytical(no,hf);
+  }
+  return;
+}
+
+
+void detratio_derivative_analytical(const int no, hamiltonian_field_t * const hf) {
   double atime, etime;
   monomial * mnl = &monomial_list[no];
   
@@ -52,6 +98,7 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
   mnl->forcefactor = 1.;
 
   if(mnl->even_odd_flag) {
+      
     /*
      *  this is being run in case there is even/odd preconditioning
      */
