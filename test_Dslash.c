@@ -126,23 +126,23 @@ void printPion(spinor* sp) {
 		pioni[t] = 0.0;
 	}
 
-//	for( int t = 0; t < T; t++ )
+	for( int t = 0; t < T; t++ )
 	{
-		int t=0;
+//		int t=0;
 //		pionr[t] = 0.0;
 //		pioni[t] = 0.0;
 //		pmax = 0.0;
 //		xmax = ymax = zmax = 0;
 //		int j = g_ipt[t][0][0][0];
 //    	for( int i = j; i < j+1/*LX*LY*LZ*/; i++ )
-		for( int x=0; x<LX; x++ )
+//		for( int x=0; x<LX; x++ )
 //			for( int y=0; y<LY; y++ )
 //				for( int z=0; z<LZ; z++ )
     	{
-			int z=0; int y=0;
+			int z=0; int y=0; int x=0;
 			int i = LX*LY*LZ*t + LY*LZ*x + LZ*y + z;
-    		pionr[x] += _spinor_prod_re( sp[i], sp[i] );
-    		pioni[x] += _spinor_prod_im( sp[i], sp[i] );
+    		pionr[t] += _spinor_prod_re( sp[i], sp[i] );
+    		pioni[t] += _spinor_prod_im( sp[i], sp[i] );
 //    		if( _spinor_prod_re( sp[i], sp[i] ) > pmax) {
 //    			pmax = _spinor_prod_re( sp[i], sp[i] );
 //    			xmax = x;
@@ -150,10 +150,10 @@ void printPion(spinor* sp) {
 //    			zmax = z;
 //    		}
     	}
-		for( int x=0; x<LX; x++ )
-    	printf("%i\t%e\t%e\n", x, pionr[x], pioni[x]);
-//		printf("%i\t%e\t(%d,%d,%d,%d)\n", t, pmax, t, xmax, ymax, zmax);
 	}
+	for( int t=0; t<T; t++ )
+    	printf("%i\t%e\t%e\n", t, pionr[t], pioni[t]);
+//		printf("%i\t%e\t(%d,%d,%d,%d)\n", t, pmax, t, xmax, ymax, zmax);
 }
 
 int main(int argc,char *argv[])
@@ -372,10 +372,13 @@ int main(int argc,char *argv[])
 			_spinor_null(g_spinor_field[2][ix]);
 			// odd
 			_spinor_null(g_spinor_field[3][ix]);
+			//Even_new
+			_spinor_null(g_spinor_field[0][ix]); //CPU
+			_spinor_null(g_spinor_field[6][ix]); //qphix
 		}
 		//point source
 		g_spinor_field[2][0].s0.c0 = 1.0;
-//		g_spinor_field[3][0].s0.c0 = 1.0; //TODO
+		g_spinor_field[3][0].s0.c0 = 1.0; //TODO
 	}
 	else
 	{
@@ -388,19 +391,19 @@ int main(int argc,char *argv[])
 #endif
 
 	// copy
-	if(even_odd_flag)
-		for(int ix=0; ix<VOLUME/2; ix++ )
-		{
-			// even
-			_spinor_assign(g_spinor_field[6][ix], g_spinor_field[2][ix]);
-			// odd
-			_spinor_assign(g_spinor_field[7][ix], g_spinor_field[3][ix]);
-		}
-	else
-		for(int ix=0; ix<VOLUME; ix++ )
-		{
-			_spinor_assign(g_spinor_field[3][ix], g_spinor_field[1][ix]);
-		}
+//	if(even_odd_flag)
+//		for(int ix=0; ix<VOLUME/2; ix++ )
+//		{
+//			// even
+//			_spinor_assign(g_spinor_field[6][ix], g_spinor_field[2][ix]);
+//			// odd
+//			_spinor_assign(g_spinor_field[7][ix], g_spinor_field[3][ix]);
+//		}
+//	else
+//		for(int ix=0; ix<VOLUME; ix++ )
+//		{
+//			_spinor_assign(g_spinor_field[3][ix], g_spinor_field[1][ix]);
+//		}
 
 #if defined MPI
 	if(even_odd_flag)

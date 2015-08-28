@@ -1803,11 +1803,17 @@ void _loadGaugeQphix()
 }
 
 
-// reorder spinor to QUDA format
-void reorder_spinor_toQphix( double* spinor )
+// reorder spinor to QPhiX format (odd sites only)
+void reorder_spinor_toQphix( double* sp )
 {
   double startTime = MPI_Wtime();
-  memcpy( tempSpinor, spinor, VOLUME*24*sizeof(double) );
+  // alloc space for a temp. spinor, used throughout this module TODO put somewhere central
+  tempSpinor  = (double*)malloc( (VOLUME)*24*sizeof(double) );
+  memcpy( tempSpinor, sp, (VOLUME/2)*24*sizeof(double) );
+  double *in,*out;
+  int Ns=4,Nc=3;
+  double K1[4] = {-1.0,1.0,1.0,-1.0};
+  int s1[4] = {3,2,1,0};
 
   // now copy and reorder from tempSpinor to spinor 
   for( int x0=0; x0<T; x0++ )
@@ -1820,25 +1826,44 @@ void reorder_spinor_toQphix( double* spinor )
           int tm_idx   = g_ipt[x0][x1][x2][x3];
 #else
           int j = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
-          int tm_idx   = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;//g_ipt[x0][x3][x2][x1];
+          int tm_idx = g_lexic2eosub[ g_ipt[x0][x3][x2][x1] ];
 #endif
-          
-          int oddBit = (x0+x1+x2+x3) & 1;
-//          int qphix_idx = 18*(oddBit*VOLUME/2+j/2);
+          // is this an odd site?
+          if((x0+x1+x2+x3+g_proc_coords[3]*LZ+g_proc_coords[2]*LY
+          + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 != 0) {
+           // gamma basis transformation
+            in  = tempSpinor + 24*tm_idx;
+            out = sp + 24*tm_idx;
 
-          memcpy( &(spinor[24*(oddBit*VOLUME/2+j/2)]), &(tempSpinor[24*tm_idx]), 24*sizeof(double));
-        } 
+            for (int s=0; s<Ns; s++) {
+              for (int c=0; c<Nc; c++) {
+                for (int z=0; z<2; z++) {
+                  out[(s*Nc+c)*2+z] = K1[s]*in[(s1[s]*Nc+c)*2+z];
+                }
+              }
+            }
+          }
+
+//          int oddBit = (x0+x1+x2+x3) & 1;
+//          int qphix_idx = 18*(oddBit*VOLUME/2+j/2);
+//          memcpy( &(spinor[24*(oddBit*VOLUME/2+j/2)]), &(tempSpinor[24*tm_idx]), 24*sizeof(double));
+
+        }
         
   double endTime = MPI_Wtime();
   double diffTime = endTime - startTime;
   printf("time spent in reorder_spinor_toQphix: %f secs\n", diffTime);
 }
 
-// reorder spinor from QUDA format
-void reorder_spinor_fromQphix( double* spinor )
+// reorder spinor from QPhiX format (odd sites only)
+void reorder_spinor_fromQphix( double* sp )
 {
   double startTime = MPI_Wtime();
-  memcpy( tempSpinor, spinor, VOLUME*24*sizeof(double) );
+  memcpy( tempSpinor, sp, (VOLUME/2)*24*sizeof(double) );
+  double *in,*out;
+  int Ns=4,Nc=3;
+  double K1[4] = {-1.0,1.0,1.0,-1.0};
+  int s1[4] = {3,2,1,0};
 
   // now copy and reorder from tempSpinor to spinor 
   for( int x0=0; x0<T; x0++ )
@@ -1851,15 +1876,29 @@ void reorder_spinor_fromQphix( double* spinor )
           int tm_idx   = g_ipt[x0][x1][x2][x3];
 #else
           int j = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
-          int tm_idx   = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;//g_ipt[x0][x3][x2][x1];
+          int tm_idx = g_lexic2eosub[ g_ipt[x0][x3][x2][x1] ];
 #endif
-          
-          int oddBit = (x0+x1+x2+x3) & 1;
-//          int qphix_idx = 18*(oddBit*VOLUME/2+j/2);
+          // is this an odd site?
+          if((x0+x1+x2+x3+g_proc_coords[3]*LZ+g_proc_coords[2]*LY
+          + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 != 0) {
+           // gamma basis transformation
+            in  = tempSpinor + 24*tm_idx;
+            out = sp + 24*tm_idx;
 
-          memcpy( &(spinor[24*tm_idx]), &(tempSpinor[24*(oddBit*VOLUME/2+j/2)]), 24*sizeof(double));
+            for (int s=0; s<Ns; s++) {
+              for (int c=0; c<Nc; c++) {
+                for (int z=0; z<2; z++) {
+                  out[(s*Nc+c)*2+z] = K1[s]*in[(s1[s]*Nc+c)*2+z];
+                }
+              }
+            }
+          }
+
+//          int oddBit = (x0+x1+x2+x3) & 1;
+//          int qphix_idx = 18*(oddBit*VOLUME/2+j/2);
+//          memcpy( &(spinor[24*(oddBit*VOLUME/2+j/2)]), &(tempSpinor[24*tm_idx]), 24*sizeof(double));
+
         }
-        
   double endTime = MPI_Wtime();
   double diffTime = endTime - startTime;
   printf("time spent in reorder_spinor_fromQphix: %f secs\n", diffTime);
@@ -1938,6 +1977,9 @@ int invert_qphix(spinor * const P, spinor * const Q, const int max_iter, double 
   lattSize[1] = LY*g_nproc_y;
   lattSize[2] = LZ*g_nproc_z;
   lattSize[3] = T*g_nproc_t;
+
+  // reorder spinor
+  reorder_spinor_toQphix( (double*)Q );
 
   if ( precision == FLOAT_PREC ) {
     if ( QPHIX_SOALEN > VECLEN_SP ) {
@@ -2050,9 +2092,9 @@ int invert_qphix(spinor * const P, spinor * const Q, const int max_iter, double 
 //  // number of CG iterations
 //  iteration = inv_param.iter;
 //
-//  // reorder spinor
-//  reorder_spinor_fromQphix( (double*)spinorIn,  inv_param.cpu_prec );
-//  reorder_spinor_fromQphix( (double*)spinorOut, inv_param.cpu_prec );
+  // reorder spinor
+  reorder_spinor_fromQphix( (double*)P );
+  reorder_spinor_fromQphix( (double*)Q );
 //
 //  double endTime = MPI_Wtime();
 //  double diffTime = endTime - startTime;
