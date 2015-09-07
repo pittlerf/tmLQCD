@@ -1856,7 +1856,7 @@ void reorder_spinor_toQphix( double* sp )
 }
 
 // reorder spinor from QPhiX format (odd sites only)
-void reorder_spinor_fromQphix( double* sp )
+void reorder_spinor_fromQphix( double* sp, double normFac=1.0 )
 {
   double startTime = MPI_Wtime();
   memcpy( tempSpinor, sp, (VOLUME/2)*24*sizeof(double) );
@@ -1888,7 +1888,7 @@ void reorder_spinor_fromQphix( double* sp )
             for (int s=0; s<Ns; s++) {
               for (int c=0; c<Nc; c++) {
                 for (int z=0; z<2; z++) {
-                  out[(s*Nc+c)*2+z] = K1[s]*in[(s1[s]*Nc+c)*2+z];
+                  out[(s*Nc+c)*2+z] = K1[s]*in[(s1[s]*Nc+c)*2+z] * normFac;
                 }
               }
             }
@@ -2093,7 +2093,7 @@ int invert_qphix(spinor * const P, spinor * const Q, const int max_iter, double 
 //  iteration = inv_param.iter;
 //
   // reorder spinor
-  reorder_spinor_fromQphix( (double*)P );
+  reorder_spinor_fromQphix( (double*)P, 1.0/g_kappa );
   reorder_spinor_fromQphix( (double*)Q );
 //
 //  double endTime = MPI_Wtime();
