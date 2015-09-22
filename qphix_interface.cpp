@@ -856,7 +856,6 @@ runTest(const int lattSize[], const int qmp_geom[])
 			  Geometry<FT,veclen,soalen,compress>& s,
 			  int cb)
   {
-    // Get the subgrid latt size.
     int Nt = s.Nt();
     int Nz = s.Nz();
     int Ny = s.Ny();
@@ -865,22 +864,22 @@ runTest(const int lattSize[], const int qmp_geom[])
     int Pxy = s.getPxy();
     int Pxyz = s.getPxyz();
 
+//    double pionr[Nt];
+//    for( int t = 0; t < Nt; t++ )
+//		pionr[t] = 0.0;
+
 #pragma omp parallel for collapse(4)
-      for(int t=0; t < Nt; t++) {
-	for(int z=0; z < Nz; z++) {
-	  for(int y=0; y < Ny; y++) {
-	    for(int s=0; s < nvecs; s++) {
+    for(int t=0; t < Nt; t++) {
+      for(int z=0; z < Nz; z++) {
+	for(int y=0; y < Ny; y++) {
+	  for(int s=0; s < nvecs; s++) {
+	    for(int spin=0; spin < 4; spin++) {
 	      for(int col=0; col < 3; col++)  {
-		for(int spin=0; spin < 4; spin++) {
-		  for(int x=0; x < soalen; x++) {
+		for(int x=0; x < soalen; x++) {
 
-		    int ind = t*Pxyz+z*Pxy+y*nvecs+s; //((t*Nz+z)*Ny+y)*nvecs+s;
-		    int x_coord = s*soalen + x;
-		    int qdp_ind = ((t*Nz + z)*Ny + y)*Nxh + x_coord;
-
-//		    if( t==0 && y==0 && z==0 )
-//		    	masterPrintf("s=%d, soalen=%d, x=%d, x_coord=%d\n", s, soalen, x, x_coord);
-
+		  int ind = t*Pxyz+z*Pxy+y*nvecs+s; //((t*Nz+z)*Ny+y)*nvecs+s;
+		  int x_coord = s*soalen + x;
+		  int qdp_ind = ((t*Nz + z)*Ny + y)*Nxh + x_coord;
 
 		  int oddBit = (t+y+z) & 1;
 		  int evenBit = (oddBit?0:1);
@@ -1825,15 +1824,15 @@ void reorder_spinor_toQphix( double* sp )
           int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
           int tm_idx   = g_ipt[x0][x1][x2][x3];
 #else
-          int j = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
-          int tm_idx = g_lexic2eosub[ g_ipt[x0][x3][x2][x1] ];
+          int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
+          int tm_idx = g_lexic2eosub[ g_ipt[x0][x1][x2][x3] ];
 #endif
           // is this an odd site?
           if((x0+x1+x2+x3+g_proc_coords[3]*LZ+g_proc_coords[2]*LY
           + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 != 0) {
            // gamma basis transformation
             in  = tempSpinor + 24*tm_idx;
-            out = sp + 24*tm_idx;
+            out = sp + 24*(j/2);
 
             for (int s=0; s<Ns; s++) {
               for (int c=0; c<Nc; c++) {
@@ -1875,14 +1874,14 @@ void reorder_spinor_fromQphix( double* sp, double normFac=1.0 )
           int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
           int tm_idx   = g_ipt[x0][x1][x2][x3];
 #else
-          int j = x1 + LX*x2 + LY*LX*x3 + LZ*LY*LX*x0;
-          int tm_idx = g_lexic2eosub[ g_ipt[x0][x3][x2][x1] ];
+          int j = x3 + LZ*x2 + LY*LZ*x1 + LX*LY*LZ*x0;
+          int tm_idx = g_lexic2eosub[ g_ipt[x0][x1][x2][x3] ];
 #endif
           // is this an odd site?
           if((x0+x1+x2+x3+g_proc_coords[3]*LZ+g_proc_coords[2]*LY
           + g_proc_coords[0]*T+g_proc_coords[1]*LX)%2 != 0) {
            // gamma basis transformation
-            in  = tempSpinor + 24*tm_idx;
+            in  = tempSpinor + 24*(j/2);
             out = sp + 24*tm_idx;
 
             for (int s=0; s<Ns; s++) {

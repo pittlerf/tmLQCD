@@ -139,7 +139,7 @@ void printPion(spinor* sp) {
 //			for( int y=0; y<LY; y++ )
 //				for( int z=0; z<LZ; z++ )
     	{
-			int z=0; int y=0; int x=0;
+			int z=3; int y=4; int x=1;
 			int i = LX*LY*LZ*t + LY*LZ*x + LZ*y + z;
     		pionr[t] += _spinor_prod_re( sp[i], sp[i] );
     		pioni[t] += _spinor_prod_im( sp[i], sp[i] );
@@ -391,19 +391,19 @@ int main(int argc,char *argv[])
 #endif
 
 	// copy
-//	if(even_odd_flag)
-//		for(int ix=0; ix<VOLUME/2; ix++ )
-//		{
-//			// even
-//			_spinor_assign(g_spinor_field[6][ix], g_spinor_field[2][ix]);
-//			// odd
-//			_spinor_assign(g_spinor_field[7][ix], g_spinor_field[3][ix]);
-//		}
-//	else
-//		for(int ix=0; ix<VOLUME; ix++ )
-//		{
-//			_spinor_assign(g_spinor_field[3][ix], g_spinor_field[1][ix]);
-//		}
+	if(even_odd_flag)
+		for(int ix=0; ix<VOLUME/2; ix++ )
+		{
+			// even
+			_spinor_assign(g_spinor_field[6][ix], g_spinor_field[2][ix]);
+			// odd
+			_spinor_assign(g_spinor_field[7][ix], g_spinor_field[3][ix]);
+		}
+	else
+		for(int ix=0; ix<VOLUME; ix++ )
+		{
+			_spinor_assign(g_spinor_field[3][ix], g_spinor_field[1][ix]);
+		}
 
 #if defined MPI
 	if(even_odd_flag)
