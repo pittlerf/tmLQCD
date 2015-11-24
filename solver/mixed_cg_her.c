@@ -1,5 +1,5 @@
 /***********************************************************************
- * Copyright (C) 2013 Florian Burger
+ * Copyright (C) 2015 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -57,7 +57,36 @@
 #include "solver/mixed_cg_her.h"
 #include "gettime.h"
 
+static inline unsigned int inner_loop(spinor32 * const x, spinor32 * const p, spinor32 * const q, spinor32 * const r, float * const rho1, float delta,
+                              matrix_mult32 f32, const float eps_sq, const unsigned int max_inner_it, const unsigned int N ){
 
+  static float alpha, beta, rho;
+  static unsigned int j;
+
+  rho = *rho1;
+  delta = delta*rho;
+
+  for(j = 0; j < max_inner_it; ++j){
+
+    f32(q,p);
+    alpha = rho/scalar_prod_r_32(p,q,N,1);
+    assign_add_mul_r_32(x, p, alpha, N);
+    assign_add_mul_r_32(r, q, -alpha, N);
+    rho = square_norm_32(r,N,1);
+    beta = rho / *rho1;
+    *rho1 = rho;
+    assign_mul_add_r_32(p, beta, r, N);
+
+    if( rho < delta || rho < eps_sq ) break;
+    
+    if(g_debug_level > 2 && g_proc_id == 0) {
+      printf("mixed CG: inner residue: %g\t\n", rho);
+    }
+
+  }
+
+  return j;
+}
 
 
 /* P output = solution , Q input = source */
@@ -66,14 +95,17 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
 
   int i = 0, iter = 0, j = 0;
   float sqnrm = 0., sqnrm2, squarenorm;
-  float pro, err, alpha_cg, beta_cg;
+  float pro, err, alpha_cg, beta_cg, rho;
   double sourcesquarenorm, sqnrm_d, squarenorm_d;
   spinor *delta, *y, *xhigh;
-  spinor32 *x, *stmp;
+  spinor32 *x, *stmp, *p, *q, *r;
   spinor ** solver_field = NULL;
   spinor32 ** solver_field32 = NULL;  
   const int nr_sf = 3;
   const int nr_sf32 = 4;
+
+  double shigh, shighp1;
+  spinor *rhigh, *qhigh;
 
   int max_inner_it = mixcg_maxinnersolverit;
   int N_outer = max_iter/max_inner_it;
@@ -92,81 +124,43 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
     init_solver_field_32(&solver_field32, VOLUMEPLUSRAND/2, nr_sf32);    
   }
 
-  squarenorm_d = square_norm(Q, N, 1);
-  sourcesquarenorm = squarenorm_d;
-  sqnrm_d = squarenorm_d;
- 
-  delta = solver_field[0];
-  y = solver_field[1];
-  xhigh = solver_field[2];
-  x = solver_field32[3];   
-  assign(delta, Q, N);
-  
-  //set solution to zero
-  zero_spinor_field(P, N);
-  
   atime = gettime();
+
+  xhigh = solver_field[2];
+  rhigh = solver_field[1];
+  qhigh = solver_field[0];
+
+  x = solver_field32[3];
+  r = solver_field32[2];
+  p = solver_field32[1];
+  q = solver_field32[0];
+
+  g_sloppy_precision_flag = 0;
+
+  zero_spinor_field(xhigh,N);
+  zero_spinor_field_32(x,N);
+  
+  assign_to_32(r,Q,N);
+  assign_to_32(p,Q,N);
+  rho = square_norm_32(r,N,1);
+  
+  iter += inner_loop(x, p, q, r, &rho, 1.0e-9, f32, (float)eps_sq, max_inner_it, N);
+
   for(i = 0; i < N_outer; i++) {
-
-    /* main CG loop in lower precision */
-    zero_spinor_field_32(x, N);
-    zero_spinor_field_32(solver_field32[0], N);   
-    assign_to_32(solver_field32[1], delta, N);
-    assign_to_32(solver_field32[2], delta, N);
+     
+    ++iter; 
+    addto_32(xhigh,x,N);
+    f(qhigh,xhigh);
+    diff(rhigh,Q,qhigh,N);
+    shigh = square_norm(rhigh,N,1);
     
-    sqnrm = (float) sqnrm_d;
-    sqnrm2 = sqnrm;
-    
-    /*inner CG loop */
-    for(j = 0; j <= max_inner_it; j++) {
-      
-      f32(solver_field32[0], solver_field32[2]); 
-      pro = scalar_prod_r_32(solver_field32[2], solver_field32[0], N, 1);
-      alpha_cg = sqnrm2 / pro;
-      
-      assign_add_mul_r_32(x, solver_field32[2], alpha_cg, N);
-      
-      assign_mul_add_r_32(solver_field32[0], -alpha_cg, solver_field32[1], N);      
-      
-      err = square_norm_32(solver_field32[0], N, 1);
-
-      if(g_proc_id == g_stdio_proc && g_debug_level > 2) {
-	      printf("inner CG: %d res^2 %g\n", iter+j, err);
-	      fflush(stdout);
-      }
-    
-      //if (((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))){
-      if((err <= mixcg_innereps*sqnrm)|| (j==max_inner_it) ||  ((1.3*err <= eps_sq) && (rel_prec == 0)) || ((1.3*err <= eps_sq*sourcesquarenorm) && (rel_prec == 1))) {
-	      break;
-      }
-      beta_cg = err / sqnrm2;
-      assign_mul_add_r_32(solver_field32[2], beta_cg, solver_field32[0], N);
-      stmp = solver_field32[0];
-      solver_field32[0] = solver_field32[1];
-      solver_field32[1] = stmp;
-      sqnrm2 = err;
-    }
-    /* end inner CG loop */
-    iter += j;
-
-    /* we want to apply a true double matrix with f(y,P) -> set sloppy off here*/
-    g_sloppy_precision_flag = 0;
-    
-    /* calculate defect in double precision */
-    assign_to_64(xhigh, x, N);    
-    add(P, P, xhigh, N);
-    f(y, P);
-    diff(delta, Q, y, N);
-    sqnrm_d = square_norm(delta, N, 1);
     if(g_debug_level > 2 && g_proc_id == 0) {
-      printf("mixed CG: last inner residue: %g\t\n", err);
-      printf("mixed CG: true residue %d %g\t\n",iter, sqnrm_d); fflush(stdout);
+      printf("mixed CG: last inner residue: %g\t\n", rho);
+      printf("mixed CG: true residue %d %g\t\n", iter, shigh); fflush(stdout);
     }
-    
-    /* here we can reset it to its initial value*/
-    g_sloppy_precision_flag = save_sloppy;
-    
-    if(((sqnrm_d <= eps_sq) && (rel_prec == 0)) || ((sqnrm_d <= eps_sq*sourcesquarenorm) && (rel_prec == 1))) {
+    if(((shigh <= eps_sq) && (rel_prec == 0)) || ((shigh <= eps_sq*sourcesquarenorm) && (rel_prec == 1))) {
+      assign(P,xhigh,N);
+      g_sloppy_precision_flag = save_sloppy;
       etime = gettime();     
 
       if(g_debug_level > 0 && g_proc_id == 0) {
@@ -187,12 +181,25 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
       	}
       }      
       
+      g_sloppy_precision_flag = save_sloppy;
       finalize_solver(solver_field, nr_sf);
       finalize_solver_32(solver_field32, nr_sf32); 
       return(iter+i);
     }
-    iter++;
+
+    // correct defect
+    assign_to_32(r,rhigh,N);
+    rho = square_norm_32(r,N,1);
+
+    // project search direction to be orthogonal to corrected residual
+    float gamma = scalar_prod_r_32(r,p,N,1);
+    assign_add_mul_r_32(p,r,-gamma,N);
+    zero_spinor_field_32(x,N);
+
+    iter += inner_loop(x, p, q, r, &rho, 1.0e-9, f32, (float)eps_sq, max_inner_it, N);
+    
   }
+  g_sloppy_precision_flag = save_sloppy;
   finalize_solver(solver_field, nr_sf);
   finalize_solver_32(solver_field32, nr_sf32); 
   return(-1);

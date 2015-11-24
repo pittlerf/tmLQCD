@@ -25,5 +25,7 @@
 /*   Makes (*R) = c*(*S)   c is a real constant*/
 void mul_r_32(spinor32 * const R, const float c, spinor32 * const S, const int N);
 void mul_r_32_orphaned(spinor32 * const R, const float c, spinor32 * const S, const int N);
+void mul_r_64to32(spinor32 * const R, const double c, spinor * const S, const int N);
+void mul_r_64to32_orphaned(spinor32 * const R, const double c, spinor * const S, const int N);
 
 #endif
