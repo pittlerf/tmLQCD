@@ -66,7 +66,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
 
   int i = 0, iter = 0, j = 0;
   float sqnrm = 0., sqnrm2, squarenorm;
-  float pro, err, alpha_cg, beta_cg;
+  float pro, err, alpha_cg, beta_cg, sigma_cg;
   double sourcesquarenorm, sqnrm_d, squarenorm_d;
   spinor *delta, *y, *xhigh;
   spinor32 *x, *stmp;
@@ -120,13 +120,14 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
     /*inner CG loop */
     for(j = 0; j <= max_inner_it; j++) {
       
-      f32(solver_field32[0], solver_field32[2]); 
-      pro = scalar_prod_r_32(solver_field32[2], solver_field32[0], N, 1);
+      f32(solver_field32[0], solver_field32[2]);
+      sigma_cg = square_norm_32(solver_field32[0], N, 1); // ||q_k+1||
+      pro = scalar_prod_r_32(solver_field32[2], solver_field32[0], N, 1); // (p_k+1,q_k+1)
       alpha_cg = sqnrm2 / pro;
       
-      assign_add_mul_r_32(x, solver_field32[2], alpha_cg, N);
+      assign_add_mul_r_32(x, solver_field32[2], alpha_cg, N); // x_k+1
       
-      assign_mul_add_r_32(solver_field32[0], -alpha_cg, solver_field32[1], N);      
+      assign_mul_add_r_32(solver_field32[0], -alpha_cg, solver_field32[1], N); // r_k+1
       
       err = square_norm_32(solver_field32[0], N, 1);
 
@@ -139,8 +140,10 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
       if((err <= mixcg_innereps*sqnrm)|| (j==max_inner_it) ||  ((1.3*err <= eps_sq) && (rel_prec == 0)) || ((1.3*err <= eps_sq*sourcesquarenorm) && (rel_prec == 1))) {
 	      break;
       }
-      beta_cg = err / sqnrm2;
-      assign_mul_add_r_32(solver_field32[2], beta_cg, solver_field32[0], N);
+      //beta_cg = err / sqnrm2;
+      // use Polak-Ribiere formula for beta
+      beta_cg = alpha_cg*(alpha_cg*sigma_cg - pro)/sqnrm2; 
+      assign_mul_add_r_32(solver_field32[2], beta_cg, solver_field32[0], N); // p_k+1
       stmp = solver_field32[0];
       solver_field32[0] = solver_field32[1];
       solver_field32[1] = stmp;
