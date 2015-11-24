@@ -372,11 +372,7 @@ int main(int argc, char *argv[])
       
       
       for(i = 0; i < no_sources_z2; i++) {
-#if (defined SSE3 || defined SSE2 || defined SSE)
         s[i] = (spinor*)(((unsigned long int)(s_)+ALIGN_BASE)&~ALIGN_BASE)+i*VOLUMEPLUSRAND;
-#else
-        s[i] = s_+i*VOLUMEPLUSRAND;
-#endif
 	
         random_spinor_field_lexic(s[i], reproduce_randomnumber_flag,RN_Z2);
 	

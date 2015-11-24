@@ -58,11 +58,7 @@ int init_gauge_field(const int V, const int back) {
     errno = 0;
     return(2);
   }
-#if (defined SSE || defined SSE2 || defined SSE3)
   g_gauge_field[0] = (su3*)(((unsigned long int)(gauge_field)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  g_gauge_field[0] = gauge_field;
-#endif
   for(i = 1; i < V; i++){
     g_gauge_field[i] = g_gauge_field[i-1]+4;
   }
@@ -88,11 +84,7 @@ int init_gauge_field(const int V, const int back) {
       errno = 0;
       return(4);
     }
-#    if (defined SSE || defined SSE2 || defined SSE3)
     g_gauge_field_copy[0][0] = (su3*)(((unsigned long int)(gauge_field_copy)+ALIGN_BASE)&~ALIGN_BASE);
-#    else
-    g_gauge_field_copy[0][0] = gauge_field_copy;
-#    endif
     for(i = 1; i < (VOLUME)/2; i++) {
       g_gauge_field_copy[0][i] = g_gauge_field_copy[0][i-1]+4;
     }
@@ -123,13 +115,8 @@ int init_gauge_field(const int V, const int back) {
       errno = 0;
       return(4);
     }
-#    if (defined SSE || defined SSE2 || defined SSE3)
     g_gauge_field_copyt[0] = (su3*)(((unsigned long int)(gauge_field_copyt)+ALIGN_BASE)&~ALIGN_BASE);
     g_gauge_field_copys[0] = (su3*)(((unsigned long int)(gauge_field_copys)+ALIGN_BASE)&~ALIGN_BASE);
-#    else
-    g_gauge_field_copyt[0] = gauge_field_copyt;
-    g_gauge_field_copys[0] = gauge_field_copys;
-#    endif
     for(i = 1; i < (VOLUME+RAND); i++) {
       g_gauge_field_copyt[i] = g_gauge_field_copyt[i-1]+2;
       g_gauge_field_copys[i] = g_gauge_field_copys[i-1]+6;
@@ -147,11 +134,7 @@ int init_gauge_field(const int V, const int back) {
       errno = 0;
       return(4);
     }
-#  if (defined SSE || defined SSE2 || defined SSE3)
     g_gauge_field_copy[0] = (su3*)(((unsigned long int)(gauge_field_copy)+ALIGN_BASE)&~ALIGN_BASE);
-#  else
-    g_gauge_field_copy[0] = gauge_field_copy;
-#  endif
     for(i = 1; i < (VOLUME+RAND); i++) {
       g_gauge_field_copy[i] = g_gauge_field_copy[i-1]+8;
     }

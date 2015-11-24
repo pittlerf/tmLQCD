@@ -54,11 +54,7 @@ int init_solver_field(spinor *** const solver_field, const int V, const int nr) 
 #endif
 
   /* now cut in pieces and distribute to solver_field[0]-solver_field[nr-1] */
-#if ( defined SSE || defined SSE2 || defined SSE3)
   (*solver_field)[0] = (spinor*)(((unsigned long int)((*solver_field)[nr])+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  (*solver_field)[0] = (*solver_field)[nr];
-#endif
   for(i = 1; i < nr; i++){
     (*solver_field)[i] = (*solver_field)[i-1]+V;
   }
@@ -101,11 +97,7 @@ int init_solver_field_32(spinor32 *** const solver_field, const int V, const int
 #endif
 
   /* now cut in pieces and distribute to solver_field[0]-solver_field[nr-1] */
-#if ( defined SSE || defined SSE2 || defined SSE3)
   (*solver_field)[0] = (spinor32*)(((unsigned long int)((*solver_field)[nr])+ALIGN_BASE32)&~ALIGN_BASE32);
-#else
-  (*solver_field)[0] = (spinor32*)(((unsigned long int)((*solver_field)[nr])+ALIGN_BASE32)&~ALIGN_BASE32);
-#endif
   for(i = 1; i < nr; i++){
     (*solver_field)[i] = (*solver_field)[i-1]+V;
   }
@@ -136,11 +128,7 @@ int init_bisolver_field(bispinor *** const solver_field, const int V, const int 
   }
 
   /* now cut in pieces and distribute to solver_field[0]-solver_field[nr-1] */
-#if ( defined SSE || defined SSE2 || defined SSE3)
   (*solver_field)[0] = (bispinor*)(((unsigned long int)((*solver_field)[nr])+ALIGN_BASE)&~ALIGN_BASE);
-#else
-  (*solver_field)[0] = (*solver_field)[nr];
-#endif
   for(i = 1; i < nr; i++){
     (*solver_field)[i] = (*solver_field)[i-1]+V;
   }

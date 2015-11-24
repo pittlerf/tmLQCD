@@ -127,11 +127,7 @@ int init_swpm(const int V) {
       errno = 0;
       return(2);
     }
-#if (defined SSE || defined SSE2 || defined SSE3)
     swp[0] = (su3*)(((unsigned long int)(_swp)+ALIGN_BASE)&~ALIGN_BASE);
-#else
-    swp[0] = _swp;
-#endif
     swm[0] = swp[0] + 4*V;
     for(i = 1; i < V; i++){
       swp[i] = swp[i-1]+4;
