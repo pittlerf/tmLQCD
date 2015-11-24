@@ -140,4 +140,44 @@ void assign_add_mul_r_32(spinor32 * const R, spinor32 * const S, const float c, 
 
 }
 
+void assign_add_mul_r_32to64(spinor * const R, spinor32 * const S, const float c, const int N)
+{
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+  spinor32 *s;
+  spinor *r;
+
+#ifdef OMP
+#pragma omp for
+#endif
+  for (int ix=0; ix<N; ix++)
+  {
+    r=(spinor *) R + ix;
+    s=(spinor32 *) S + ix;
+
+    r->s0.c0 += (double)c * (complex double)s->s0.c0;
+    r->s0.c1 += (double)c * (complex double)s->s0.c1;
+    r->s0.c2 += (double)c * (complex double)s->s0.c2;
+
+    r->s1.c0 += (double)c * (complex double)s->s1.c0;
+    r->s1.c1 += (double)c * (complex double)s->s1.c1;
+    r->s1.c2 += (double)c * (complex double)s->s1.c2;
+
+    r->s2.c0 += (double)c * (complex double)s->s2.c0;
+    r->s2.c1 += (double)c * (complex double)s->s2.c1;
+    r->s2.c2 += (double)c * (complex double)s->s2.c2;
+
+    r->s3.c0 += (double)c * (complex double)s->s3.c0;
+    r->s3.c1 += (double)c * (complex double)s->s3.c1;
+    r->s3.c2 += (double)c * (complex double)s->s3.c2;
+  }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
+}
+
 #endif

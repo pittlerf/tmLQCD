@@ -69,7 +69,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   float pro, err, alpha_cg, beta_cg, sigma_cg;
   double sourcesquarenorm, sqnrm_d, squarenorm_d;
   spinor *delta, *y, *xhigh;
-  spinor32 *x, *stmp;
+  spinor32 *stmp, *x;
   spinor ** solver_field = NULL;
   spinor32 ** solver_field32 = NULL;  
   const int nr_sf = 3;
@@ -109,7 +109,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   for(i = 0; i < N_outer; i++) {
 
     /* main CG loop in lower precision */
-    zero_spinor_field_32(x, N);
+    zero_spinor_field(xhigh, N);
     zero_spinor_field_32(solver_field32[0], N);   
     assign_to_32(solver_field32[1], delta, N);
     assign_to_32(solver_field32[2], delta, N);
@@ -120,12 +120,13 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
     /*inner CG loop */
     for(j = 0; j <= max_inner_it; j++) {
       
-      f32(solver_field32[0], solver_field32[2]);
+      f32(solver_field32[0], solver_field32[2]); // q_k+1 = A p_k+1
       sigma_cg = square_norm_32(solver_field32[0], N, 1); // ||q_k+1||
       pro = scalar_prod_r_32(solver_field32[2], solver_field32[0], N, 1); // (p_k+1,q_k+1)
       alpha_cg = sqnrm2 / pro;
       
-      assign_add_mul_r_32(x, solver_field32[2], alpha_cg, N); // x_k+1
+      // alpha*p_k+1 and solution always in high precision
+      assign_add_mul_r_32to64(xhigh, solver_field32[2], alpha_cg, N); // x_k+1
       
       assign_mul_add_r_32(solver_field32[0], -alpha_cg, solver_field32[1], N); // r_k+1
       
@@ -156,7 +157,8 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
     g_sloppy_precision_flag = 0;
     
     /* calculate defect in double precision */
-    assign_to_64(xhigh, x, N);    
+    // assignment removed here because we always keep the solution in high precision to avoid truncation
+    //assign_to_64(xhigh, x, N);
     add(P, P, xhigh, N);
     f(y, P);
     diff(delta, Q, y, N);
