@@ -57,8 +57,10 @@
 #include "solver/mixed_cg_her.h"
 #include "gettime.h"
 
+#define DELTA 1.0e-4
+
 static inline unsigned int inner_loop(spinor32 * const x, spinor32 * const p, spinor32 * const q, spinor32 * const r, float * const rho1, float delta,
-                              matrix_mult32 f32, const float eps_sq, const unsigned int max_inner_it, const unsigned int N ){
+                              matrix_mult32 f32, const float eps_sq, const unsigned int max_inner_it, const unsigned int N, const unsigned int iter ){
 
   static float alpha, beta, rho;
   static unsigned int j;
@@ -80,9 +82,8 @@ static inline unsigned int inner_loop(spinor32 * const x, spinor32 * const p, sp
     if( rho < delta || rho < eps_sq ) break;
     
     if(g_debug_level > 2 && g_proc_id == 0) {
-      printf("mixed CG: inner residue: %g\t\n", rho);
+      printf("inner CG: %d res^2 %g\t\n", j+iter, rho);
     }
-
   }
 
   return j;
@@ -144,7 +145,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   assign_to_32(p,Q,N);
   rho = square_norm_32(r,N,1);
   
-  iter += inner_loop(x, p, q, r, &rho, 1.0e-9, f32, (float)eps_sq, max_inner_it, N);
+  iter += inner_loop(x, p, q, r, &rho, DELTA, f32, (float)eps_sq, max_inner_it, N, iter);
 
   for(i = 0; i < N_outer; i++) {
      
@@ -196,7 +197,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
     assign_add_mul_r_32(p,r,-gamma,N);
     zero_spinor_field_32(x,N);
 
-    iter += inner_loop(x, p, q, r, &rho, 1.0e-9, f32, (float)eps_sq, max_inner_it, N);
+    iter += inner_loop(x, p, q, r, &rho, DELTA, f32, (float)eps_sq, max_inner_it, N, iter);
     
   }
   g_sloppy_precision_flag = save_sloppy;
