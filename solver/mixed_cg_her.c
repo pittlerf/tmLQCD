@@ -57,7 +57,7 @@
 #include "solver/mixed_cg_her.h"
 #include "gettime.h"
 
-#define DELTA 1.0e-4
+#define DELTA 1.0e-2
 
 void output_flops(const double seconds, const unsigned int N, const unsigned int iter, const double eps_sq);
 
@@ -115,8 +115,8 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
 
   int max_inner_it = mixcg_maxinnersolverit;
   int N_outer = max_iter/max_inner_it;
-  //to be on the save side we allow at least 10 outer iterations
-  if(N_outer < 10) N_outer = 10;
+  //to be on the safe side we allow at least 40 outer iterations
+  if(N_outer < 40) N_outer = 40;
   
   int save_sloppy = g_sloppy_precision_flag;
   double atime, etime, flops;
@@ -150,7 +150,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   assign_to_32(p,Q,N);
   rho = square_norm_32(r,N,1);
   
-  iter += inner_loop(x, p, q, r, &rho, DELTA, f32, (float)eps_sq, max_inner_it, N, iter);
+  iter += inner_loop(x, p, q, r, &rho, DELTA/100, f32, (float)eps_sq, max_inner_it, N, iter);
 
   for(i = 0; i < N_outer; i++) {
      
