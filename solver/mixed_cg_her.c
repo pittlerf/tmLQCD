@@ -1,5 +1,5 @@
 /***********************************************************************
- * Copyright (C) 2015 Bartosz Kostrzewa
+ * Copyright (C) 2015 Florian Burger, Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -57,14 +57,16 @@
 #include "solver/mixed_cg_her.h"
 #include "gettime.h"
 
-#define DELTA 1.0e-2
+#define DELTA 1.0e-4
+#define BETA_DP 1
+#define PR 0
 
 void output_flops(const double seconds, const unsigned int N, const unsigned int iter, const double eps_sq);
 
-static inline unsigned int inner_loop(spinor32 * const x, spinor32 * const p, spinor32 * const q, spinor32 * const r, float * const rho1, float delta,
-                              matrix_mult32 f32, const float eps_sq, const unsigned int max_inner_it, const unsigned int N, const unsigned int iter ){
+static inline unsigned int inner_loop_high(spinor * const x, spinor * const p, spinor * const q, spinor * const r, double * const rho1, double delta,
+                              matrix_mult f, const double eps_sq, const unsigned int max_inner_it, const unsigned int N, const unsigned int iter ){
 
-  static float alpha, beta, rho, rhomax;
+  static double alpha, beta, rho, rhomax;
   static unsigned int j;
 
   rho = *rho1;
@@ -72,14 +74,14 @@ static inline unsigned int inner_loop(spinor32 * const x, spinor32 * const p, sp
 
   for(j = 0; j < max_inner_it; ++j){
 
-    f32(q,p);
-    alpha = rho/scalar_prod_r_32(p,q,N,1);
-    assign_add_mul_r_32(x, p, alpha, N);
-    assign_add_mul_r_32(r, q, -alpha, N);
-    rho = square_norm_32(r,N,1);
+    f(q,p);
+    alpha = rho/scalar_prod_r(p,q,N,1);
+    assign_add_mul_r(x, p, alpha, N);
+    assign_add_mul_r(r, q, -alpha, N);
+    rho = square_norm(r,N,1);
     beta = rho / *rho1;
     *rho1 = rho;
-    assign_mul_add_r_32(p, beta, r, N);
+    assign_mul_add_r(p, beta, r, N);
     
     /* break out of inner loop if iterated residual goes below some fraction of the maximum observed
      * iterated residual since the last update or if the target precision has been reached */
@@ -87,7 +89,68 @@ static inline unsigned int inner_loop(spinor32 * const x, spinor32 * const p, sp
     if( rho > rhomax ) rhomax = rho;
     
     if(g_debug_level > 2 && g_proc_id == 0) {
-      printf("inner CG: %d res^2 %g\t\n", j+iter, rho);
+      printf("DP_inner CG: %d res^2 %g\t\n", j+iter, rho);
+    }
+  }
+
+  return j;
+}
+
+static inline unsigned int inner_loop(spinor32 * const x, spinor32 * const p, spinor32 * const q, spinor32 * const r, float * const rho1, float delta,
+                              matrix_mult32 f32, const float eps_sq, const unsigned int max_inner_it, const unsigned int N, const unsigned int iter,
+                              float alpha, float beta, int pipelined, int pr ){
+
+  static float rho, rhomax, pro;
+  static unsigned int j;
+
+  rho = *rho1;
+  rhomax = *rho1;
+
+  if(pipelined==0){
+    for(j = 0; j < max_inner_it; ++j){
+      f32(q,p);
+      pro = scalar_prod_r_32(p,q,N,1);
+      alpha = rho/pro;
+      assign_add_mul_r_32(x, p, alpha, N);
+      assign_add_mul_r_32(r, q, -alpha, N);
+      rho = square_norm_32(r,N,1);
+      // Polak-Ribiere seems to stabilize the solver, resulting in fewer iterations 
+      if(pr){
+        beta = alpha*(alpha*square_norm_32(q,N,1)-pro) / *rho1;
+      }else{
+        beta = rho / *rho1;
+      }
+      *rho1 = rho;
+      assign_mul_add_r_32(p, beta, r, N);
+      if(g_debug_level > 2 && g_proc_id == 0) {
+        printf("SP_inner CG: %d res^2 %g\t\n", j+iter, rho);
+      }
+      /* break out of inner loop if iterated residual goes below some fraction of the maximum observed
+       * iterated residual since the last update or if the target precision has been reached 
+       * enforce convergence more strictly by a factor of 1.3 to avoid unnecessary restarts 
+       * if the real residual is still a bit too large */
+      if( rho < delta*rhomax || 1.3*rho < eps_sq ) break;
+      if( rho > rhomax ) rhomax = rho;
+    }
+  }else{
+    for(j = 0; j < max_inner_it; ++j){
+      assign_add_mul_r_32(x, p, alpha, N);
+      assign_add_mul_r_32(r, q, -alpha, N);
+      assign_mul_add_r_32(p, beta, r, N);
+      f32(q,p);
+  
+      rho = square_norm_32(r,N,1);
+      *rho1 = rho;
+      pro = scalar_prod_r_32(p,q,N,1);
+      alpha = rho/pro;
+      beta = alpha*(alpha*square_norm_32(q,N,1)-pro)/rho;
+      /* break out of inner loop if iterated residual goes below some fraction of the maximum observed
+       * iterated residual since the last update or if the target precision has been reached */
+      if(g_debug_level > 2 && g_proc_id == 0) {
+        printf("SP_inner CG: %d res^2 %g\t\n", j+iter, rho);
+      }
+      if( rho < delta*rhomax || 1.3*rho < eps_sq ) break;
+      if( rho > rhomax ) rhomax = rho;
     }
   }
 
@@ -100,23 +163,24 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
 		 double eps_sq, const int rel_prec, const int N, matrix_mult f, matrix_mult32 f32) {
 
   int i = 0, iter = 0, j = 0;
-  float sqnrm = 0., sqnrm2, squarenorm;
-  float pro, err, alpha_cg, beta_cg, rho;
-  double sourcesquarenorm, sqnrm_d, squarenorm_d;
-  spinor *delta, *y, *xhigh;
-  spinor32 *x, *stmp, *p, *q, *r;
+  float rho_sp, beta_sp;
+  double beta_dp, rho_dp;
+  double sourcesquarenorm;
+
+  spinor *xhigh, *rhigh, *qhigh, *phigh;
+  spinor32 *x, *p, *q, *r;
   spinor ** solver_field = NULL;
   spinor32 ** solver_field32 = NULL;  
-  const int nr_sf = 3;
+  const int nr_sf = 4;
   const int nr_sf32 = 4;
 
-  double shigh, shighp1;
-  spinor *rhigh, *qhigh;
+  float delta = DELTA;
 
   int max_inner_it = mixcg_maxinnersolverit;
-  int N_outer = max_iter/max_inner_it;
+  //int N_outer = max_iter/max_inner_it;
   //to be on the safe side we allow at least 40 outer iterations
-  if(N_outer < 40) N_outer = 40;
+  //if(N_outer < 40) N_outer = 40;
+  int N_outer = 100;
   
   int save_sloppy = g_sloppy_precision_flag;
   double atime, etime, flops;
@@ -132,6 +196,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
 
   atime = gettime();
 
+  phigh = solver_field[3];
   xhigh = solver_field[2];
   rhigh = solver_field[1];
   qhigh = solver_field[0];
@@ -143,14 +208,18 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
 
   g_sloppy_precision_flag = 0;
 
-  zero_spinor_field(xhigh,N);
+  // should compute real residual here, for now we always use a zero guess
   zero_spinor_field_32(x,N);
+  zero_spinor_field(xhigh,N);
+  assign(phigh,Q,N);
+  assign(rhigh,Q,N);
   
-  assign_to_32(r,Q,N);
-  assign_to_32(p,Q,N);
-  rho = square_norm_32(r,N,1);
+  rho_dp = square_norm(rhigh,N,1);
+  assign_to_32(r,rhigh,N);
+  rho_sp = square_norm_32(r,N,1);
+  assign_32(p,r,N);
   
-  iter += inner_loop(x, p, q, r, &rho, DELTA/100, f32, (float)eps_sq, max_inner_it, N, iter);
+  iter += inner_loop(x, p, q, r, &rho_sp, delta, f32, (float)eps_sq, max_inner_it, N, iter, 0.0, 0.0, 0, PR);
 
   for(i = 0; i < N_outer; i++) {
      
@@ -160,13 +229,16 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
     // compute real residual
     f(qhigh,xhigh);
     diff(rhigh,Q,qhigh,N);
-    shigh = square_norm(rhigh,N,1);
-    
+    beta_dp = 1/rho_dp;
+    rho_dp = square_norm(rhigh,N,1);
+    beta_dp *= rho_dp; 
+
     if(g_debug_level > 2 && g_proc_id == 0) {
-      printf("mixed CG: last inner residue: %g\t\n", rho);
-      printf("mixed CG: true residue %d %g\t\n", iter, shigh); fflush(stdout);
+      printf("mixed CG last inner residue:       %17g\n", rho_sp);
+      printf("mixed CG true residue:             %6d %10g\n", iter, rho_dp); fflush(stdout);
+      printf("mixed CG residue reduction factor: %6d %10g\n", iter, beta_dp);
     }
-    if(((shigh <= eps_sq) && (rel_prec == 0)) || ((shigh <= eps_sq*sourcesquarenorm) && (rel_prec == 1))) {
+    if(((rho_dp <= eps_sq) && (rel_prec == 0))) { //|| ((shigh <= eps_sq*sourcesquarenorm) && (rel_prec == 1))) {
       // output solution
       assign(P,xhigh,N);
       
@@ -181,15 +253,22 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
 
     // correct defect
     assign_to_32(r,rhigh,N);
-    rho = square_norm_32(r,N,1);
+    rho_sp = rho_dp; // not sure if it's fine to truncate this or whether one should calculate it in SP directly
 
-    // project search direction to be orthogonal to corrected residual
-    float gamma = scalar_prod_r_32(r,p,N,1);
-    assign_add_mul_r_32(p,r,-gamma,N);
+    // throw away search vector if it seems that we're stuck
+    if(beta_dp>=5) {
+      assign_32(p,r,N);
+    }else{
+      // otherwise project search vector to be
+      // orthogonal to new residual in double precision
+      assign_to_64(phigh,p,N);
+      assign_mul_add_r(phigh,beta_dp,rhigh,N);
+      assign_to_32(p,phigh,N);
+    }
+
     zero_spinor_field_32(x,N);
 
-    iter += inner_loop(x, p, q, r, &rho, DELTA, f32, (float)eps_sq, max_inner_it, N, iter);
-    
+    iter += inner_loop(x, p, q, r, &rho_sp, delta, f32, (float)eps_sq, max_inner_it, N, iter, 0.0, 0.0, 0, PR);
   }
   g_sloppy_precision_flag = save_sloppy;
   finalize_solver(solver_field, nr_sf);
