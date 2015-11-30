@@ -176,6 +176,8 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
 
   float delta = DELTA;
 
+  int high_control = 0;
+
   int max_inner_it = mixcg_maxinnersolverit;
   //int N_outer = max_iter/max_inner_it;
   //to be on the safe side we allow at least 40 outer iterations
@@ -210,7 +212,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
 
   // should compute real residual here, for now we always use a zero guess
   zero_spinor_field_32(x,N);
-  zero_spinor_field(xhigh,N);
+  zero_spinor_field(P,N);
   assign(phigh,Q,N);
   assign(rhigh,Q,N);
   
@@ -224,14 +226,35 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   for(i = 0; i < N_outer; i++) {
      
     ++iter;
+
+    // prepare for defect correction
     // update high precision solution 
-    addto_32(xhigh,x,N);
-    // compute real residual
-    f(qhigh,xhigh);
-    diff(rhigh,Q,qhigh,N);
-    beta_dp = 1/rho_dp;
-    rho_dp = square_norm(rhigh,N,1);
-    beta_dp *= rho_dp; 
+    if(high_control==0) { 
+      addto_32(P,x,N);
+      // compute real residual
+      f(qhigh,P);
+      diff(rhigh,Q,qhigh,N);
+      beta_dp = 1/rho_dp;
+      rho_dp = square_norm(rhigh,N,1);
+      beta_dp *= rho_dp;
+    }
+    
+    // if it seems like we're diverging, let's do a couple of iterations in full precision
+    if( high_control==2 || beta_dp >= 3 ) {
+      assign(phigh,rhigh,N);
+      zero_spinor_field(xhigh,N);
+      beta_dp = 1/rho_dp;
+      iter += inner_loop_high(xhigh, phigh, qhigh, rhigh, &rho_dp, 100*delta, f, eps_sq, max_inner_it, N, iter);
+      rho_sp = rho_dp;
+      // accumulate solution
+      add(P,P,xhigh,N);
+      // compute real residue
+      f(qhigh,P);
+      diff(rhigh,Q,qhigh,N);
+      rho_dp = square_norm(rhigh,N,1);
+      beta_dp *= rho_dp;
+      high_control = 1;
+    }
 
     if(g_debug_level > 2 && g_proc_id == 0) {
       printf("mixed CG last inner residue:       %17g\n", rho_sp);
@@ -239,41 +262,42 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
       printf("mixed CG residue reduction factor: %6d %10g\n", iter, beta_dp);
     }
     if(((rho_dp <= eps_sq) && (rel_prec == 0))) { //|| ((shigh <= eps_sq*sourcesquarenorm) && (rel_prec == 1))) {
-      // output solution
-      assign(P,xhigh,N);
-      
       etime = gettime();
       output_flops(etime-atime, N, iter, eps_sq);
       
       g_sloppy_precision_flag = save_sloppy;
       finalize_solver(solver_field, nr_sf);
       finalize_solver_32(solver_field32, nr_sf32); 
-      return(iter+i);
+      return(iter);
     }
 
-    // correct defect
-    assign_to_32(r,rhigh,N);
-    rho_sp = rho_dp; // not sure if it's fine to truncate this or whether one should calculate it in SP directly
-
-    // throw away search vector if it seems that we're stuck
-    if(beta_dp>=5) {
-      assign_32(p,r,N);
+    // if it seems like we're stuck or reaching the iteration limit, we skip this correction and proceed in full precision above
+    if( i >= (N_outer-3) ){
+      if(g_proc_id==0) printf("Reaching iteration limit, switching to DP!\n");
+      high_control = 2;
+      continue;
     }else{
+      // correct defect
+      assign_to_32(r,rhigh,N);
+      rho_sp = rho_dp; // not sure if it's fine to truncate this or whether one should calculate it in SP directly
+      if(high_control==0){
+        assign_to_64(phigh,p,N);
+      }else{
+        high_control = 0;
+      }
       // otherwise project search vector to be
       // orthogonal to new residual in double precision
-      assign_to_64(phigh,p,N);
       assign_mul_add_r(phigh,beta_dp,rhigh,N);
       assign_to_32(p,phigh,N);
     }
 
     zero_spinor_field_32(x,N);
-
     iter += inner_loop(x, p, q, r, &rho_sp, delta, f32, (float)eps_sq, max_inner_it, N, iter, 0.0, 0.0, 0, PR);
   }
   g_sloppy_precision_flag = save_sloppy;
   finalize_solver(solver_field, nr_sf);
-  finalize_solver_32(solver_field32, nr_sf32); 
-  return(-1);
+  finalize_solver_32(solver_field32, nr_sf32);
+  return -1; 
 }
 
 void output_flops(const double seconds, const unsigned int N, const unsigned int iter, const double eps_sq){
