@@ -219,6 +219,8 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   sourcesquarenorm = square_norm(Q,N,1);
   if( rel_prec == 1 ) {
     target_eps_sq = eps_sq*sourcesquarenorm;
+    if(g_debug_level > 0 && g_proc_id==0) 
+      printf("#Mixed CG: Using relative precision! eps_sq: %.6g target_eps_sq: %.6g \n",eps_sq,target_eps_sq);
   }else{
     target_eps_sq = eps_sq;
   }
