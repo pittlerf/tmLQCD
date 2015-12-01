@@ -49,7 +49,7 @@
 #include "solver/mixed_cg_her.h"
 #include "gettime.h"
 
-#define DELTA 1.0e-4f
+#define DELTA 1.0e-8f
 #define PR 0
 
 void output_flops(const double seconds, const unsigned int N, const unsigned int iter_out, const unsigned int iter_in_sp, const unsigned int iter_in_dp, const double eps_sq);
@@ -179,15 +179,6 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
 
   int high_control = 0;
 
-  /* this seems to help with convergence substantially by ensuring that the number of corrections
-   * is dependent on the volume. The factors are such that N=48^3*96 gives max_inner_it ~ 500 
-   * and V=24^3*48 -> max_inner_it ~ 1500 */
-  int max_inner_it = 200 + (int)(1500*exp(-(double)N/1.5e7f));
-  int N_outer = max_iter/max_inner_it;
-  
-  //to be on the safe side, we allow at least 40 outer iterations
-  if(N_outer < 40) N_outer = 40;
-  
   double atime, etime, flops;
   
   if(N == VOLUME) {
@@ -224,6 +215,16 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   }else{
     target_eps_sq = eps_sq;
   }
+  
+  /* this seems to help with convergence substantially by ensuring that the number of corrections
+   * is dependent on the volume. The factors are guesses from experience. */
+  int max_inner_it = 200 + (int)(1500*exp(-(double)N/5e6f));
+  int N_outer = (int)( (double)max_iter / (double)max_inner_it ) + 1;
+  if(g_debug_level > 0 && g_proc_id==0) 
+    printf("#Mixed CG: max_inner_it: %d N_outer: %d \n", max_inner_it, target_eps_sq);
+  
+  //to be on the safe side, we allow at least 40 outer iterations
+  if(N_outer < 40) N_outer = 40;
 
   // should compute real residual here, for now we always use a zero guess
   zero_spinor_field_32(x,N);
@@ -327,20 +328,18 @@ void output_flops(const double seconds, const unsigned int N, const unsigned int
   // TODO: compute real number of flops...
   int total_it = iter_in_sp+iter_in_dp+iter_out;
   if(g_debug_level > 0 && g_proc_id == 0) {
+    printf("# mixed CG: iter_out: %d iter_in_sp: %d iter_in_dp: %d\n",iter_out,iter_in_sp,iter_in_dp);
   	if(N != VOLUME){
   	  /* 2 A + 2 Nc Ns + N_Count ( 2 A + 10 Nc Ns ) */
   	  /* 2*1608.0 because the linalg is over VOLUME/2 */
   	  flops = (2*(2*1608.0+2*3*4) + 2*3*4 + total_it*(2.*(2*1608.0+2*3*4) + 10*3*4))*N/1.0e6f;
-  	  printf("# mixed CG: iter: %d eps_sq: %1.4e t/s: %1.4e\n", total_it, eps_sq, seconds); 
-  	  printf("# mixed CG: flopcount (for e/o tmWilson only): t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
-  	      seconds, flops/(seconds), g_nproc*flops/(seconds));
   	}
   	else{
   	  /* 2 A + 2 Nc Ns + N_Count ( 2 A + 10 Nc Ns ) */
   	  flops = (2*(1608.0+2*3*4) + 2*3*4 + total_it*(2.*(1608.0+2*3*4) + 10*3*4))*N/1.0e6f;      
-  	  printf("# mixed CG: iter: %d eps_sq: %1.4e t/s: %1.4e\n", total_it, eps_sq, seconds); 
-  	  printf("# mixed CG: flopcount (for non-e/o tmWilson only): t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
-  	      seconds, flops/(seconds), g_nproc*flops/(seconds));      
   	}
+  	printf("# mixed CG: iter: %d eps_sq: %1.4e t/s: %1.4e\n", total_it, eps_sq, seconds); 
+  	printf("# mixed CG: flopcount (for e/o tmWilson only): t/s: %1.4e mflops_local: %.1f mflops: %.1f\n", 
+  	      seconds, flops/(seconds), g_nproc*flops/(seconds));
   }      
 }
