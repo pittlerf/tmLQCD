@@ -89,12 +89,13 @@ static inline unsigned int inner_loop_high(spinor * const x, spinor * const p, s
   return j;
 }
 
-static inline unsigned int inner_loop(spinor32 * const x, spinor32 * const p, spinor32 * const q, spinor32 * const r, float * const rho1, float delta,
+static inline unsigned int inner_loop(spinor * const x, spinor32 * const p, spinor32 * const q, spinor32 * const r, float * const rho1, float delta,
                               matrix_mult32 f32, const float eps_sq, const unsigned int max_inner_it, const unsigned int N, const unsigned int iter,
                               float alpha, float beta, int pipelined, int pr ){
 
-  static float rho, rhomax, pro;
+  static float rho, rhomax;
   static unsigned int j;
+  static double pro;
 
   rho = *rho1;
   rhomax = *rho1;
@@ -102,9 +103,9 @@ static inline unsigned int inner_loop(spinor32 * const x, spinor32 * const p, sp
   if(pipelined==0){
     for(j = 0; j < max_inner_it; ++j){
       f32(q,p);
-      pro = scalar_prod_r_32(p,q,N,1);
-      alpha = rho/pro;
-      assign_add_mul_r_32(x, p, alpha, N);
+      pro = scalar_prod_r_32to64(p,q,N,1);
+      alpha = (double)rho/pro;
+      assign_add_mul_r_32to64(x, p, alpha, N);
       assign_add_mul_r_32(r, q, -alpha, N);
       rho = square_norm_32(r,N,1);
       // Polak-Ribiere computation of beta, claimed to be self-stabilising, positive effect so far not observed or required
@@ -237,7 +238,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   rho_sp = rho_dp;
   assign_32(p,r,N);
   
-  iter_in_sp += inner_loop(x, p, q, r, &rho_sp, delta, f32, (float)target_eps_sq, max_inner_it, 
+  iter_in_sp += inner_loop(P, p, q, r, &rho_sp, delta, f32, (float)target_eps_sq, max_inner_it, 
                            N, iter_out+iter_in_sp+iter_in_dp, 0.0, 0.0, 0, PR);
 
   for(i = 0; i < N_outer; i++) {
@@ -248,7 +249,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
     // update high precision solution 
     if(high_control==0) {
       // accumulate solution (sp -> dp) 
-      addto_32(P,x,N);
+      //addto_32(P,x,N);
       // compute real residual
       f(qhigh,P);
       diff(rhigh,Q,qhigh,N);
@@ -311,8 +312,8 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
       assign_to_32(p,phigh,N);
     }
 
-    zero_spinor_field_32(x,N);
-    iter_in_sp += inner_loop(x, p, q, r, &rho_sp, delta, f32, (float)target_eps_sq, 
+    //zero_spinor_field_32(x,N);
+    iter_in_sp += inner_loop(P, p, q, r, &rho_sp, delta, f32, (float)target_eps_sq, 
                              max_inner_it, N, iter_out+iter_in_sp+iter_in_dp, 0.0, 0.0, 0, PR);
   }
   
