@@ -49,7 +49,7 @@
 #include "solver/mixed_cg_her.h"
 #include "gettime.h"
 
-#define DELTA 1.0e-8f
+#define DELTA 1.0e-2f
 #define PR 0
 
 void output_flops(const double seconds, const unsigned int N, const unsigned int iter_out, const unsigned int iter_in_sp, const unsigned int iter_in_dp, const double eps_sq);
@@ -221,7 +221,7 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   int max_inner_it = 200 + (int)(1500*exp(-(double)N/5e6f));
   int N_outer = (int)( (double)max_iter / (double)max_inner_it ) + 1;
   if(g_debug_level > 0 && g_proc_id==0) 
-    printf("#Mixed CG: max_inner_it: %d N_outer: %d \n", max_inner_it, target_eps_sq);
+    printf("#Mixed CG: max_inner_it: %d N_outer: %d \n", max_inner_it, N_outer);
   
   //to be on the safe side, we allow at least 40 outer iterations
   if(N_outer < 40) N_outer = 40;
