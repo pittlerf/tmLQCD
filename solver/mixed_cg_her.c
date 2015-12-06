@@ -1,5 +1,5 @@
 /***********************************************************************
- * Copyright (C) 2015 Florian Burger, Bartosz Kostrzewa
+ * Copyright (C) 2015 Bartosz Kostrzewa, Florian Burger
  *
  * This file is part of tmLQCD.
  *
@@ -174,7 +174,8 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
   spinor32 ** solver_field32 = NULL;  
   const int nr_sf = 4;
   const int nr_sf32 = 4;
-
+  
+  // for now use constant residual reduction factor, 0.01 seems to work very well in general
   float delta = DELTA;
 
   int high_control = 0;
@@ -258,12 +259,11 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
     }
     
     // if it seems like we're diverging, let's do a couple of iterations in full precision
-    if( high_control==2 || beta_dp >= 3 ) {
+    if( high_control==2 ) {
       assign(phigh,rhigh,N);
       zero_spinor_field(xhigh,N);
       beta_dp = 1/rho_dp;
-      // residual reduction factor set to 100*delta to ensure that we don't waste too much time in DP
-      iter_in_dp += inner_loop_high(xhigh, phigh, qhigh, rhigh, &rho_dp, 100*delta, f, 
+      iter_in_dp += inner_loop_high(xhigh, phigh, qhigh, rhigh, &rho_dp, delta, f, 
                                     target_eps_sq, max_inner_it, N, iter_out+iter_in_sp+iter_in_dp);
       rho_sp = rho_dp;
       // accumulate solution
@@ -300,15 +300,24 @@ int mixed_cg_her(spinor * const P, spinor * const Q, const int max_iter,
       // correct defect
       assign_to_32(r,rhigh,N);
       rho_sp = rho_dp; // not sure if it's fine to truncate this or whether one should calculate it in SP directly
-      // if we just came out of a high precision loop (high_control==1), phigh currently contains the search vector
-      if(high_control==0){
-        assign_to_64(phigh,p,N);
+
+      // if the inner loop was successful at reducing the residual, reuse the search direction to some extent
+      if(beta_cp < 1.0) {
+        // if we just came out of a high precision loop (high_control==1), phigh currently contains the search vector
+        // and there is no need to copy it over
+        if(high_control==0){
+          assign_to_64(phigh,p,N);
+        }else{
+          high_control = 0;
+        }
+        // attempt to make a new search vector, as conjugate as possible to the previous one
+        // trying to enforce conjugacy (phigh M p) = 0 directly by computing p' = rhigh - (rhigh M p) / (p M p) * p
+        // does not work in general due to limited precision (it fails on lattices L>24)
+        assign_mul_add_r(phigh,beta_dp,rhigh,N);
+        assign_to_32(p,phigh,N);
       }else{
-        high_control = 0;
+        assign_to_32(p,rhigh,N);
       }
-      // project search vector orthogonal to new residual in double precision
-      assign_mul_add_r(phigh,beta_dp,rhigh,N);
-      assign_to_32(p,phigh,N);
     }
 
     zero_spinor_field_32(x,N);
