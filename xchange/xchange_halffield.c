@@ -369,6 +369,13 @@ void wait_halffield() {
   return;
 }
 
+void wait_halffield32() {
+#  ifdef MPI
+  MPI_Waitall(reqcount, requests, hstatus); 
+#  endif /* MPI */
+  return;
+}
+
 # endif /* _INDEX_INDEP_GEOM */
 
 #endif /* def (_USE_SHMEM || _PERSISTENT) */ 
@@ -463,7 +470,7 @@ void xchange_halffield32() {
 	    T*LX*LY*12/2, MPI_FLOAT, g_nb_z_up, 504, g_cart_grid, &requests[15]); 
 #    endif
 
-  MPI_Waitall(reqcount, requests, status); 
+  //MPI_Waitall(reqcount, requests, status); 
 #  endif /* MPI */
   return;
 #ifdef _KOJAK_INST
