@@ -381,7 +381,7 @@ int init_dirac_halfspinor32() {
     return(-1);
   }
 
-  HalfSpinor32 = (halfspinor32*)(((unsigned long int)(HalfSpinor32_)+ALIGN_BASE)&~ALIGN_BASE);
+  HalfSpinor32 = (halfspinor32*)(((unsigned long int)(HalfSpinor32_)+ALIGN_BASE+1)&~ALIGN_BASE);
 
 #ifdef MPI
   //re-use memory from 64Bit version
@@ -398,49 +398,54 @@ int init_dirac_halfspinor32() {
       y = (j-t*(LX*LY*LZ)-x*(LY*LZ))/(LZ);
       z = (j-t*(LX*LY*LZ)-x*(LY*LZ) - y*LZ);
       for(mu = 0; mu < 4; mu++) {
-	NBPointer32[ieo][8*i + 2*mu + 0] = &HalfSpinor32[ 8*g_lexic2eosub[ g_idn[j][mu] ] + 2*mu + 0];
-	NBPointer32[ieo][8*i + 2*mu + 1] = &HalfSpinor32[ 8*g_lexic2eosub[ g_iup[j][mu] ] + 2*mu + 1];
+        NBPointer32[ieo][8*i + 2*mu + 0] = &HalfSpinor32[ 8*g_lexic2eosub[ g_idn[j][mu] ] + 2*mu + 0];
+        NBPointer32[ieo][8*i + 2*mu + 1] = &HalfSpinor32[ 8*g_lexic2eosub[ g_iup[j][mu] ] + 2*mu + 1];
       }
 #if ((defined PARALLELT) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(t == 0) {
-	k = (g_lexic2eosub[g_idn[j][0]] - VOLUME/2);
-	NBPointer32[ieo][8*i] = &sendBuffer32[ k ];
+        k = (g_lexic2eosub[g_idn[j][0]] - VOLUME/2);
+        NBPointer32[ieo][8*i] = &sendBuffer32[ k ];
       }
       if(t == T-1) {
-	k = (g_lexic2eosub[g_iup[j][0]] - VOLUME/2);
-	NBPointer32[ieo][8*i + 1] = &sendBuffer32[ k ];
+	      k = (g_lexic2eosub[g_iup[j][0]] - VOLUME/2);
+	      NBPointer32[ieo][8*i + 1] = &sendBuffer32[ k ];
       }
 #endif
 #if ((defined PARALLELX) || (defined PARALLELXY) || (defined PARALLELXYZ) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(x == 0) {
-	k = (g_lexic2eosub[g_idn[j][1]] - VOLUME/2);
-	NBPointer32[ieo][8*i + 2] = &sendBuffer32[ k ];
+	      k = (g_lexic2eosub[g_idn[j][1]] - VOLUME/2);
+	      NBPointer32[ieo][8*i + 2] = &sendBuffer32[ k ];
       }
       if(x == LX-1) {
-	k = (g_lexic2eosub[g_iup[j][1]] - VOLUME/2);
-	NBPointer32[ieo][8*i + 3] = &sendBuffer32[ k ];
+	      k = (g_lexic2eosub[g_iup[j][1]] - VOLUME/2);
+	      NBPointer32[ieo][8*i + 3] = &sendBuffer32[ k ];
       }
 #endif
 #if ((defined PARALLELXY) || (defined PARALLELXYZ) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(y == 0) {
-	k = (g_lexic2eosub[g_idn[j][2]] - VOLUME/2);
-	NBPointer32[ieo][8*i + 4] = &sendBuffer32[ k ];
+	      k = (g_lexic2eosub[g_idn[j][2]] - VOLUME/2);
+	      NBPointer32[ieo][8*i + 4] = &sendBuffer32[ k ];
       }
       if(y == LY-1) {
-	k = (g_lexic2eosub[g_iup[j][2]] - VOLUME/2);
-	NBPointer32[ieo][8*i + 5] = &sendBuffer32[ k ];
+	      k = (g_lexic2eosub[g_iup[j][2]] - VOLUME/2);
+	      NBPointer32[ieo][8*i + 5] = &sendBuffer32[ k ];
       }
 #endif
 #if ((defined PARALLELXYZ) || (defined PARALLELXYZT))
       if(z == 0) {
-	k = (g_lexic2eosub[g_idn[j][3]] - VOLUME/2);
-	NBPointer32[ieo][8*i + 6] = &sendBuffer32[ k ];
+	      k = (g_lexic2eosub[g_idn[j][3]] - VOLUME/2);
+	      NBPointer32[ieo][8*i + 6] = &sendBuffer32[ k ];
       }
       if(z == LZ-1) {
-	k = (g_lexic2eosub[g_iup[j][3]] - VOLUME/2);
-	NBPointer32[ieo][8*i + 7] = &sendBuffer32[ k ];
+	      k = (g_lexic2eosub[g_iup[j][3]] - VOLUME/2);
+	      NBPointer32[ieo][8*i + 7] = &sendBuffer32[ k ];
       }
 #endif
+    }
+    for(int i = VOLUME/2; i < (VOLUME+RAND)/2; i++) {
+      for(int mu = 0; mu < 8; mu++) {                                                                                                 
+        NBPointer32[ieo][8*i + mu] = NBPointer32[ieo][0];
+      }
     }
   }
   for(int ieo = 2; ieo < 4; ieo++) {
@@ -452,40 +457,45 @@ int init_dirac_halfspinor32() {
       y = (j-t*(LX*LY*LZ)-x*(LY*LZ))/(LZ);
       z = (j-t*(LX*LY*LZ)-x*(LY*LZ) - y*LZ);
       for(mu = 0; mu < 8; mu++) {
-	NBPointer32[ieo][8*i + mu] = &HalfSpinor32[8*i + mu];
+	      NBPointer32[ieo][8*i + mu] = &HalfSpinor32[8*i + mu];
       }
 #if ((defined PARALLELT) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(t == T-1) {
-	NBPointer32[ieo][8*i]     = &recvBuffer32[ (g_lexic2eosub[ g_iup[j][0] ] - VOLUME/2)];
+	      NBPointer32[ieo][8*i]     = &recvBuffer32[ (g_lexic2eosub[ g_iup[j][0] ] - VOLUME/2)];
       }
       if(t == 0) {
-	NBPointer32[ieo][8*i + 1] = &recvBuffer32[ (g_lexic2eosub[ g_idn[j][0] ] - VOLUME/2)];
+	      NBPointer32[ieo][8*i + 1] = &recvBuffer32[ (g_lexic2eosub[ g_idn[j][0] ] - VOLUME/2)];
       }
 #endif
 #if ((defined PARALLELX) || (defined PARALLELXY) || (defined PARALLELXYZ) || (defined PARALLELXT) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(x == LX-1) { 
-	NBPointer32[ieo][8*i + 2] = &recvBuffer32[ (g_lexic2eosub[ g_iup[j][1] ] - VOLUME/2)];
+	      NBPointer32[ieo][8*i + 2] = &recvBuffer32[ (g_lexic2eosub[ g_iup[j][1] ] - VOLUME/2)];
       }
       if(x == 0) {
-	NBPointer32[ieo][8*i + 3] = &recvBuffer32[ (g_lexic2eosub[ g_idn[j][1] ] - VOLUME/2)];
+	      NBPointer32[ieo][8*i + 3] = &recvBuffer32[ (g_lexic2eosub[ g_idn[j][1] ] - VOLUME/2)];
       }
 #endif
 #if ((defined PARALLELXY) || (defined PARALLELXYZ) || (defined PARALLELXYT) || (defined PARALLELXYZT))
       if(y == LY-1) {
-	NBPointer32[ieo][8*i + 4] = &recvBuffer32[ (g_lexic2eosub[ g_iup[j][2] ] - VOLUME/2)];
+	      NBPointer32[ieo][8*i + 4] = &recvBuffer32[ (g_lexic2eosub[ g_iup[j][2] ] - VOLUME/2)];
       }
       if(y == 0) {
-	NBPointer32[ieo][8*i + 5] = &recvBuffer32[ (g_lexic2eosub[ g_idn[j][2] ] - VOLUME/2)];
+	      NBPointer32[ieo][8*i + 5] = &recvBuffer32[ (g_lexic2eosub[ g_idn[j][2] ] - VOLUME/2)];
       }
 #endif
 #if ((defined PARALLELXYZ) || (defined PARALLELXYZT))
       if(z == LZ-1) {
-	NBPointer32[ieo][8*i + 6] = &recvBuffer32[ (g_lexic2eosub[ g_iup[j][3] ] - VOLUME/2)];
+	      NBPointer32[ieo][8*i + 6] = &recvBuffer32[ (g_lexic2eosub[ g_iup[j][3] ] - VOLUME/2)];
       }
       if(z == 0) {
-	NBPointer32[ieo][8*i + 7] = &recvBuffer32[ (g_lexic2eosub[ g_idn[j][3] ] - VOLUME/2)];
+	      NBPointer32[ieo][8*i + 7] = &recvBuffer32[ (g_lexic2eosub[ g_idn[j][3] ] - VOLUME/2)];
       }
 #endif
+    }
+    for(int i = VOLUME/2; i < (VOLUME+RAND)/2; i++) {
+      for(int mu = 0; mu < 8; mu++) {
+        NBPointer32[ieo][8*i + mu] = NBPointer32[ieo][0];
+      }
     }
   }
 #if (defined SPI && defined MPI)
@@ -586,7 +596,6 @@ int init_dirac_halfspinor32() {
   else {
     if(g_cart_id == 0) printf("# 32 Bit SPI exchange successfully tested\n");
   }
-
-#endif
+#endif // SPI
   return(0);
 }
