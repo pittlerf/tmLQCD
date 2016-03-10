@@ -138,7 +138,7 @@ static inline void nohopp(spinor * restrict const tmpr, spinor const * restrict 
              (   *(xs+2)   -(*(xs+4))  +(*(xs+6))  -(*(xs+8))       \
                +(*(xs+10)) -(*(xs+12)) +(*(xs+14)) -(*(xs+16)) ); 
 
-  fact2 = 2.0*(eta_BSM+4.0*rho_BSM)*(*(xs+1))+0.5*rho_BSM*       \ 
+  fact2 = 2.0*(eta_BSM+4.0*rho_BSM)*(*(xs+1))+0.5*rho_BSM*       \
              (   *(xs+3)   -(*(xs+5))  +(*(xs+7))  -(*(xs+9))    \
 	       +(*(xs+11)) -(*(xs+13)) +(*(xs+15)) -(*(xs+17)) );
 
