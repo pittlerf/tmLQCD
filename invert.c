@@ -460,7 +460,7 @@ int main(int argc, char *argv[])
       /* support multiple inversions for the BSM operator, one for each scalar field */
       for(int i_pergauge = 0; i_pergauge < operator_list[op_id].npergauge; ++i_pergauge){
         // generate or read the scalar field for the BSM operator
-        if(operator_list[op_id].type == BSM){
+        if(operator_list[op_id].type == BSM || operator_list[op_id].type == BSM2){
           /* used by op_write_prop to generate an appropriate output filename */
           operator_list[op_id].n = i_pergauge;
           // read scalar field

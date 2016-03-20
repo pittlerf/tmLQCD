@@ -504,6 +504,10 @@ inline void rmQuotes(char *str){
     optr->type = BSM;
     have_bsm_op = 1;
   }
+  else if(strcmp(yytext, "BSM2")==0) {
+    optr->type = BSM2;
+    have_bsm_op = 1;
+  }
   else {
     fprintf(stderr, "Unknown operator type %s in line %d\n", yytext, line_of_file);
     exit(1);

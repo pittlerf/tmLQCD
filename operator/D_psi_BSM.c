@@ -42,7 +42,7 @@
 #endif
 #include "update_backward_gauge.h"
 #include "block.h"
-#include "operator/D_psi.h"
+#include "operator/D_psi_BSM.h"
 #include "solver/dirac_operator_eigenvectors.h"
 #include "buffers/utils.h"
 #include "linalg_eo.h"
@@ -60,7 +60,7 @@
  * sign = -1 -> Fbaradd
  */
 
-void Fadd(bispinor * const out, const bispinor * const in, const scalar * const phi, const double c, const double sign) {
+static inline void Fadd(bispinor * const out, const bispinor * const in, const scalar * const phi, const double c, const double sign) {
 #ifdef OMP
 #define static
 #endif

@@ -28,13 +28,16 @@
 #include "solver/solver_params.h"
                                     
 
-#define TMWILSON 0
-#define OVERLAP 1
-#define WILSON 2
-#define DBTMWILSON 3
-#define CLOVER 4
-#define DBCLOVER 5
-#define BSM 6
+typedef enum op_type {
+  TMWILSON = 0,
+  OVERLAP,
+  WILSON,
+  DBTMWILSON,
+  CLOVER,
+  DBCLOVER,
+  BSM,
+  BSM2
+} op_type;
 
 #define max_no_operators 10
 
@@ -107,7 +110,11 @@ typedef struct {
   void (*applyQp) (spinor * const, spinor * const);
   void (*applyQm) (spinor * const, spinor * const);
   void (*applyQsq) (spinor * const, spinor * const);
-  void (*applyQsqbi) (bispinor * const, bispinor * const);
+
+  void (*applyMbi)    (bispinor * const, bispinor * const);
+  void (*applyMdagbi) (bispinor * const, bispinor * const);
+  void (*applyQsqbi)  (bispinor * const, bispinor * const);
+  
   void (*applyMp) (spinor * const, spinor * const);
   void (*applyMm) (spinor * const, spinor * const);
   void (*applyDbQsq) (spinor * const, spinor * const, spinor * const, spinor * const);
