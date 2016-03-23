@@ -29,6 +29,14 @@
 #include <errno.h>
 #include "global.h"
 
+#if defined BGQ || defined SPI
+#include <unistd.h>
+#include <sys/sycall.h>
+#include <sys/types.h>
+#include <sched.h>
+#include <spi/include/kernel/location.h>
+#endif
+
 void init_openmp(void) {
 #ifdef OMP  
   if(omp_num_threads > 0) 
@@ -37,6 +45,31 @@ void init_openmp(void) {
      if( g_debug_level > 0 && g_proc_id == 0 ) {
        printf("# Instructing OpenMP to use %d threads.\n",omp_num_threads);
      }
+  // on BG/Q, set thread affinity as done by QPhiX (github.com/JeffersonLaba/qphix -> lib/bgq_threadbind.cc)
+  // unlike QphiX, we always assume 4 threads per core
+  #if defined BGQ || defined SPI
+  #pragma omp parallel
+     {
+       int tid = omp_get_thread_num();
+       int core = tid/4;
+       int smtid = tid - core*4;
+       int hw_procid = smtid + 4*core;
+  
+       cpu_set_t set;
+  
+       CPU_ZERO(&set);
+       CPU_SET(hw_proc, &set);
+  
+       pid_t pid = (pid_t) syscall(SYS_gettid);
+       if((sched_setaffinity(pid, sizeof(set), &set)) == -1) {
+         if(g_proc_id==0){
+           printf("WARNING: BGQ thread affinity could not be set!\n");
+           flush(stdout);
+         }
+       }
+     } // parallel closing brace
+  #endif // BGQ || SPI 
+
   }
   else {
     if( g_proc_id == 0 )
@@ -47,7 +80,7 @@ void init_openmp(void) {
   }
 
   init_omp_accumulators(omp_num_threads);
-#endif
+#endif // OMP
   return;
 }
 
