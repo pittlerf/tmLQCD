@@ -27,7 +27,7 @@
 * otherwise a simple application of Dslash on a spinor will be tested.
 *
 *******************************************************************************/
-#define TEST_INVERSION 1
+//#define TEST_INVERSION 0
 
 
 #ifdef HAVE_CONFIG_H
@@ -67,6 +67,7 @@
 #include "init/init.h"
 #include "init/init_scalar_field.h"
 #include "test/check_geometry.h"
+#include "operator/D_psi_BSM2.h"
 #include "operator/D_psi_BSM.h"
 #include "operator/M_psi.h"
 #include "mpi_init.h"
@@ -350,68 +351,101 @@ int main(int argc,char *argv[])
 	/*initialize the bispinor fields*/
 	j_max=1;
 	sdt=0.;
-	random_spinor_field_lexic( (spinor*)(g_bispinor_field[1]), reproduce_randomnumber_flag, RN_GAUSS);
-	random_spinor_field_lexic( (spinor*)(g_bispinor_field[1])+VOLUME, reproduce_randomnumber_flag, RN_GAUSS);
-	// for the D^\dagger test:
+  // w
 	random_spinor_field_lexic( (spinor*)(g_bispinor_field[4]), reproduce_randomnumber_flag, RN_GAUSS);
 	random_spinor_field_lexic( (spinor*)(g_bispinor_field[4])+VOLUME, reproduce_randomnumber_flag, RN_GAUSS);
+	// for the D^\dagger test:
+  // v
+	random_spinor_field_lexic( (spinor*)(g_bispinor_field[5]), reproduce_randomnumber_flag, RN_GAUSS);
+	random_spinor_field_lexic( (spinor*)(g_bispinor_field[5])+VOLUME, reproduce_randomnumber_flag, RN_GAUSS);
 #if defined MPI
 	generic_exchange(g_bispinor_field[1], sizeof(bispinor));
 #endif
 
 	// print L2-norm of source:
-	double squarenorm = square_norm((spinor*)g_bispinor_field[1], 2*VOLUME, 1);
+	double squarenorm = square_norm((spinor*)g_bispinor_field[4], 2*VOLUME, 1);
 	if(g_proc_id==0) {
-		printf("\n# ||source||^2 = %e\n\n", squarenorm);
+		printf("\n# ||w||^2 = %e\n\n", squarenorm);
 		fflush(stdout);
 	}
 
-
-	/************************** one operator: D_psi_BSM **************************/
-
-#ifdef MPI
-	MPI_Barrier(MPI_COMM_WORLD);
-#endif
-	t1 = gettime();
 
 	/* here the actual Dslash application */
 #if TEST_INVERSION
+
 //	fgmres4bispinors(g_bispinor_field[0], g_bispinor_field[1],
 //	   16, 100, 1.0e-8, 1.0e-8,
 //	   VOLUME, 0, &Q2_psi_BSM);
-	cg_her_bi(g_bispinor_field[0], g_bispinor_field[1],
+  // Marco's operator
+  // WARNING FIXME WARNING D_dagger missing
+	cg_her_bi(g_bispinor_field[0], g_bispinor_field[4],
            25000, 1.0e-14, 1, VOLUME, &Q2_psi_BSM);
+  // Bartek's operator
+	cg_her_bi(g_bispinor_field[1], g_bispinor_field[4],
+           25000, 1.0e-14, 1, VOLUME, &Q2_psi_BSM2);
+
 #else
-	D_psi_BSM(g_bispinor_field[0], g_bispinor_field[1]);
 
-	/* test D^\dagger */
-	// < D w, v >
-	_Complex double prod1 = scalar_prod((spinor*)g_bispinor_field[0], (spinor*)g_bispinor_field[4], 2*VOLUME, 1);
-	printf("< D w, v >        = %f+I*%f\n", creal(prod1), cimag(prod1));
-
-	// < w, D^\dagger v >
-	D_psi_dagger_BSM(g_bispinor_field[5], g_bispinor_field[4]);
-	_Complex double prod2 = scalar_prod((spinor*)g_bispinor_field[1], (spinor*)g_bispinor_field[5], 2*VOLUME, 1);
-	printf("< w, D^dagger v > = %f+I*%f\n", creal(prod2), cimag(prod2));
-	printf("|diff.|           = %e\n",cabs(prod2-prod1));
-#endif
-
-	t2 = gettime();
-	dt=t2-t1;
+  // Marco's operator
 #ifdef MPI
-	MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Barrier(MPI_COMM_WORLD);
+#endif
+  double t_MG = 0.0;
+  t1 = gettime();
+  D_psi_BSM(g_bispinor_field[0], g_bispinor_field[4]);
+  t1 = gettime() - t1;
+#ifdef MPI
+	MPI_Allreduce (&t1, &t_MG, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
-	sdt = dt;
+  t_MG = t1;
 #endif
 
-	if(g_proc_id==0) {
-		printf("\n# Time for Dslash1: %e sec.\n", sdt);
-		fflush(stdout);
-	}
+  // Bartek's operator
+#ifdef MPI
+  MPI_Barrier(MPI_COMM_WORLD);
+#endif
+  double t_BK = 0.0;
+  t1 = gettime();
+  D_psi_BSM2(g_bispinor_field[1], g_bispinor_field[4]);
+  t1 = gettime() - t1;
+#ifdef MPI
+	MPI_Allreduce (&t1, &t_BK, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#else
+  t_BK = t1;
+#endif
+  
+  if(g_proc_id==0)
+    printf("t_MG = %f sec \t t_BK = %f sec\n", t_MG, t_BK); 
+
+  diff((spinor*) g_bispinor_field[3], (spinor*) g_bispinor_field[0], (spinor*) g_bispinor_field[1], 2*VOLUME);
+
+  double diffnorm = square_norm( (spinor*) g_spinor_field[3], 2*VOLUME, 1 );
+  if(g_proc_id==0)
+    printf("|| D_MG w - D_BK w ||      = %f \n", diffnorm); 
+
+	// < D w, v >
+  _Complex double prod1 = scalar_prod( (spinor*)g_bispinor_field[0], (spinor*)g_bispinor_field[5], 2*VOLUME, 1 );
+	if(g_proc_id==0)
+    printf("< D_MG w, v >        = %f+I*%f\n", creal(prod1), cimag(prod1));
+	
+  prod1 = scalar_prod( (spinor*)g_bispinor_field[1], (spinor*)g_bispinor_field[5], 2*VOLUME, 1 );
+  if(g_proc_id==0)
+  	printf("< D_BK w, v >        = %f+I*%f\n", creal(prod1), cimag(prod1));
+	
+	// FIXME D_MG^dagger missing
+  // < w, D^\dagger v >
+	D_psi_dagger_BSM2(g_bispinor_field[3], g_bispinor_field[5]);
+	_Complex double prod2 = scalar_prod((spinor*)g_bispinor_field[4], (spinor*)g_bispinor_field[3], 2*VOLUME, 1);
+  if( g_proc_id == 0 ){
+	  printf("< w, D_BK^dagger v > = %f+I*%f\n", creal(prod2), cimag(prod2));
+	  printf("| < D_BK w, v > - < w, D_BK^dagger v > | = %e\n\n",cabs(prod2-prod1));
+  }
+#endif // TEST_INVERSION
 
 #if TEST_INVERSION
 	// check result
-	Q2_psi_BSM(g_bispinor_field[2], g_bispinor_field[0]);
+  // BaKo: this is not done yet
+	Q2_psi_BSM2(g_bispinor_field[2], g_bispinor_field[0]);
 	assign_diff_mul((spinor*)g_bispinor_field[2], (spinor*)g_bispinor_field[1], 1.0, 2*VOLUME);
 	squarenorm = square_norm((spinor*)g_bispinor_field[2], 2*VOLUME, 1);
 	if(g_proc_id==0) {
@@ -422,115 +456,15 @@ int main(int argc,char *argv[])
 	// print L2-norm of result:
 	squarenorm = square_norm((spinor*)g_bispinor_field[0], 2*VOLUME, 1);
 	if(g_proc_id==0) {
-		printf("# ||result1||^2 = %e\n\n", squarenorm);
+		printf("# || D_MG w ||^2 = %e\n", squarenorm);
 		fflush(stdout);
 	}
-#endif
-
-	/************************** the other operator: M_psi **************************/
-	decompact(g_spinor_field[0], g_spinor_field[1], g_bispinor_field[1]);
-
-#ifdef MPI
-	MPI_Barrier(MPI_COMM_WORLD);
-#endif
-	t1 = gettime();
-
-	/* here the actual Dslash application */
-#if TEST_INVERSION
-
-#else
-	scalarderivatives(drvsc);
-	M_psi(g_spinor_field[2], g_spinor_field[3], g_spinor_field[0], g_spinor_field[1], drvsc);
-#endif
-
-	t2 = gettime();
-	dt=t2-t1;
-#ifdef MPI
-	MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-#else
-	sdt = dt;
-#endif
-
-	compact(g_bispinor_field[1], g_spinor_field[2], g_spinor_field[3]);
-
-	if(g_proc_id==0) {
-		printf("# Time for Dslash2: %e sec.\n", sdt);
-		fflush(stdout);
-	}
-
-	// print L2-norm of result:
 	squarenorm = square_norm((spinor*)g_bispinor_field[1], 2*VOLUME, 1);
 	if(g_proc_id==0) {
-		printf("# ||result2||^2 = %e\n\n", squarenorm);
-		fflush(stdout);
-	}
-
-	/************************** timing D_psi **************************/
-
-#if 0
-#ifdef MPI
-	MPI_Barrier(MPI_COMM_WORLD);
-#endif
-	t1 = gettime();
-
-	/* here the actual Dslash application */
-#if TEST_INVERSION
-
-#else
-	D_psi(g_spinor_field[2], g_spinor_field[3]);
-#endif
-
-	t2 = gettime();
-	dt=t2-t1;
-#ifdef MPI
-	MPI_Allreduce (&dt, &sdt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-#else
-	sdt = dt;
-#endif
-
-
-	if(g_proc_id==0) {
-		printf("# Time for D_psi: %e sec.\n", sdt);
+		printf("# || D_BK w ||^2 = %e\n", squarenorm);
 		fflush(stdout);
 	}
 #endif
-
-	/************************** finished: get difference **************************/
-
-	// subract result1 -= result2
-	for(int ix=0; ix<VOLUME; ix++ )
-	{
-		_vector_sub_assign( g_bispinor_field[0][ix].sp_up.s0, g_bispinor_field[1][ix].sp_up.s0 );
-		_vector_sub_assign( g_bispinor_field[0][ix].sp_up.s1, g_bispinor_field[1][ix].sp_up.s1 );
-		_vector_sub_assign( g_bispinor_field[0][ix].sp_up.s2, g_bispinor_field[1][ix].sp_up.s2 );
-		_vector_sub_assign( g_bispinor_field[0][ix].sp_up.s3, g_bispinor_field[1][ix].sp_up.s3 );
-
-		_vector_sub_assign( g_bispinor_field[0][ix].sp_dn.s0, g_bispinor_field[1][ix].sp_dn.s0 );
-		_vector_sub_assign( g_bispinor_field[0][ix].sp_dn.s1, g_bispinor_field[1][ix].sp_dn.s1 );
-		_vector_sub_assign( g_bispinor_field[0][ix].sp_dn.s2, g_bispinor_field[1][ix].sp_dn.s2 );
-		_vector_sub_assign( g_bispinor_field[0][ix].sp_dn.s3, g_bispinor_field[1][ix].sp_dn.s3 );
-	}
-
-	// print L2-norm of result1 - result2:
-	squarenorm = square_norm((spinor*)g_bispinor_field[0], 2*VOLUME, 1);
-	if(g_proc_id==0) {
-		printf("# ||result1-result2||^2 = %e\n\n", squarenorm);
-		fflush(stdout);
-	}
-
-	// ---------------
-#ifdef HAVE_LIBLEMON
-	if(g_proc_id==0) {
-		printf("# Performing parallel IO test ...\n");
-	}
-	xlfInfo = construct_paramsXlfInfo(0.5, 0);
-	write_gauge_field( "conf.test", 64, xlfInfo);
-	free(xlfInfo);
-	if(g_proc_id==0) {
-		printf("# done ...\n");
-	}
-#endif
-
 
 #ifdef OMP
 	free_omp_accumulators();
@@ -549,15 +483,7 @@ int main(int argc,char *argv[])
 
 static void usage()
 {
-  fprintf(stdout, "Inversion for EO preconditioned Wilson twisted mass QCD\n");
-//  fprintf(stdout, "Version %s \n\n", PACKAGE_VERSION);
-//  fprintf(stdout, "Please send bug reports to %s\n", PACKAGE_BUGREPORT);
-  fprintf(stdout, "Usage:   invert [options]\n");
   fprintf(stdout, "Options: [-f input-filename]\n");
-  fprintf(stdout, "         [-o output-filename]\n");
-  fprintf(stdout, "         [-v] more verbosity\n");
-  fprintf(stdout, "         [-h|-? this help]\n");
-  fprintf(stdout, "         [-V] print version information and exit\n");
   exit(0);
 }
 

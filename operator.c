@@ -218,7 +218,8 @@ int init_operators() {
       else if(optr->type == BSM || optr->type == BSM2 ) {
         optr->even_odd_flag = 0;
         optr->applyMbi    = &D_psi_BSM;
-        optr->applyMdagbi = &D_psi_dagger_BSM;
+        // WARNING FIXME WARNING FIXME
+        optr->applyMdagbi = NULL;//&D_psi_dagger_BSM;
         optr->applyQsqbi  = &Q2_psi_BSM;
         if( optr->type == BSM2 ) {
           optr->applyMbi    = &D_psi_BSM2;
