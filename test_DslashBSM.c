@@ -52,6 +52,7 @@
 #include "gettime.h"
 #include "su3.h"
 #include "linalg/scalar_prod.h"
+#include "linalg/diff.h"
 #include "su3adj.h"
 #include "ranlxd.h"
 #include "geometry_eo.h"
@@ -364,8 +365,10 @@ int main(int argc,char *argv[])
 
 	// print L2-norm of source:
 	double squarenorm = square_norm((spinor*)g_bispinor_field[4], 2*VOLUME, 1);
+  _Complex double cnorm = scalar_prod((spinor*)g_bispinor_field[4], (spinor*)g_bispinor_field[4], 2*VOLUME, 1);
 	if(g_proc_id==0) {
 		printf("\n# ||w||^2 = %e\n\n", squarenorm);
+		printf("\n# ||w||^2 = %e + I*%e\n\n", creal(cnorm), cimag(cnorm));
 		fflush(stdout);
 	}
 
@@ -417,11 +420,15 @@ int main(int argc,char *argv[])
   if(g_proc_id==0)
     printf("t_MG = %f sec \t t_BK = %f sec\n", t_MG, t_BK); 
 
-  diff((spinor*) g_bispinor_field[3], (spinor*) g_bispinor_field[0], (spinor*) g_bispinor_field[1], 2*VOLUME);
+  diff( (spinor*)g_bispinor_field[3], (spinor*)g_bispinor_field[0], (spinor*)g_bispinor_field[1], 2*VOLUME);
+  printf("w->sp_up.s0.c0=%f + I%f \n", creal(g_bispinor_field[3][0].sp_up.s0.c0), cimag(g_bispinor_field[3][0].sp_up.s0.c0) );
 
-  double diffnorm = square_norm( (spinor*) g_spinor_field[3], 2*VOLUME, 1 );
-  if(g_proc_id==0)
+  double diffnorm = square_norm( (spinor*) g_bispinor_field[3], 2*VOLUME, 1 );
+  _Complex double cdiffnorm = scalar_prod( (spinor*) g_bispinor_field[3], (spinor*)g_bispinor_field[3], 2*VOLUME, 1 );
+  if(g_proc_id==0){
     printf("|| D_MG w - D_BK w ||      = %f \n", diffnorm); 
+    printf("|| D_MG w - D_BK w ||_c    = %f + I%f \n", creal(cdiffnorm), cimag(cdiffnorm)); 
+  }
 
 	// < D w, v >
   _Complex double prod1 = scalar_prod( (spinor*)g_bispinor_field[0], (spinor*)g_bispinor_field[5], 2*VOLUME, 1 );
