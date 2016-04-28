@@ -27,7 +27,7 @@
 * otherwise a simple application of Dslash on a spinor will be tested.
 *
 *******************************************************************************/
-//#define TEST_INVERSION 0
+#define TEST_INVERSION 1
 
 
 #ifdef HAVE_CONFIG_H
@@ -231,13 +231,13 @@ int main(int argc,char *argv[])
 	init_geometry_indices(VOLUMEPLUSRAND + g_dbw2rand);
 
 
-	j = init_bispinor_field(VOLUMEPLUSRAND, 3*k_max);
+	j = init_bispinor_field(VOLUMEPLUSRAND, 12);
 	if ( j!= 0) {
 		fprintf(stderr, "Not enough memory for bispinor fields! Aborting...\n");
 		exit(0);
 	}
 
-	j = init_spinor_field(VOLUMEPLUSRAND, 4*k_max);
+	j = init_spinor_field(VOLUMEPLUSRAND, 12);
 	if ( j!= 0) {
 		fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
 		exit(0);
@@ -265,7 +265,8 @@ int main(int argc,char *argv[])
 	/* define the geometry */
 	geometry();
 	/* define the boundary conditions for the fermion fields */
-	boundary(g_kappa);
+  /* for the actual inversion, this is done in invert.c as the operators are iterated through */
+	boundary(1.0); // for the BSM operator, there is no hopping parameter and thus the phases are not kappa-normalised
 
 	status = check_geometry();
 	if (status != 0) {
@@ -365,35 +366,38 @@ int main(int argc,char *argv[])
 
 	// print L2-norm of source:
 	double squarenorm = square_norm((spinor*)g_bispinor_field[4], 2*VOLUME, 1);
-  _Complex double cnorm = scalar_prod((spinor*)g_bispinor_field[4], (spinor*)g_bispinor_field[4], 2*VOLUME, 1);
 	if(g_proc_id==0) {
-		printf("\n# ||w||^2 = %e\n\n", squarenorm);
-		printf("\n# ||w||^2 = %e + I*%e\n\n", creal(cnorm), cimag(cnorm));
+		printf("\n# square norm of the source: ||w||^2 = %e\n\n", squarenorm);
 		fflush(stdout);
 	}
 
-
-	/* here the actual Dslash application */
+	/* inversion needs to be done first because it uses loads of the g_bispinor_fields internally */
 #if TEST_INVERSION
-
-//	fgmres4bispinors(g_bispinor_field[0], g_bispinor_field[1],
-//	   16, 100, 1.0e-8, 1.0e-8,
-//	   VOLUME, 0, &Q2_psi_BSM);
+  if(g_proc_id==1)
+    printf("Testing inversion\n");
   // Marco's operator
-  // WARNING FIXME WARNING D_dagger missing
-	cg_her_bi(g_bispinor_field[0], g_bispinor_field[4],
+  t1 = gettime();
+	cg_her_bi(g_bispinor_field[8], g_bispinor_field[4],
            25000, 1.0e-14, 1, VOLUME, &Q2_psi_BSM);
+  double t_MG = gettime() - t1;
   // Bartek's operator
-	cg_her_bi(g_bispinor_field[1], g_bispinor_field[4],
+  
+  t1 = gettime();
+	cg_her_bi(g_bispinor_field[9], g_bispinor_field[4],
            25000, 1.0e-14, 1, VOLUME, &Q2_psi_BSM2);
+  double t_BK = gettime() - t1;
+  
+  if(g_proc_id==0)
+    printf("Operator inversion time: t_MG = %f sec \t t_BK = %f sec\n\n", t_MG, t_BK); 
+#endif
 
-#else
+  /* now apply the operators to the same bispinor field and do various comparisons */
 
   // Marco's operator
 #ifdef MPI
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
-  double t_MG = 0.0;
+  t_MG = 0.0;
   t1 = gettime();
   D_psi_BSM(g_bispinor_field[0], g_bispinor_field[4]);
   t1 = gettime() - t1;
@@ -407,7 +411,7 @@ int main(int argc,char *argv[])
 #ifdef MPI
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
-  double t_BK = 0.0;
+  t_BK = 0.0;
   t1 = gettime();
   D_psi_BSM2(g_bispinor_field[1], g_bispinor_field[4]);
   t1 = gettime() - t1;
@@ -418,57 +422,76 @@ int main(int argc,char *argv[])
 #endif
   
   if(g_proc_id==0)
-    printf("t_MG = %f sec \t t_BK = %f sec\n", t_MG, t_BK); 
+    printf("Opertor application time: t_MG = %f sec \t t_BK = %f sec\n\n", t_MG, t_BK); 
 
-  diff( (spinor*)g_bispinor_field[3], (spinor*)g_bispinor_field[0], (spinor*)g_bispinor_field[1], 2*VOLUME);
-  printf("w->sp_up.s0.c0=%f + I%f \n", creal(g_bispinor_field[3][0].sp_up.s0.c0), cimag(g_bispinor_field[3][0].sp_up.s0.c0) );
-
-  double diffnorm = square_norm( (spinor*) g_bispinor_field[3], 2*VOLUME, 1 );
-  _Complex double cdiffnorm = scalar_prod( (spinor*) g_bispinor_field[3], (spinor*)g_bispinor_field[3], 2*VOLUME, 1 );
-  if(g_proc_id==0){
-    printf("|| D_MG w - D_BK w ||      = %f \n", diffnorm); 
-    printf("|| D_MG w - D_BK w ||_c    = %f + I%f \n", creal(cdiffnorm), cimag(cdiffnorm)); 
-  }
-
-	// < D w, v >
-  _Complex double prod1 = scalar_prod( (spinor*)g_bispinor_field[0], (spinor*)g_bispinor_field[5], 2*VOLUME, 1 );
-	if(g_proc_id==0)
-    printf("< D_MG w, v >        = %f+I*%f\n", creal(prod1), cimag(prod1));
-	
-  prod1 = scalar_prod( (spinor*)g_bispinor_field[1], (spinor*)g_bispinor_field[5], 2*VOLUME, 1 );
-  if(g_proc_id==0)
-  	printf("< D_BK w, v >        = %f+I*%f\n", creal(prod1), cimag(prod1));
-	
-	// FIXME D_MG^dagger missing
-  // < w, D^\dagger v >
-	D_psi_dagger_BSM2(g_bispinor_field[3], g_bispinor_field[5]);
-	_Complex double prod2 = scalar_prod((spinor*)g_bispinor_field[4], (spinor*)g_bispinor_field[3], 2*VOLUME, 1);
-  if( g_proc_id == 0 ){
-	  printf("< w, D_BK^dagger v > = %f+I*%f\n", creal(prod2), cimag(prod2));
-	  printf("| < D_BK w, v > - < w, D_BK^dagger v > | = %e\n\n",cabs(prod2-prod1));
-  }
-#endif // TEST_INVERSION
-
-#if TEST_INVERSION
-	// check result
-  // BaKo: this is not done yet
-	Q2_psi_BSM2(g_bispinor_field[2], g_bispinor_field[0]);
-	assign_diff_mul((spinor*)g_bispinor_field[2], (spinor*)g_bispinor_field[1], 1.0, 2*VOLUME);
-	squarenorm = square_norm((spinor*)g_bispinor_field[2], 2*VOLUME, 1);
-	if(g_proc_id==0) {
-		printf("# ||A*result1-b||^2 = %e\n\n", squarenorm);
-		fflush(stdout);
-	}
-#else
-	// print L2-norm of result:
 	squarenorm = square_norm((spinor*)g_bispinor_field[0], 2*VOLUME, 1);
 	if(g_proc_id==0) {
-		printf("# || D_MG w ||^2 = %e\n", squarenorm);
+		printf("# || D_MG w ||^2 = %.16e\n", squarenorm);
 		fflush(stdout);
 	}
 	squarenorm = square_norm((spinor*)g_bispinor_field[1], 2*VOLUME, 1);
 	if(g_proc_id==0) {
-		printf("# || D_BK w ||^2 = %e\n", squarenorm);
+		printf("# || D_BK w ||^2 = %.16e\n\n\n", squarenorm);
+		fflush(stdout);
+	}
+
+  diff( (spinor*)g_bispinor_field[3], (spinor*)g_bispinor_field[0], (spinor*)g_bispinor_field[1], 2*VOLUME);
+
+  printf("element-wise difference between (D_BK w) and (D_MG w)\n");
+  printf("( D_MG w - M_BK w )->sp_up.s0.c0= %.16e + I*(%.16e)\n\n", creal(g_bispinor_field[3][0].sp_up.s0.c0), cimag(g_bispinor_field[3][0].sp_up.s0.c0) );
+
+  double diffnorm = square_norm( (spinor*) g_bispinor_field[3], 2*VOLUME, 1 );
+  if(g_proc_id==0){
+    printf("Square norm of the difference\n");
+    printf("|| D_MG w - D_BK w ||^2     = %.16e \n\n\n", diffnorm); 
+  }
+
+	// < D w, v >
+  printf("Check consistency of D and D^dagger\n");
+  _Complex double prod1_MG = scalar_prod( (spinor*)g_bispinor_field[0], (spinor*)g_bispinor_field[5], 2*VOLUME, 1 );
+	if(g_proc_id==0)
+    printf("< D_MG w, v >        = %.16e + I*(%.16e)\n", creal(prod1_MG), cimag(prod1_MG));
+	
+  _Complex double prod1_BK = scalar_prod( (spinor*)g_bispinor_field[1], (spinor*)g_bispinor_field[5], 2*VOLUME, 1 );
+  if(g_proc_id==0)
+  	printf("< D_BK w, v >        = %.16e + I*(%.16e)\n\n", creal(prod1_BK), cimag(prod1_BK));
+	
+  // < w, D^\dagger v >
+	D_psi_dagger_BSM(g_bispinor_field[6], g_bispinor_field[5]);
+	D_psi_dagger_BSM2(g_bispinor_field[7], g_bispinor_field[5]);
+	_Complex double prod2_MG = scalar_prod((spinor*)g_bispinor_field[4], (spinor*)g_bispinor_field[6], 2*VOLUME, 1);
+	_Complex double prod2_BK = scalar_prod((spinor*)g_bispinor_field[4], (spinor*)g_bispinor_field[7], 2*VOLUME, 1);
+  if( g_proc_id == 0 ){
+	  printf("< w, D_MG^dagger v > = %.16e + I*(%.16e)\n", creal(prod2_MG), cimag(prod2_MG));
+    printf("< w, D_BK^dagger v > = %.16e + I*(%.16e)\n", creal(prod2_BK), cimag(prod2_BK));
+	  
+    printf("\n| < D_MG w, v > - < w, D_MG^dagger v > | = %.16e\n",cabs(prod2_MG-prod1_MG));
+	  printf("| < D_BK w, v > - < w, D_BK^dagger v > | = %.16e\n\n",cabs(prod2_BK-prod1_BK));
+  }
+	
+#if TEST_INVERSION
+	// check result of inversion
+	Q2_psi_BSM(g_bispinor_field[10], g_bispinor_field[8]);
+	Q2_psi_BSM2(g_bispinor_field[11], g_bispinor_field[8]);
+	assign_diff_mul((spinor*)g_bispinor_field[10], (spinor*)g_bispinor_field[4], 1.0, 2*VOLUME);
+	assign_diff_mul((spinor*)g_bispinor_field[11], (spinor*)g_bispinor_field[4], 1.0, 2*VOLUME);
+	double squarenorm_MGMG = square_norm((spinor*)g_bispinor_field[10], 2*VOLUME, 1);
+	double squarenorm_BKMG = square_norm((spinor*)g_bispinor_field[11], 2*VOLUME, 1);
+	if(g_proc_id==0) {
+		printf("# ||Q2_MG*(Q2_MG)^-1*(b)-b||^2 = %.16e\n\n", squarenorm_MGMG);
+		printf("# ||Q2_BK*(Q2_MG)^-1*(b)-b||^2 = %.16e\n\n", squarenorm_BKMG);
+		fflush(stdout);
+	}
+	
+  Q2_psi_BSM2(g_bispinor_field[10], g_bispinor_field[9]);
+  Q2_psi_BSM(g_bispinor_field[11], g_bispinor_field[9]);
+	assign_diff_mul((spinor*)g_bispinor_field[10], (spinor*)g_bispinor_field[4], 1.0, 2*VOLUME);
+	assign_diff_mul((spinor*)g_bispinor_field[11], (spinor*)g_bispinor_field[4], 1.0, 2*VOLUME);
+	double squarenorm_BKBK = square_norm((spinor*)g_bispinor_field[10], 2*VOLUME, 1);
+	double squarenorm_MGBK = square_norm((spinor*)g_bispinor_field[11], 2*VOLUME, 1);
+	if(g_proc_id==0) {
+		printf("# ||Q2_BK*(Q2_BK)^-1*(b)-b||^2 = %.16e\n\n", squarenorm_BKBK);
+		printf("# ||Q2_MG*(Q2_BK)^-1*(b)-b||^2 = %.16e\n\n", squarenorm_MGBK);
 		fflush(stdout);
 	}
 #endif
