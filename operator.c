@@ -216,10 +216,12 @@ int init_operators() {
         optr->applyDbQsq = &Qtm_pm_ndpsi;
       }
       else if(optr->type == BSM || optr->type == BSM2 ) {
+        // for the BSM operator we don't use kappa normalistion
+        // as a result, when twisted boundary conditions are applied this needs to be unity
+        optr->kappa = 1.0; 
         optr->even_odd_flag = 0;
         optr->applyMbi    = &D_psi_BSM;
-        // WARNING FIXME WARNING FIXME
-        optr->applyMdagbi = NULL;//&D_psi_dagger_BSM;
+        optr->applyMdagbi = D_psi_dagger_BSM;
         optr->applyQsqbi  = &Q2_psi_BSM;
         if( optr->type == BSM2 ) {
           optr->applyMbi    = &D_psi_BSM2;
