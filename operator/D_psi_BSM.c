@@ -218,7 +218,7 @@ static inline void p0add_gamma(bispinor * restrict const tmpr , bispinor const *
 
   // us = phase*u*s
   if( inv )
-    bispinor_times_phase_times_inverse_u(&us, phase, u, s);
+    bispinor_times_phase_times_inverse_u(&us, phase, u, s); 
   else
     bispinor_times_phase_times_u(&us, phase, u, s);
 
@@ -389,10 +389,17 @@ void D_psi_BSM(bispinor * const P, bispinor * const Q){
     scalar phi[4];                   // phi_i(x)
     scalar phip[4][4];               // phi_i(x+mu) = phip[mu][i]
     scalar phim[4][4];               // phi_i(x-mu) = phim[mu][i]
+    _Complex double phase_00,phase_11,phase_22,phase_33,c_phase_00,c_phase_11,c_phase_22,c_phase_33;
+phase_00=phase_0*phase_0;
+phase_11=phase_1*phase_1;
+phase_22=phase_2*phase_2;
+phase_33=phase_3*phase_3;
+c_phase_00=conj(phase_00);
+c_phase_11=conj(phase_11);
+c_phase_22=conj(phase_22);
+c_phase_33=conj(phase_33);
 
-
-    /************************ loop over all lattice sites *************************/
-
+/************************ loop over all lattice sites *************************/
 #ifdef OMP
 #pragma omp for
 #endif
@@ -400,7 +407,7 @@ void D_psi_BSM(bispinor * const P, bispinor * const Q){
       {
 	rr = (bispinor *) P + ix;
 	s  = (bispinor *) Q + ix;
-
+//printf("%d\n",ix);
 	// prefatch scalar fields
 	phi[0] = g_scalar_field[0][ix];
 	phi[1] = g_scalar_field[1][ix];
@@ -458,7 +465,7 @@ void D_psi_BSM(bispinor * const P, bispinor * const Q){
         iy=g_iup[iy][0];
         sp = (bispinor *) Q +iy;
         _su3_times_su3(tempuu,*up,*um);uu=&tempuu;
-        padd_F(rr, sp, uu, 0, 1/*0.5*phase_0*/, -0.125*rho_BSM, phip[0], +1.);
+        padd_F(rr, sp, uu, 0, phase_00, -0.125*rho_BSM, phip[0], +1.);
         
 	/******************************* direction -0 *********************************/
 	iy=g_idn[ix][0];
@@ -469,8 +476,8 @@ void D_psi_BSM(bispinor * const P, bispinor * const Q){
         iy=g_idn[iy][0];
         up=&g_gauge_field[iy][0];
         sm = (bispinor *) Q +iy;
-        _su3_times_su3(tempuu,*um,*up);uu=&tempuu;
-        padd_F(rr, sm, uu, 0, 1/*0.5*phase_0*/, -0.125*rho_BSM, phim[0], +1.);
+        _su3d_times_su3d(tempuu,*um,*up);uu=&tempuu;//it gives the dagger operator, so applay it without the inversion
+        padd_F(rr, sm, uu, 0, c_phase_00, -0.125*rho_BSM, phim[0], +1.);
 
 
 	/******************************* direction +1 *********************************/
@@ -483,68 +490,69 @@ void D_psi_BSM(bispinor * const P, bispinor * const Q){
         iy=g_iup[iy][1];
         sp = (bispinor *) Q +iy;
         _su3_times_su3(tempuu,*up,*um);uu=&tempuu;
-        padd_F(rr, sp, uu, 0, 1/*0.5*phase_0*/, -0.125*rho_BSM, phip[1], +1.);
+        padd_F(rr, sp, uu, 0, phase_11, -0.125*rho_BSM, phip[1], +1.);
         
 	/******************************* direction -1 *********************************/
 	iy=g_idn[ix][1];
 	sm      = (bispinor *) Q +iy;
 	um=&g_gauge_field[iy][1];
-	p1add_gamma(rr, sm, um, 1, -0.5*phase_0);
+	p1add_gamma(rr, sm, um, 1, -0.5*phase_1);
         
         iy=g_idn[iy][1];
         up=&g_gauge_field[iy][1];
         sm = (bispinor *) Q +iy;
-        _su3_times_su3(tempuu,*um,*up);uu=&tempuu;
-        padd_F(rr, sm, uu, 0, 1/*0.5*phase_0*/, -0.125*rho_BSM, phim[1], +1.);
+        _su3d_times_su3d(tempuu,*um,*up);uu=&tempuu;
+        padd_F(rr, sm, uu, 0, c_phase_11, -0.125*rho_BSM, phim[1], +1.);
 
 	/******************************* direction +2 *********************************/
 	iy=g_iup[ix][2];
 	sp = (bispinor *) Q +iy;
 	up=&g_gauge_field[ix][2];
-	p2add_gamma(rr, sp, up, 0, 0.5*phase_0);
+	p2add_gamma(rr, sp, up, 0, 0.5*phase_2);
 
         um=&g_gauge_field[iy][2];
         iy=g_iup[iy][2];
         sp = (bispinor *) Q +iy;
         _su3_times_su3(tempuu,*up,*um);uu=&tempuu;
-        padd_F(rr, sp, uu, 0, 1/*0.5*phase_0*/, -0.125*rho_BSM, phip[2], +1.);
+        padd_F(rr, sp, uu, 0, phase_22, -0.125*rho_BSM, phip[2], +1.);
         
 	/******************************* direction -2 *********************************/
 	iy=g_idn[ix][2];
 	sm      = (bispinor *) Q +iy;
 	um=&g_gauge_field[iy][2];
-	p2add_gamma(rr, sm, um, 1, -0.5*phase_0);
+	p2add_gamma(rr, sm, um, 1, -0.5*phase_2);
         
         iy=g_idn[iy][2];
         up=&g_gauge_field[iy][2];
         sm = (bispinor *) Q +iy;
-        _su3_times_su3(tempuu,*um,*up);uu=&tempuu;
-        padd_F(rr, sm, uu, 0, 1/*0.5*phase_0*/, -0.125*rho_BSM, phim[2], +1.);
+        _su3d_times_su3d(tempuu,*um,*up);uu=&tempuu;
+        padd_F(rr, sm, uu, 0, c_phase_22, -0.125*rho_BSM, phim[2], +1.);
 
 	/******************************* direction +3 *********************************/
 	iy=g_iup[ix][3];
 	sp = (bispinor *) Q +iy;
 	up=&g_gauge_field[ix][3];
-	p3add_gamma(rr, sp, up, 0, 0.5*phase_0);
+	p3add_gamma(rr, sp, up, 0, 0.5*phase_3);
 
         um=&g_gauge_field[iy][3];
         iy=g_iup[iy][3];
         sp = (bispinor *) Q +iy;
         _su3_times_su3(tempuu,*up,*um);uu=&tempuu;
-        padd_F(rr, sp, uu, 0, 1/*0.5*phase_0*/, -0.125*rho_BSM, phip[3], +1.);
-        
+        padd_F(rr, sp, uu, 0, phase_33, -0.125*rho_BSM, phip[3], +1.);
+   
 	/******************************* direction -3 *********************************/
 	iy=g_idn[ix][3];
 	sm      = (bispinor *) Q +iy;
 	um=&g_gauge_field[iy][3];
-	p3add_gamma(rr, sm, um, 1, -0.5*phase_0);
+	p3add_gamma(rr, sm, um, 1, -0.5*phase_3);
         
         iy=g_idn[iy][3];
         up=&g_gauge_field[iy][3];
         sm = (bispinor *) Q +iy;
-        _su3_times_su3(tempuu,*um,*up);uu=&tempuu;
-        padd_F(rr, sm, uu, 0, 1/*0.5*phase_0*/, -0.125*rho_BSM, phim[3], +1.);
-
+         _su3d_times_su3d(tempuu,*um,*up);uu=&tempuu;
+        padd_F(rr, sm, uu, 0, c_phase_33, -0.125*rho_BSM, phim[3], +1.);
+ 
+        
       }
 #ifdef OMP
   } /* OpenMP closing brace */
@@ -582,6 +590,15 @@ void D_psi_dagger_BSM(bispinor * const P, bispinor * const Q){
     scalar phi[4];                   // phi_i(x)
     scalar phip[4][4];               // phi_i(x+mu) = phip[mu][i]
     scalar phim[4][4];               // phi_i(x-mu) = phim[mu][i]
+    _Complex double phase_00,phase_11,phase_22,phase_33,c_phase_00,c_phase_11,c_phase_22,c_phase_33;
+phase_00=phase_0*phase_0;
+phase_11=phase_1*phase_1;
+phase_22=phase_2*phase_2;
+phase_33=phase_3*phase_3;
+c_phase_00=conj(phase_00);
+c_phase_11=conj(phase_11);
+c_phase_22=conj(phase_22);
+c_phase_33=conj(phase_33);
 
 
     /************************ loop over all lattice sites *************************/
@@ -651,7 +668,7 @@ void D_psi_dagger_BSM(bispinor * const P, bispinor * const Q){
         iy=g_iup[iy][0];
         sp = (bispinor *) Q +iy;
         _su3_times_su3(tempuu,*up,*um);uu=&tempuu;
-        padd_F(rr, sp, uu, 0, 1/*0.5*phase_0*/, -0.125*rho_BSM, phip[0], -1.);
+        padd_F(rr, sp, uu, 0, phase_00, -0.125*rho_BSM, phip[0], -1.);
         
 	/******************************* direction -0 *********************************/
 	iy=g_idn[ix][0];
@@ -662,8 +679,8 @@ void D_psi_dagger_BSM(bispinor * const P, bispinor * const Q){
         iy=g_idn[iy][0];
         up=&g_gauge_field[iy][0];
         sm = (bispinor *) Q +iy;
-        _su3_times_su3(tempuu,(*um),(*up));uu=&tempuu;
-        padd_F(rr, sm, uu, 0, 1/*0.5*phase_0*/, -0.125*rho_BSM, phim[0], -1.);
+         _su3d_times_su3d(tempuu,*um,*up);uu=&tempuu;
+        padd_F(rr, sm, uu, 0, c_phase_00, -0.125*rho_BSM, phim[0], -1.);
 
 
 	/******************************* direction +1 *********************************/
@@ -676,67 +693,67 @@ void D_psi_dagger_BSM(bispinor * const P, bispinor * const Q){
         iy=g_iup[iy][1];
         sp = (bispinor *) Q +iy;
         _su3_times_su3(tempuu,*up,*um);uu=&tempuu;
-        padd_F(rr, sp, uu, 0, 1/*0.5*phase_0*/, -0.125*rho_BSM, phip[1], -1.);
+        padd_F(rr, sp, uu, 0, phase_11, -0.125*rho_BSM, phip[1], -1.);
         
 	/******************************* direction -1 *********************************/
 	iy=g_idn[ix][1];
 	sm      = (bispinor *) Q +iy;
 	um=&g_gauge_field[iy][1];
-	p1add_gamma(rr, sm, um, 1, +0.5*phase_0);
+	p1add_gamma(rr, sm, um, 1, +0.5*phase_1);
         
         iy=g_idn[iy][1];
         up=&g_gauge_field[iy][1];
         sm = (bispinor *) Q +iy;
-        _su3_times_su3(tempuu,*um,*up);uu=&tempuu;
-        padd_F(rr, sm, uu, 0, 1/*0.5*phase_0*/, -0.125*rho_BSM, phim[1], -1.);
+        _su3d_times_su3d(tempuu,*um,*up);uu=&tempuu;
+        padd_F(rr, sm, uu, 0, c_phase_11, -0.125*rho_BSM, phim[1], -1.);
 
 	/******************************* direction +2 *********************************/
 	iy=g_iup[ix][2];
 	sp = (bispinor *) Q +iy;
 	up=&g_gauge_field[ix][2];
-	p2add_gamma(rr, sp, up, 0, -0.5*phase_0);
+	p2add_gamma(rr, sp, up, 0, -0.5*phase_2);
 
         um=&g_gauge_field[iy][2];
         iy=g_iup[iy][2];
         sp = (bispinor *) Q +iy;
         _su3_times_su3(tempuu,*up,*um);uu=&tempuu;
-        padd_F(rr, sp, uu, 0, 1/*0.5*phase_0*/, -0.125*rho_BSM, phip[2], -1.);
+        padd_F(rr, sp, uu, 0, phase_22, -0.125*rho_BSM, phip[2], -1.);
         
 	/******************************* direction -2 *********************************/
 	iy=g_idn[ix][2];
 	sm      = (bispinor *) Q +iy;
 	um=&g_gauge_field[iy][2];
-	p2add_gamma(rr, sm, um, 1, +0.5*phase_0);
+	p2add_gamma(rr, sm, um, 1, +0.5*phase_2);
         
         iy=g_idn[iy][2];
         up=&g_gauge_field[iy][2];
         sm = (bispinor *) Q +iy;
-        _su3_times_su3(tempuu,*um,*up);uu=&tempuu;
-        padd_F(rr, sm, uu, 0, 1/*0.5*phase_0*/, -0.125*rho_BSM, phim[2], -1.);
+        _su3d_times_su3d(tempuu,*um,*up);uu=&tempuu;
+        padd_F(rr, sm, uu, 0, c_phase_22, -0.125*rho_BSM, phim[2], -1.);
 
 	/******************************* direction +3 *********************************/
 	iy=g_iup[ix][3];
 	sp = (bispinor *) Q +iy;
 	up=&g_gauge_field[ix][3];
-	p3add_gamma(rr, sp, up, 0, -0.5*phase_0);
+	p3add_gamma(rr, sp, up, 0, -0.5*phase_3);
 
         um=&g_gauge_field[iy][3];
         iy=g_iup[iy][3];
         sp = (bispinor *) Q +iy;
         _su3_times_su3(tempuu,*up,*um);uu=&tempuu;
-        padd_F(rr, sp, uu, 0, 1/*0.5*phase_0*/, -0.125*rho_BSM, phip[3], -1.);
+        padd_F(rr, sp, uu, 0, phase_33, -0.125*rho_BSM, phip[3], -1.);
         
 	/******************************* direction -3 *********************************/
 	iy=g_idn[ix][3];
 	sm      = (bispinor *) Q +iy;
 	um=&g_gauge_field[iy][3];
-	p3add_gamma(rr, sm, um, 1, +0.5*phase_0);
+	p3add_gamma(rr, sm, um, 1, +0.5*phase_3);
         
         iy=g_idn[iy][3];
         up=&g_gauge_field[iy][3];
         sm = (bispinor *) Q +iy;
-        _su3_times_su3(tempuu,*um,*up);uu=&tempuu;
-        padd_F(rr, sm, uu, 0, 1/*0.5*phase_0*/, -0.125*rho_BSM, phim[3], -1.);
+        _su3d_times_su3d(tempuu,*um,*up);uu=&tempuu;
+        padd_F(rr, sm, uu, 0, c_phase_33, -0.125*rho_BSM, phim[3], -1.);
 
     }
 #ifdef OMP
@@ -746,7 +763,7 @@ void D_psi_dagger_BSM(bispinor * const P, bispinor * const Q){
 void Q2_psi_BSM(bispinor * const P, bispinor * const Q){
 
   // dagger mising
-//  D_psi_dagger_BSM(g_bispinor_field[3] , Q);
+  D_psi_dagger_BSM(g_bispinor_field[3] , Q);
   D_psi_BSM(P, g_bispinor_field[3]);
   assign_add_mul_r((spinor*)P, (spinor*)Q, m0_BSM, 2*VOLUME); 
   /* Q and P are spinor, not bispinor ==> made a cast */
