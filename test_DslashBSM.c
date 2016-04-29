@@ -378,13 +378,13 @@ int main(int argc,char *argv[])
   // Marco's operator
   t1 = gettime();
 	cg_her_bi(g_bispinor_field[8], g_bispinor_field[4],
-           25000, 1.0e-14, 1, VOLUME, &Q2_psi_BSM);
+           25000, 1.0e-14, 0, VOLUME, &Q2_psi_BSM);
   double t_MG = gettime() - t1;
   // Bartek's operator
   
   t1 = gettime();
 	cg_her_bi(g_bispinor_field[9], g_bispinor_field[4],
-           25000, 1.0e-14, 1, VOLUME, &Q2_psi_BSM2);
+           25000, 1.0e-14, 0, VOLUME, &Q2_psi_BSM2);
   double t_BK = gettime() - t1;
   
   if(g_proc_id==0)
