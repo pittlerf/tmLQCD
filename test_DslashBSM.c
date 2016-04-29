@@ -67,6 +67,7 @@
 #include "xchange/xchange.h"
 #include "init/init.h"
 #include "init/init_scalar_field.h"
+#include "init/init_bsm_2hop_lookup.h"
 #include "test/check_geometry.h"
 #include "operator/D_psi_BSM2.h"
 #include "operator/D_psi_BSM.h"
@@ -264,6 +265,14 @@ int main(int argc,char *argv[])
 
 	/* define the geometry */
 	geometry();
+
+  j = init_bsm_2hop_lookup(VOLUME);
+	if ( j!= 0) {
+    // this should not be reached since the init function calls fatal_error anyway
+		fprintf(stderr, "Not enough memory for bsm 2hop lookup table! Aborting...\n");
+		exit(0);
+	}
+
 	/* define the boundary conditions for the fermion fields */
   /* for the actual inversion, this is done in invert.c as the operators are iterated through */
 	boundary(1.0); // for the BSM operator, there is no hopping parameter and thus the phases are not kappa-normalised
@@ -371,21 +380,22 @@ int main(int argc,char *argv[])
 		fflush(stdout);
 	}
 
+  double t_MG, t_BK;
 	/* inversion needs to be done first because it uses loads of the g_bispinor_fields internally */
 #if TEST_INVERSION
   if(g_proc_id==1)
     printf("Testing inversion\n");
+  // Bartek's operator
+  t1 = gettime();
+	cg_her_bi(g_bispinor_field[9], g_bispinor_field[4],
+           25000, 1.0e-14, 0, VOLUME, &Q2_psi_BSM2);
+  t_BK = gettime() - t1;
+
   // Marco's operator
   t1 = gettime();
 	cg_her_bi(g_bispinor_field[8], g_bispinor_field[4],
            25000, 1.0e-14, 0, VOLUME, &Q2_psi_BSM);
-  double t_MG = gettime() - t1;
-  // Bartek's operator
-  
-  t1 = gettime();
-	cg_her_bi(g_bispinor_field[9], g_bispinor_field[4],
-           25000, 1.0e-14, 0, VOLUME, &Q2_psi_BSM2);
-  double t_BK = gettime() - t1;
+  t_MG = gettime() - t1;
   
   if(g_proc_id==0)
     printf("Operator inversion time: t_MG = %f sec \t t_BK = %f sec\n\n", t_MG, t_BK); 
@@ -422,7 +432,7 @@ int main(int argc,char *argv[])
 #endif
   
   if(g_proc_id==0)
-    printf("Opertor application time: t_MG = %f sec \t t_BK = %f sec\n\n", t_MG, t_BK); 
+    printf("Operator application time: t_MG = %f sec \t t_BK = %f sec\n\n", t_MG, t_BK); 
 
 	squarenorm = square_norm((spinor*)g_bispinor_field[0], 2*VOLUME, 1);
 	if(g_proc_id==0) {
@@ -457,8 +467,17 @@ int main(int argc,char *argv[])
   	printf("< D_BK w, v >        = %.16e + I*(%.16e)\n\n", creal(prod1_BK), cimag(prod1_BK));
 	
   // < w, D^\dagger v >
+  t_MG = gettime();
 	D_psi_dagger_BSM(g_bispinor_field[6], g_bispinor_field[5]);
+  t_MG = gettime()-t_MG;
+
+  t_BK = gettime();
 	D_psi_dagger_BSM2(g_bispinor_field[7], g_bispinor_field[5]);
+  t_BK = gettime() - t_BK;
+
+  if(g_proc_id==0)
+    printf("Operator dagger application time: t_MG = %f sec \t t_BK = %f sec\n\n", t_MG, t_BK); 
+
 	_Complex double prod2_MG = scalar_prod((spinor*)g_bispinor_field[4], (spinor*)g_bispinor_field[6], 2*VOLUME, 1);
 	_Complex double prod2_BK = scalar_prod((spinor*)g_bispinor_field[4], (spinor*)g_bispinor_field[7], 2*VOLUME, 1);
   if( g_proc_id == 0 ){

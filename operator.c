@@ -47,6 +47,7 @@
 #include "invert_overlap.h"
 #include "invert_clover_eo.h"
 #include "init/init_scalar_field.h"
+#include "init/init_bsm_2hop_lookup.h"
 #include "boundary.h"
 #include "start.h"
 #include "solver/eigenvalues.h"
@@ -214,6 +215,10 @@ int init_operators() {
       else if(optr->type == DBCLOVER) {
         optr->even_odd_flag = 1;
         optr->applyDbQsq = &Qtm_pm_ndpsi;
+      }
+      if( optr->type == BSM2 ){
+        // initialise lookup table
+        init_bsm_2hop_lookup(VOLUME);
       }
       else if(optr->type == BSM || optr->type == BSM2 ) {
         // for the BSM operator we don't use kappa normalistion

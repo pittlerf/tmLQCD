@@ -44,6 +44,7 @@
 #include "update_backward_gauge.h"
 #include "block.h"
 #include "operator/D_psi_BSM2.h"
+#include "operator/bsm_2hop_dirs.h"
 #include "solver/dirac_operator_eigenvectors.h"
 #include "buffers/utils.h"
 #include "linalg_eo.h"
@@ -214,156 +215,115 @@ static inline void bispinor_times_phase_times_inverse_u(bispinor * const us, con
   return;
 }
 
-static inline void Fadd2hop( bispinor * const out, const bispinor * const in, const scalar * const phipm, 
-                             const double c, const double sign, const su3 * restrict const u1, const su3 * restrict const u2,
+static inline void Fadd2hop( bispinor * const out, const bispinor * const in, const scalar * const phipm, bispinor * restrict const uus, 
+                             const double c, const double sign, su3 * restrict const uu, const su3 * restrict const u1, const su3 * restrict const u2,
                              const _Complex double phase, const hopdirection dir )
 {
-#ifdef OMP
-#define static
-#endif
-//  static bispinor us;
-  static bispinor uus;
-#ifdef OMP
-#undef static
-#endif
-
   switch( dir ){
     case HOP_UP:
-      bispinor_times_phase_times_u(&uus, phase, u2, in);
-      bispinor_times_phase_times_u(&uus, phase, u1, &uus); 
+      _su3_times_su3(*uu,*u1,*u2);
+      bispinor_times_phase_times_u(uus, phase, uu, in);
       break;
     case HOP_DN:
-      bispinor_times_phase_times_inverse_u(&uus, phase, u2, in);
-      bispinor_times_phase_times_inverse_u(&uus, phase, u1, &uus); 
+      _su3_times_su3(*uu,*u2,*u1);
+      bispinor_times_phase_times_inverse_u(uus, phase, uu, in);
       break;
     default:
       fatal_error("Invalid value for 'hopdirection'","Fadd2hop");
       break;
   }
 
-  Fadd(out, &uus, phipm, c, sign); 
+  Fadd(out, uus, phipm, c, sign); 
 }
 
-static inline void p0add(bispinor * restrict const tmpr , bispinor const * restrict const s,
+static inline void p0add(bispinor * restrict const tmpr , bispinor const * restrict const s, bispinor * restrict const us,
                          su3 const * restrict const u, const hopdirection dir, const _Complex double phase) {
-
-#ifdef OMP
-#define static
-#endif
-  static bispinor us;
-#ifdef OMP
-#undef static
-#endif
 
   // us = phase*u*s
   if( dir == HOP_DN )
-    bispinor_times_phase_times_inverse_u(&us, phase, u, s);
+    bispinor_times_phase_times_inverse_u(us, phase, u, s);
   else
-    bispinor_times_phase_times_u(&us, phase, u, s);
+    bispinor_times_phase_times_u(us, phase, u, s);
 
   // tmpr += \gamma_0*us
-  _vector_add_assign(tmpr->sp_up.s0, us.sp_up.s2);
-  _vector_add_assign(tmpr->sp_up.s1, us.sp_up.s3);
-  _vector_add_assign(tmpr->sp_up.s2, us.sp_up.s0);
-  _vector_add_assign(tmpr->sp_up.s3, us.sp_up.s1);
+  _vector_add_assign(tmpr->sp_up.s0, us->sp_up.s2);
+  _vector_add_assign(tmpr->sp_up.s1, us->sp_up.s3);
+  _vector_add_assign(tmpr->sp_up.s2, us->sp_up.s0);
+  _vector_add_assign(tmpr->sp_up.s3, us->sp_up.s1);
 
-  _vector_add_assign(tmpr->sp_dn.s0, us.sp_dn.s2);
-  _vector_add_assign(tmpr->sp_dn.s1, us.sp_dn.s3);
-  _vector_add_assign(tmpr->sp_dn.s2, us.sp_dn.s0);
-  _vector_add_assign(tmpr->sp_dn.s3, us.sp_dn.s1);
+  _vector_add_assign(tmpr->sp_dn.s0, us->sp_dn.s2);
+  _vector_add_assign(tmpr->sp_dn.s1, us->sp_dn.s3);
+  _vector_add_assign(tmpr->sp_dn.s2, us->sp_dn.s0);
+  _vector_add_assign(tmpr->sp_dn.s3, us->sp_dn.s1);
 
   return;
 }
 
-static inline void p1add(bispinor * restrict const tmpr, bispinor const * restrict const s,
+static inline void p1add(bispinor * restrict const tmpr, bispinor const * restrict const s, bispinor * restrict const us,
                          su3 const * restrict const u, const hopdirection dir, const _Complex double phase) {
-
-#ifdef OMP
-#define static
-#endif
-  static bispinor us;
-#ifdef OMP
-#undef static
-#endif
 
   // us = phase*u*s
   if( dir == HOP_DN )
-    bispinor_times_phase_times_inverse_u(&us, phase, u, s);
+    bispinor_times_phase_times_inverse_u(us, phase, u, s);
   else
-    bispinor_times_phase_times_u(&us, phase, u, s);
+    bispinor_times_phase_times_u(us, phase, u, s);
 
   // tmpr += \gamma_1*us
-  _vector_i_add_assign(tmpr->sp_up.s0, us.sp_up.s3);
-  _vector_i_add_assign(tmpr->sp_up.s1, us.sp_up.s2);
-  _vector_i_sub_assign(tmpr->sp_up.s2, us.sp_up.s1);
-  _vector_i_sub_assign(tmpr->sp_up.s3, us.sp_up.s0);
+  _vector_i_add_assign(tmpr->sp_up.s0, us->sp_up.s3);
+  _vector_i_add_assign(tmpr->sp_up.s1, us->sp_up.s2);
+  _vector_i_sub_assign(tmpr->sp_up.s2, us->sp_up.s1);
+  _vector_i_sub_assign(tmpr->sp_up.s3, us->sp_up.s0);
 
-  _vector_i_add_assign(tmpr->sp_dn.s0, us.sp_dn.s3);
-  _vector_i_add_assign(tmpr->sp_dn.s1, us.sp_dn.s2);
-  _vector_i_sub_assign(tmpr->sp_dn.s2, us.sp_dn.s1);
-  _vector_i_sub_assign(tmpr->sp_dn.s3, us.sp_dn.s0);
+  _vector_i_add_assign(tmpr->sp_dn.s0, us->sp_dn.s3);
+  _vector_i_add_assign(tmpr->sp_dn.s1, us->sp_dn.s2);
+  _vector_i_sub_assign(tmpr->sp_dn.s2, us->sp_dn.s1);
+  _vector_i_sub_assign(tmpr->sp_dn.s3, us->sp_dn.s0);
 
   return;
 }
 
-static inline void p2add(bispinor * restrict const tmpr, bispinor const * restrict const s,
+static inline void p2add(bispinor * restrict const tmpr, bispinor const * restrict const s, bispinor * restrict const us,
                          su3 const * restrict const u, const hopdirection dir, const _Complex double phase) {
-
-#ifdef OMP
-#define static
-#endif
-  static bispinor us;
-#ifdef OMP
-#undef static
-#endif
 
   // us = phase*u*s
   if( dir == HOP_DN )
-    bispinor_times_phase_times_inverse_u(&us, phase, u, s);
+    bispinor_times_phase_times_inverse_u(us, phase, u, s);
   else
-    bispinor_times_phase_times_u(&us, phase, u, s);
+    bispinor_times_phase_times_u(us, phase, u, s);
 
   // tmpr += \gamma_2*us
-  _vector_add_assign(tmpr->sp_up.s0, us.sp_up.s3);
-  _vector_sub_assign(tmpr->sp_up.s1, us.sp_up.s2);
-  _vector_sub_assign(tmpr->sp_up.s2, us.sp_up.s1);
-  _vector_add_assign(tmpr->sp_up.s3, us.sp_up.s0);
+  _vector_add_assign(tmpr->sp_up.s0, us->sp_up.s3);
+  _vector_sub_assign(tmpr->sp_up.s1, us->sp_up.s2);
+  _vector_sub_assign(tmpr->sp_up.s2, us->sp_up.s1);
+  _vector_add_assign(tmpr->sp_up.s3, us->sp_up.s0);
 
-  _vector_add_assign(tmpr->sp_dn.s0, us.sp_dn.s3);
-  _vector_sub_assign(tmpr->sp_dn.s1, us.sp_dn.s2);
-  _vector_sub_assign(tmpr->sp_dn.s2, us.sp_dn.s1);
-  _vector_add_assign(tmpr->sp_dn.s3, us.sp_dn.s0);
+  _vector_add_assign(tmpr->sp_dn.s0, us->sp_dn.s3);
+  _vector_sub_assign(tmpr->sp_dn.s1, us->sp_dn.s2);
+  _vector_sub_assign(tmpr->sp_dn.s2, us->sp_dn.s1);
+  _vector_add_assign(tmpr->sp_dn.s3, us->sp_dn.s0);
 
   return;
 }
 
-static inline void p3add(bispinor * restrict const tmpr, bispinor const * restrict const s,
+static inline void p3add(bispinor * restrict const tmpr, bispinor const * restrict const s, bispinor * restrict const us,
                          su3 const * restrict const u, const hopdirection dir, const _Complex double phase) {
-
-#ifdef OMP
-#define static
-#endif
-  static bispinor us;
-#ifdef OMP
-#undef static
-#endif
 
   // us = phase*u*s
   if( dir == HOP_DN )
-    bispinor_times_phase_times_inverse_u(&us, phase, u, s);
+    bispinor_times_phase_times_inverse_u(us, phase, u, s);
   else
-    bispinor_times_phase_times_u(&us, phase, u, s);
+    bispinor_times_phase_times_u(us, phase, u, s);
 
   // tmpr += \gamma_3*us
-  _vector_i_add_assign(tmpr->sp_up.s0, us.sp_up.s2);
-  _vector_i_sub_assign(tmpr->sp_up.s1, us.sp_up.s3);
-  _vector_i_sub_assign(tmpr->sp_up.s2, us.sp_up.s0);
-  _vector_i_add_assign(tmpr->sp_up.s3, us.sp_up.s1);
+  _vector_i_add_assign(tmpr->sp_up.s0, us->sp_up.s2);
+  _vector_i_sub_assign(tmpr->sp_up.s1, us->sp_up.s3);
+  _vector_i_sub_assign(tmpr->sp_up.s2, us->sp_up.s0);
+  _vector_i_add_assign(tmpr->sp_up.s3, us->sp_up.s1);
 
-  _vector_i_add_assign(tmpr->sp_dn.s0, us.sp_dn.s2);
-  _vector_i_sub_assign(tmpr->sp_dn.s1, us.sp_dn.s3);
-  _vector_i_sub_assign(tmpr->sp_dn.s2, us.sp_dn.s0);
-  _vector_i_add_assign(tmpr->sp_dn.s3, us.sp_dn.s1);
+  _vector_i_add_assign(tmpr->sp_dn.s0, us->sp_dn.s2);
+  _vector_i_sub_assign(tmpr->sp_dn.s1, us->sp_dn.s3);
+  _vector_i_sub_assign(tmpr->sp_dn.s2, us->sp_dn.s0);
+  _vector_i_add_assign(tmpr->sp_dn.s3, us->sp_dn.s1);
 
   return;
 }
@@ -402,6 +362,8 @@ void D_psi_BSM2(bispinor * const P, bispinor * const Q){
   scalar phi[4];                       // phi_i(x)
   scalar phip[4][4];                   // phi_i(x+mu) = phip[mu][i]
   scalar phim[4][4];                   // phi_i(x-mu) = phim[mu][i]
+  su3 ALIGN uu;
+  bispinor ALIGN stmp;
 
     /************************ loop over all lattice sites *************************/
 
@@ -461,69 +423,76 @@ void D_psi_BSM2(bispinor * const P, bispinor * const Q){
     // the hopping part:
     // tmpr += +-1/2 \sum_\mu (\gamma_\mu - \rho_BSM/4*F(x+-\mu)*U_{+-\mu}(x)U_{x+-2\mu)*Q(x+-2\mu)
     /******************************* direction +0 *********************************/
-    ixpm=g_iup[ix][0]; ixpm2=g_iup[ixpm][0];
-    spm = (bispinor *) Q + ixpm; spm2 = (bispinor *) Q + ixpm2;
-    upm=&g_gauge_field[ix][0]; upm2=&g_gauge_field[ixpm][0];
-    // not sure whether Fadd2hop before or after is faster
-    //Fadd2hop( rr, spm2, phip[0], -0.125*rho_BSM, +1.0, upm, upm2, phase_0, HOP_UP );
-    p0add(rr, spm, upm, HOP_UP, 0.5*phase_0);
-    Fadd2hop( rr, spm2, phip[0], -0.125*rho_BSM, +1.0, upm, upm2, phase_0, HOP_UP );
+    spm  = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_P0  ]; 
+    spm2 = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_PP0 ];
+    upm  = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_0   ] ][0]; 
+    upm2 = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_P0  ] ][0];
+
+    Fadd2hop( rr, spm2, phip[0], &stmp, -0.125*rho_BSM, +1.0, &uu, upm, upm2, phase_00, HOP_UP );
+    p0add(rr, spm, &stmp, upm, HOP_UP, 0.5*phase_0);
 
     /******************************* direction -0 *********************************/
-    ixpm=g_idn[ix][0]; ixpm2=g_idn[ixpm][0];
-    spm = (bispinor *) Q + ixpm; spm2 = (bispinor *) Q + ixpm2;
-    upm=&g_gauge_field[ixpm][0]; upm2=&g_gauge_field[ixpm2][0];
-    //Fadd2hop(rr, spm2, phim[0], -0.125*rho_BSM, +1.0, upm, upm2, phase_0, HOP_DN );
-    p0add(rr, spm, upm, HOP_DN, -0.5*phase_0);
-    Fadd2hop(rr, spm2, phim[0], -0.125*rho_BSM, +1.0, upm, upm2, phase_0, HOP_DN );
+    spm  = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_M0  ]; 
+    spm2 = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_MM0 ];
+    upm  = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_M0  ] ][0]; 
+    upm2 = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_MM0 ] ][0];
+
+    Fadd2hop(rr, spm2, phim[0], &stmp, -0.125*rho_BSM, +1.0, &uu, upm, upm2, phase_00, HOP_DN );
+    p0add(rr, spm, &stmp, upm, HOP_DN, -0.5*phase_0);
     
     /******************************* direction +1 *********************************/
-    ixpm=g_iup[ix][1]; ixpm2=g_iup[ixpm][1];
-    spm = (bispinor *) Q + ixpm; spm2 = (bispinor *) Q + ixpm2;
-    upm=&g_gauge_field[ix][1]; upm2=&g_gauge_field[ixpm][1];
-//    Fadd2hop( rr, spm2, phip[1], -0.125*rho_BSM, +1.0, upm, upm2, phase_1, HOP_UP );
-    p1add(rr, spm, upm, HOP_UP, 0.5*phase_1);
-    Fadd2hop( rr, spm2, phip[1], -0.125*rho_BSM, +1.0, upm, upm2, phase_1, HOP_UP );
+    spm  = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_P1  ]; 
+    spm2 = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_PP1 ];
+    upm  = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_1   ] ][1]; 
+    upm2 = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_P1  ] ][1];
+
+    Fadd2hop( rr, spm2, phip[1], &stmp, -0.125*rho_BSM, +1.0, &uu, upm, upm2, phase_11, HOP_UP );
+    p1add(rr, spm, &stmp, upm, HOP_UP, 0.5*phase_1);
 
     /******************************* direction -1 *********************************/
-    ixpm=g_idn[ix][1]; ixpm2=g_idn[ixpm][1];
-    spm = (bispinor *) Q + ixpm; spm2 = (bispinor *) Q + ixpm2;
-    upm=&g_gauge_field[ixpm][1]; upm2=&g_gauge_field[ixpm2][1];
-//    Fadd2hop(rr, spm2, phim[1], -0.125*rho_BSM, +1.0, upm, upm2, phase_1, HOP_DN );
-    p1add(rr, spm, upm, HOP_DN, -0.5*phase_1);
-    Fadd2hop(rr, spm2, phim[1], -0.125*rho_BSM, +1.0, upm, upm2, phase_1, HOP_DN );
+    spm  = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_M1  ]; 
+    spm2 = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_MM1 ];
+    upm  = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_M1  ] ][1]; 
+    upm2 = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_MM1 ] ][1];
+    
+    Fadd2hop(rr, spm2, phim[1], &stmp, -0.125*rho_BSM, +1.0, &uu, upm, upm2, phase_11, HOP_DN );
+    p1add(rr, spm, &stmp, upm, HOP_DN, -0.5*phase_1);
     
     /******************************* direction +2 *********************************/
-    ixpm=g_iup[ix][2]; ixpm2=g_iup[ixpm][2];
-    spm = (bispinor *) Q + ixpm; spm2 = (bispinor *) Q + ixpm2;
-    upm=&g_gauge_field[ix][2]; upm2=&g_gauge_field[ixpm][2];
-    //Fadd2hop( rr, spm2, phip[2], -0.125*rho_BSM, +1.0, upm, upm2, phase_2, HOP_UP );
-    p2add(rr, spm, upm, HOP_UP, 0.5*phase_2);
-    Fadd2hop( rr, spm2, phip[2], -0.125*rho_BSM, +1.0, upm, upm2, phase_2, HOP_UP );
+    spm  = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_P2  ]; 
+    spm2 = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_PP2 ];
+    upm  = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_2   ] ][2]; 
+    upm2 = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_P2  ] ][2];
+    
+    Fadd2hop( rr, spm2, phip[2], &stmp, -0.125*rho_BSM, +1.0, &uu, upm, upm2, phase_22, HOP_UP );
+    p2add(rr, spm, &stmp, upm, HOP_UP, 0.5*phase_2);
 
     /******************************* direction -2 *********************************/
-    ixpm=g_idn[ix][2]; ixpm2=g_idn[ixpm][2];
-    spm = (bispinor *) Q + ixpm; spm2 = (bispinor *) Q + ixpm2;
-    upm=&g_gauge_field[ixpm][2]; upm2=&g_gauge_field[ixpm2][2];
-    //Fadd2hop(rr, spm2, phim[2], -0.125*rho_BSM, +1.0, upm, upm2, phase_2, HOP_DN );
-    p2add(rr, spm, upm, HOP_DN, -0.5*phase_2);
-    Fadd2hop(rr, spm2, phim[2], -0.125*rho_BSM, +1.0, upm, upm2, phase_2, HOP_DN );
+    spm  = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_M2  ]; 
+    spm2 = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_MM2 ];
+    upm  = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_M2  ] ][2]; 
+    upm2 = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_MM2 ] ][2];
+    
+    Fadd2hop(rr, spm2, phim[2], &stmp, -0.125*rho_BSM, +1.0, &uu, upm, upm2, phase_22, HOP_DN );
+    p2add(rr, spm, &stmp, upm, HOP_DN, -0.5*phase_2);
     
     /******************************* direction +3 *********************************/
-    ixpm=g_iup[ix][3]; ixpm2=g_iup[ixpm][3];
-    spm = (bispinor *) Q + ixpm; spm2 = (bispinor *) Q + ixpm2;
-    upm=&g_gauge_field[ix][3]; upm2=&g_gauge_field[ixpm][3];
-    //Fadd2hop( rr, spm2, phip[3], -0.125*rho_BSM, +1.0, upm, upm2, phase_3, HOP_UP );
-    p3add(rr, spm, upm, HOP_UP, 0.5*phase_3);
-    Fadd2hop( rr, spm2, phip[3], -0.125*rho_BSM, +1.0, upm, upm2, phase_3, HOP_UP );
+    spm  = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_P3  ]; 
+    spm2 = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_PP3 ];
+    upm  = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_3   ] ][3]; 
+    upm2 = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_P3  ] ][3];
+    
+    Fadd2hop( rr, spm2, phip[3], &stmp, -0.125*rho_BSM, +1.0, &uu, upm, upm2, phase_33, HOP_UP );
+    p3add(rr, spm, &stmp, upm, HOP_UP, 0.5*phase_3);
 
     /******************************* direction -3 *********************************/
-    ixpm=g_idn[ix][3]; ixpm2=g_idn[ixpm][3];
-    spm = (bispinor *) Q + ixpm; spm2 = (bispinor *) Q + ixpm2;
-    upm=&g_gauge_field[ixpm][3]; upm2=&g_gauge_field[ixpm2][3];
-    //Fadd2hop(rr, spm2, phim[3], -0.125*rho_BSM, +1.0, upm, upm2, phase_3, HOP_DN );
-    p3add(rr, spm, upm, HOP_DN, -0.5*phase_3);
-    Fadd2hop(rr, spm2, phim[3], -0.125*rho_BSM, +1.0, upm, upm2, phase_3, HOP_DN );
+    spm  = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_M3  ]; 
+    spm2 = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_MM3 ];
+    upm  = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_M3  ] ][3]; 
+    upm2 = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_MM3 ] ][3];
+    
+    Fadd2hop(rr, spm2, phim[3], &stmp, -0.125*rho_BSM, +1.0, &uu, upm, upm2, phase_33, HOP_DN );
+    p3add(rr, spm, &stmp, upm, HOP_DN, -0.5*phase_3);
 
   } 
 #ifdef OMP
@@ -563,6 +532,8 @@ void D_psi_dagger_BSM2(bispinor * const P, bispinor * const Q){
   scalar phi[4];                       // phi_i(x)
   scalar phip[4][4];                   // phi_i(x+mu) = phip[mu][i]
   scalar phim[4][4];                   // phi_i(x-mu) = phim[mu][i]
+  su3 ALIGN uu;
+  bispinor ALIGN stmp;
 
     /************************ loop over all lattice sites *************************/
 
@@ -622,60 +593,76 @@ void D_psi_dagger_BSM2(bispinor * const P, bispinor * const Q){
     // the hopping part:
     // tmpr += +-1/2 \sum_\mu (\gamma_\mu - \rho_BSM/4*F(x+-\mu)*U_{+-\mu}(x)U_{x+-2\mu)*Q(x+-2\mu)
     /******************************* direction +0 *********************************/
-    ixpm=g_iup[ix][0]; ixpm2=g_iup[ixpm][0];
-    spm = (bispinor *) Q + ixpm; spm2 = (bispinor *) Q + ixpm2;
-    upm=&g_gauge_field[ix][0]; upm2=&g_gauge_field[ixpm][0];
-    Fadd2hop( rr, spm2, phip[0], -0.125*rho_BSM, -1.0, upm, upm2, phase_0, HOP_UP );
-    p0add(rr, spm, upm, HOP_UP, -0.5*phase_0);
+    spm  = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_P0  ]; 
+    spm2 = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_PP0 ];
+    upm  = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_0   ] ][0]; 
+    upm2 = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_P0  ] ][0];
+    
+    Fadd2hop( rr, spm2, phip[0], &stmp, -0.125*rho_BSM, -1.0, &uu, upm, upm2, phase_00, HOP_UP );
+    p0add(rr, spm, &stmp, upm, HOP_UP, -0.5*phase_0);
 
     /******************************* direction -0 *********************************/
-    ixpm=g_idn[ix][0]; ixpm2=g_idn[ixpm][0];
-    spm = (bispinor *) Q + ixpm; spm2 = (bispinor *) Q + ixpm2;
-    upm=&g_gauge_field[ixpm][0]; upm2=&g_gauge_field[ixpm2][0];
-    Fadd2hop(rr, spm2, phim[0], -0.125*rho_BSM, -1.0, upm, upm2, phase_0, HOP_DN );
-    p0add(rr, spm, upm, HOP_DN, +0.5*phase_0);
+    spm  = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_M0  ]; 
+    spm2 = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_MM0 ];
+    upm  = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_M0  ] ][0]; 
+    upm2 = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_MM0 ] ][0];
+    
+    Fadd2hop(rr, spm2, phim[0], &stmp, -0.125*rho_BSM, -1.0, &uu, upm, upm2, phase_00, HOP_DN );
+    p0add(rr, spm, &stmp, upm, HOP_DN, +0.5*phase_0);
     
     /******************************* direction +1 *********************************/
-    ixpm=g_iup[ix][1]; ixpm2=g_iup[ixpm][1];
-    spm = (bispinor *) Q + ixpm; spm2 = (bispinor *) Q + ixpm2;
-    upm=&g_gauge_field[ix][1]; upm2=&g_gauge_field[ixpm][1];
-    Fadd2hop( rr, spm2, phip[1], -0.125*rho_BSM, -1.0, upm, upm2, phase_1, HOP_UP );
-    p1add(rr, spm, upm, HOP_UP, -0.5*phase_1);
+    spm  = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_P1  ]; 
+    spm2 = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_PP1 ];
+    upm  = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_1   ] ][1]; 
+    upm2 = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_P1  ] ][1];
+    
+    Fadd2hop( rr, spm2, phip[1], &stmp, -0.125*rho_BSM, -1.0, &uu, upm, upm2, phase_11, HOP_UP );
+    p1add(rr, spm, &stmp, upm, HOP_UP, -0.5*phase_1);
 
     /******************************* direction -1 *********************************/
-    ixpm=g_idn[ix][1]; ixpm2=g_idn[ixpm][1];
-    spm = (bispinor *) Q + ixpm; spm2 = (bispinor *) Q + ixpm2;
-    upm=&g_gauge_field[ixpm][1]; upm2=&g_gauge_field[ixpm2][1];
-    Fadd2hop(rr, spm2, phim[1], -0.125*rho_BSM, -1.0, upm, upm2, phase_1, HOP_DN );
-    p1add(rr, spm, upm, HOP_DN, +0.5*phase_1);
+    spm  = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_M1  ]; 
+    spm2 = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_MM1 ];
+    upm  = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_M1  ] ][1]; 
+    upm2 = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_MM1 ] ][1];
+    
+    Fadd2hop(rr, spm2, phim[1], &stmp, -0.125*rho_BSM, -1.0, &uu, upm, upm2, phase_11, HOP_DN );
+    p1add(rr, spm, &stmp, upm, HOP_DN, +0.5*phase_1);
     
     /******************************* direction +2 *********************************/
-    ixpm=g_iup[ix][2]; ixpm2=g_iup[ixpm][2];
-    spm = (bispinor *) Q + ixpm; spm2 = (bispinor *) Q + ixpm2;
-    upm=&g_gauge_field[ix][2]; upm2=&g_gauge_field[ixpm][2];
-    Fadd2hop( rr, spm2, phip[2], -0.125*rho_BSM, -1.0, upm, upm2, phase_2, HOP_UP );
-    p2add(rr, spm, upm, HOP_UP, -0.5*phase_2);
+    spm  = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_P2  ]; 
+    spm2 = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_PP2 ];
+    upm  = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_2   ] ][2]; 
+    upm2 = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_P2  ] ][2];
+    
+    Fadd2hop( rr, spm2, phip[2], &stmp, -0.125*rho_BSM, -1.0, &uu, upm, upm2, phase_22, HOP_UP );
+    p2add(rr, spm, &stmp, upm, HOP_UP, -0.5*phase_2);
 
     /******************************* direction -2 *********************************/
-    ixpm=g_idn[ix][2]; ixpm2=g_idn[ixpm][2];
-    spm = (bispinor *) Q + ixpm; spm2 = (bispinor *) Q + ixpm2;
-    upm=&g_gauge_field[ixpm][2]; upm2=&g_gauge_field[ixpm2][2];
-    Fadd2hop(rr, spm2, phim[2], -0.125*rho_BSM, -1.0, upm, upm2, phase_2, HOP_DN );
-    p2add(rr, spm, upm, HOP_DN, 0.5*phase_2);
+    spm  = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_M2  ]; 
+    spm2 = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_MM2 ];
+    upm  = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_M2  ] ][2]; 
+    upm2 = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_MM2 ] ][2];
+    
+    Fadd2hop(rr, spm2, phim[2], &stmp, -0.125*rho_BSM, -1.0, &uu, upm, upm2, phase_22, HOP_DN );
+    p2add(rr, spm, &stmp, upm, HOP_DN, 0.5*phase_2);
     
     /******************************* direction +3 *********************************/
-    ixpm=g_iup[ix][3]; ixpm2=g_iup[ixpm][3];
-    spm = (bispinor *) Q + ixpm; spm2 = (bispinor *) Q + ixpm2;
-    upm=&g_gauge_field[ix][3]; upm2=&g_gauge_field[ixpm][3];
-    Fadd2hop( rr, spm2, phip[3], -0.125*rho_BSM, -1.0, upm, upm2, phase_3, HOP_UP );
-    p3add(rr, spm, upm, HOP_UP, -0.5*phase_3);
+    spm  = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_P3  ]; 
+    spm2 = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_PP3 ];
+    upm  = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_3   ] ][3]; 
+    upm2 = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_P3  ] ][3];
+    
+    Fadd2hop( rr, spm2, phip[3], &stmp, -0.125*rho_BSM, -1.0, &uu, upm, upm2, phase_33, HOP_UP );
+    p3add(rr, spm, &stmp, upm, HOP_UP, -0.5*phase_3);
 
     /******************************* direction -3 *********************************/
-    ixpm=g_idn[ix][3]; ixpm2=g_idn[ixpm][3];
-    spm = (bispinor *) Q + ixpm; spm2 = (bispinor *) Q + ixpm2;
-    upm=&g_gauge_field[ixpm][3]; upm2=&g_gauge_field[ixpm2][3];
-    Fadd2hop(rr, spm2, phim[3], -0.125*rho_BSM, -1.0, upm, upm2, phase_3, HOP_DN );
-    p3add(rr, spm, upm, HOP_DN, 0.5*phase_3);
+    spm  = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_M3  ]; 
+    spm2 = (bispinor *) Q +  g_bsm_2hop_lookup[32*ix + BSM_2HOP_S_MM3 ];
+    upm  = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_M3  ] ][3]; 
+    upm2 = &g_gauge_field[   g_bsm_2hop_lookup[32*ix + BSM_2HOP_U_MM3 ] ][3];
+    
+    Fadd2hop(rr, spm2, phim[3], &stmp, -0.125*rho_BSM, -1.0, &uu, upm, upm2, phase_33, HOP_DN );
+    p3add(rr, spm, &stmp, upm, HOP_DN, 0.5*phase_3);
 
   } 
 #ifdef OMP
