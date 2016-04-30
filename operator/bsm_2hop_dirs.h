@@ -20,6 +20,8 @@
 #ifndef _BSM_2HOP_DIRS_H
 #define _BSM_2HOP_DIRS_H
 
+/* enumeration of indices for the lookup table for gauge and spinor fields in D_psi_BSM2 */
+
 typedef enum bsm_2hop_dirs {
   BSM_2HOP_S_P0 = 0,
   BSM_2HOP_S_PP0,
