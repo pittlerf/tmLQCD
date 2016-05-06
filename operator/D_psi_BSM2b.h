@@ -1,6 +1,7 @@
 /***********************************************************************
  *
- * Copyright (C) 2007,2008 Carsten Urbach
+ * Copyright (C) 2015 Mario Schroeck
+ *               2016 Bartosz Kostrzewa
  *
  * This file is part of tmLQCD.
  *
@@ -18,14 +19,14 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _D_PSI_BSM2_H
-#define _D_PSI_BSM2_H
+#ifndef _D_PSI_BSM2b_H
+#define _D_PSI_BSM2b_H
 
 #include "block.h"
 
-void D_psi_BSM2(bispinor * const P, bispinor * const Q);
-void D_psi_dagger_BSM2(bispinor * const P, bispinor * const Q);
-void Q2_psi_BSM2(bispinor * const P, bispinor * const Q);
+void D_psi_BSM2b(bispinor * const P, bispinor * const Q);
+void D_psi_dagger_BSM2b(bispinor * const P, bispinor * const Q);
+void Q2_psi_BSM2b(bispinor * const P, bispinor * const Q);
 
 typedef enum hopdirection {
   HOP_UP=0,

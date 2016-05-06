@@ -43,7 +43,7 @@
 #endif
 #include "update_backward_gauge.h"
 #include "block.h"
-#include "operator/D_psi_BSM2.h"
+#include "operator/D_psi_BSM2b.h"
 #include "operator/bsm_2hop_dirs.h"
 #include "solver/dirac_operator_eigenvectors.h"
 #include "buffers/utils.h"
@@ -329,10 +329,10 @@ static inline void p3add(bispinor * restrict const tmpr, bispinor const * restri
 }
 
 
-/* D_psi_BSM acts on bispinor fields */
-void D_psi_BSM2(bispinor * const P, bispinor * const Q){
+/* D_psi_BSM2b acts on bispinor fields */
+void D_psi_BSM2b(bispinor * const P, bispinor * const Q){
   if(P==Q){
-    printf("Error in D_psi_BSM2 (D_psi_BSM2.c):\n");
+    printf("Error in D_psi_BSM2b (D_psi_BSM2b.c):\n");
     printf("Arguments must be different bispinor fields\n");
     printf("Program aborted\n");
     exit(1);
@@ -352,7 +352,6 @@ void D_psi_BSM2(bispinor * const P, bispinor * const Q){
 #endif
 
   int ix;
-  int ixpm, ixpm2;
   su3 * restrict upm;
   su3 * restrict upm2;                 // U(x)_{+-\mu}, U(x)_{+-2\mu}
   bispinor * restrict rr;              // P(x)
@@ -500,9 +499,9 @@ void D_psi_BSM2(bispinor * const P, bispinor * const Q){
 #endif
 }
 
-void D_psi_dagger_BSM2(bispinor * const P, bispinor * const Q){
+void D_psi_dagger_BSM2b(bispinor * const P, bispinor * const Q){
   if(P==Q){
-    printf("Error in D_psi_dagger_BSM2 (D_psi_BSM2.c):\n");
+    printf("Error in D_psi_dagger_BSM2b (D_psi_BSM2b.c):\n");
     printf("Arguments must be different bispinor fields\n");
     printf("Program aborted\n");
     exit(1);
@@ -522,7 +521,6 @@ void D_psi_dagger_BSM2(bispinor * const P, bispinor * const Q){
 #endif
 
   int ix;
-  int ixpm, ixpm2;
   su3 * restrict upm;
   su3 * restrict upm2;                 // U(x)_{+-\mu}, U(x)_{+-2\mu}
   bispinor * restrict rr;              // P(x)
@@ -670,13 +668,13 @@ void D_psi_dagger_BSM2(bispinor * const P, bispinor * const Q){
 #endif
 }
 
-/* Q2_psi_BSM acts on bispinor fields */
-void Q2_psi_BSM2(bispinor * const P, bispinor * const Q){
+/* Q2_psi_BSM2b acts on bispinor fields */
+void Q2_psi_BSM2b(bispinor * const P, bispinor * const Q){
 
-  D_psi_dagger_BSM2(g_bispinor_field[3] , Q);
-  D_psi_BSM2(P, g_bispinor_field[3]);
-  assign_add_mul_r((spinor*)P, (spinor*)Q, m0_BSM, 2*VOLUME); 
+  /* TODO: the use of [3] has to be changed to avoid future conflicts */
+  D_psi_dagger_BSM2b(g_bispinor_field[3] , Q);
+  D_psi_BSM2b(P, g_bispinor_field[3]);
   /* Q and P are spinor, not bispinor ==> made a cast */
-  /* the use of [3] has to be changed to avoid future conflicts */
+  assign_add_mul_r((spinor*)P, (spinor*)Q, m0_BSM, 2*VOLUME);
 
 }

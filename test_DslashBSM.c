@@ -69,8 +69,8 @@
 #include "init/init_scalar_field.h"
 #include "init/init_bsm_2hop_lookup.h"
 #include "test/check_geometry.h"
-#include "operator/D_psi_BSM2.h"
-#include "operator/D_psi_BSM.h"
+#include "operator/D_psi_BSM2b.h"
+#include "operator/D_psi_BSM2m.h"
 #include "operator/M_psi.h"
 #include "mpi_init.h"
 #include "measure_gauge_action.h"
@@ -179,7 +179,6 @@ int main(int argc,char *argv[])
 	tmlqcd_mpi_init(argc, argv);
 
 
-
 	if(g_proc_id==0) {
 #ifdef SSE
 		printf("# The code was compiled with SSE instructions\n");
@@ -269,7 +268,7 @@ int main(int argc,char *argv[])
   j = init_bsm_2hop_lookup(VOLUME);
 	if ( j!= 0) {
     // this should not be reached since the init function calls fatal_error anyway
-		fprintf(stderr, "Not enough memory for bsm 2hop lookup table! Aborting...\n");
+		fprintf(stderr, "Not enough memory for BSM2b 2hop lookup table! Aborting...\n");
 		exit(0);
 	}
 
@@ -344,8 +343,6 @@ int main(int argc,char *argv[])
 		}
 	}
 
-
-
 #ifdef MPI
     xchange_gauge(g_gauge_field);
 #endif
@@ -359,8 +356,6 @@ int main(int argc,char *argv[])
     }
 
 #ifdef MPI
-	/*For parallelization: exchange the gaugefield */
-	xchange_gauge(g_gauge_field);
 	for( int s=0; s<numbScalarFields; s++ )
 		generic_exchange(g_scalar_field[s], sizeof(scalar));
 #endif
@@ -394,13 +389,13 @@ int main(int argc,char *argv[])
   // Bartek's operator
   t1 = gettime();
 	cg_her_bi(g_bispinor_field[9], g_bispinor_field[4],
-           25000, 1.0e-14, 0, VOLUME, &Q2_psi_BSM2);
+           25000, 1.0e-14, 0, VOLUME, &Q2_psi_BSM2b);
   t_BK = gettime() - t1;
 
   // Marco's operator
   t1 = gettime();
 	cg_her_bi(g_bispinor_field[8], g_bispinor_field[4],
-           25000, 1.0e-14, 0, VOLUME, &Q2_psi_BSM);
+           25000, 1.0e-14, 0, VOLUME, &Q2_psi_BSM2m);
   t_MG = gettime() - t1;
   
   if(g_proc_id==0)
@@ -415,7 +410,7 @@ int main(int argc,char *argv[])
 #endif
   t_MG = 0.0;
   t1 = gettime();
-  D_psi_BSM(g_bispinor_field[0], g_bispinor_field[4]);
+  D_psi_BSM2m(g_bispinor_field[0], g_bispinor_field[4]);
   t1 = gettime() - t1;
 #ifdef MPI
 	MPI_Allreduce (&t1, &t_MG, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -429,7 +424,7 @@ int main(int argc,char *argv[])
 #endif
   t_BK = 0.0;
   t1 = gettime();
-  D_psi_BSM2(g_bispinor_field[1], g_bispinor_field[4]);
+  D_psi_BSM2b(g_bispinor_field[1], g_bispinor_field[4]);
   t1 = gettime() - t1;
 #ifdef MPI
 	MPI_Allreduce (&t1, &t_BK, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -474,11 +469,11 @@ int main(int argc,char *argv[])
 	
   // < w, D^\dagger v >
   t_MG = gettime();
-	D_psi_dagger_BSM(g_bispinor_field[6], g_bispinor_field[5]);
+	D_psi_dagger_BSM2m(g_bispinor_field[6], g_bispinor_field[5]);
   t_MG = gettime()-t_MG;
 
   t_BK = gettime();
-	D_psi_dagger_BSM2(g_bispinor_field[7], g_bispinor_field[5]);
+	D_psi_dagger_BSM2b(g_bispinor_field[7], g_bispinor_field[5]);
   t_BK = gettime() - t_BK;
 
   if(g_proc_id==0)
@@ -496,8 +491,8 @@ int main(int argc,char *argv[])
 	
 #if TEST_INVERSION
 	// check result of inversion
-	Q2_psi_BSM(g_bispinor_field[10], g_bispinor_field[8]);
-	Q2_psi_BSM2(g_bispinor_field[11], g_bispinor_field[8]);
+	Q2_psi_BSM2m(g_bispinor_field[10], g_bispinor_field[8]);
+	Q2_psi_BSM2b(g_bispinor_field[11], g_bispinor_field[8]);
 	assign_diff_mul((spinor*)g_bispinor_field[10], (spinor*)g_bispinor_field[4], 1.0, 2*VOLUME);
 	assign_diff_mul((spinor*)g_bispinor_field[11], (spinor*)g_bispinor_field[4], 1.0, 2*VOLUME);
 	double squarenorm_MGMG = square_norm((spinor*)g_bispinor_field[10], 2*VOLUME, 1);
@@ -508,8 +503,8 @@ int main(int argc,char *argv[])
 		fflush(stdout);
 	}
 	
-  Q2_psi_BSM2(g_bispinor_field[10], g_bispinor_field[9]);
-  Q2_psi_BSM(g_bispinor_field[11], g_bispinor_field[9]);
+  Q2_psi_BSM2b(g_bispinor_field[10], g_bispinor_field[9]);
+  Q2_psi_BSM2m(g_bispinor_field[11], g_bispinor_field[9]);
 	assign_diff_mul((spinor*)g_bispinor_field[10], (spinor*)g_bispinor_field[4], 1.0, 2*VOLUME);
 	assign_diff_mul((spinor*)g_bispinor_field[11], (spinor*)g_bispinor_field[4], 1.0, 2*VOLUME);
 	double squarenorm_BKBK = square_norm((spinor*)g_bispinor_field[10], 2*VOLUME, 1);

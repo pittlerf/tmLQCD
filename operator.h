@@ -36,7 +36,8 @@ typedef enum op_type {
   CLOVER,
   DBCLOVER,
   BSM,
-  BSM2
+  BSM2b,
+  BSM2m
 } op_type;
 
 #define max_no_operators 10

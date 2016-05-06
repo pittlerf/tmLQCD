@@ -38,7 +38,8 @@
 #include "linalg_eo.h"
 #include "operator/D_psi.h"
 #include "operator/D_psi_BSM.h"
-#include "operator/D_psi_BSM2.h"
+#include "operator/D_psi_BSM2b.h"
+#include "operator/D_psi_BSM2m.h"
 #include "operator/Dov_psi.h"
 #include "operator/tm_operators_nd.h"
 #include "operator/Hopping_Matrix.h"
@@ -136,7 +137,7 @@ int add_operator(const int type) {
     optr->m = 0.;
     optr->inverter = &op_invert;
   }
-  if(optr->type == DBTMWILSON || optr->type == DBCLOVER || optr->type == BSM || optr->type == BSM2 ) {
+  if(optr->type == DBTMWILSON || optr->type == DBCLOVER || optr->type == BSM || optr->type == BSM2m || optr->type == BSM2b ) {
     optr->no_flavours = 2;
     g_running_phmc = 1;
   }
@@ -216,11 +217,11 @@ int init_operators() {
         optr->even_odd_flag = 1;
         optr->applyDbQsq = &Qtm_pm_ndpsi;
       }
-      if( optr->type == BSM2 ){
-        // initialise lookup table (multiple calls simply result in no-op, safe)
+      if( optr->type == BSM2b ){
+        // initialise lookup table for BSM2b operator (multiple calls simply result in no-op, safe)
         init_bsm_2hop_lookup(VOLUME);
       }
-      else if(optr->type == BSM || optr->type == BSM2 ) {
+      else if(optr->type == BSM || optr->type == BSM2b || optr->type == BSM2m ) {
         // For the BSM operator we don't use kappa normalisation,
         // as a result, when twisted boundary conditions are applied this needs to be unity.
         // In addition, unlike in the Wilson case, the hopping term comes with a plus sign.
@@ -231,10 +232,14 @@ int init_operators() {
         optr->applyMbi    = &D_psi_BSM;
         optr->applyMdagbi = D_psi_dagger_BSM;
         optr->applyQsqbi  = &Q2_psi_BSM;
-        if( optr->type == BSM2 ) {
-          optr->applyMbi    = &D_psi_BSM2;
-          optr->applyMdagbi = &D_psi_dagger_BSM2;
-          optr->applyQsqbi  = &Q2_psi_BSM2;
+        if( optr->type == BSM2b ) {
+          optr->applyMbi    = &D_psi_BSM2b;
+          optr->applyMdagbi = &D_psi_dagger_BSM2b;
+          optr->applyQsqbi  = &Q2_psi_BSM2b;
+        } else if( optr->type == BSM2m ){
+          optr->applyMbi    = &D_psi_BSM2m;
+          optr->applyMdagbi = &D_psi_dagger_BSM2m;
+          optr->applyQsqbi  = &Q2_psi_BSM2m;
         }
         // generate space for 4
         int j = init_scalar_field(VOLUMEPLUSRAND, 4);
@@ -457,7 +462,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 
     if(write_prop) optr->write_prop(op_id, index_start, 0);
   }
-  else if( optr->type == BSM || optr->type == BSM2 ) {
+  else if( optr->type == BSM || optr->type == BSM2b || optr->type == BSM2m ) {
     for(i = 0; i < SourceInfo.no_flavours; i++) {
 
       convert_eo_to_lexic(g_spinor_field[8], optr->sr0, optr->sr1);
@@ -562,14 +567,14 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
   if(SourceInfo.type != 1) {
     if (PropInfo.splitted) {
       /* operators with additional external fields require one more index */
-      if( optr->type==BSM || optr->type==BSM2 ){
+      if( optr->type==BSM || optr->type==BSM2b || optr->type==BSM2m ){
         snprintf(filename, strl, "%s.%.4d.%.2d.%.2d.%03d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, optr->n, ending);
       }else{
         snprintf(filename, strl, "%s.%.4d.%.2d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, ending);
       }
     }
     else {
-      if( optr->type==BSM || optr->type == BSM2 ){
+      if( optr->type==BSM || optr->type == BSM2b || optr->type==BSM2m ){
         snprintf(filename, strl, "%s.%.4d.%.2d.%03d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, optr->n, ending);
       }else{
         snprintf(filename, strl, "%s.%.4d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, ending);
@@ -577,7 +582,7 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
     }
   }
   else {
-    if(optr->type==BSM || optr->type==BSM2){
+    if(optr->type==BSM || optr->type==BSM2b || optr->type==BSM2m ){
       snprintf(filename, strl, "%s.%.4d.%.5d.%03d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, optr->n, ending);
     } else {
       snprintf(filename, strl, "%s.%.4d.%.5d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, ending);
