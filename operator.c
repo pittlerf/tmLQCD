@@ -217,10 +217,6 @@ int init_operators() {
         optr->even_odd_flag = 1;
         optr->applyDbQsq = &Qtm_pm_ndpsi;
       }
-      if( optr->type == BSM2b ){
-        // initialise lookup table for BSM2b operator (multiple calls simply result in no-op, safe)
-        init_bsm_2hop_lookup(VOLUME);
-      }
       else if(optr->type == BSM || optr->type == BSM2b || optr->type == BSM2m ) {
         // For the BSM operator we don't use kappa normalisation,
         // as a result, when twisted boundary conditions are applied this needs to be unity.
@@ -236,6 +232,8 @@ int init_operators() {
           optr->applyMbi    = &D_psi_BSM2b;
           optr->applyMdagbi = &D_psi_dagger_BSM2b;
           optr->applyQsqbi  = &Q2_psi_BSM2b;
+          // initialise lookup table for BSM2b operator (multiple calls simply result in no-op, safe)
+          init_bsm_2hop_lookup(VOLUME);
         } else if( optr->type == BSM2m ){
           optr->applyMbi    = &D_psi_BSM2m;
           optr->applyMdagbi = &D_psi_dagger_BSM2m;
