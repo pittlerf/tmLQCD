@@ -674,7 +674,11 @@ void Q2_psi_BSM2b(bispinor * const P, bispinor * const Q){
   /* TODO: the use of [3] has to be changed to avoid future conflicts */
   D_psi_dagger_BSM2b(g_bispinor_field[3] , Q);
   D_psi_BSM2b(P, g_bispinor_field[3]);
-  /* Q and P are spinor, not bispinor ==> made a cast */
-  assign_add_mul_r((spinor*)P, (spinor*)Q, m0_BSM, 2*VOLUME);
+  // only use these cycles if the m0_BSM parameter is really nonzero...
+  if( fabs(m0_BSM) > 1.e-10 ){
+    /* Q and P are spinor, not bispinor ==> made a cast */
+    assign_add_mul_r((spinor*)P, (spinor*)Q, m0_BSM, 2*VOLUME);
+  }
 
 }
+
