@@ -275,7 +275,13 @@ int main(int argc,char *argv[])
 
 	/* define the boundary conditions for the fermion fields */
   /* for the actual inversion, this is done in invert.c as the operators are iterated through */
-	boundary(1.0); // for the BSM operator, there is no hopping parameter and thus the phases are not kappa-normalised
+  // 
+  // For the BSM operator we don't use kappa normalisation,
+  // as a result, when twisted boundary conditions are applied this needs to be unity.
+  // In addition, unlike in the Wilson case, the hopping term comes with a plus sign.
+  // However, in boundary(), the minus sign for the Wilson case is implicitly included.
+  // We therefore use -1.0 here.
+	boundary(-1.0);
 
 	status = check_geometry();
 	if (status != 0) {

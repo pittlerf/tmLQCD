@@ -217,13 +217,16 @@ int init_operators() {
         optr->applyDbQsq = &Qtm_pm_ndpsi;
       }
       if( optr->type == BSM2 ){
-        // initialise lookup table
+        // initialise lookup table (multiple calls simply result in no-op, safe)
         init_bsm_2hop_lookup(VOLUME);
       }
       else if(optr->type == BSM || optr->type == BSM2 ) {
-        // for the BSM operator we don't use kappa normalistion
-        // as a result, when twisted boundary conditions are applied this needs to be unity
-        optr->kappa = 1.0; 
+        // For the BSM operator we don't use kappa normalisation,
+        // as a result, when twisted boundary conditions are applied this needs to be unity.
+        // In addition, unlike in the Wilson case, the hopping term comes with a plus sign.
+        // However, in boundary(), the minus sign for the Wilson case is implicitly included.
+        // We therefore use -1.0 here.
+        optr->kappa = -1.0; 
         optr->even_odd_flag = 0;
         optr->applyMbi    = &D_psi_BSM;
         optr->applyMdagbi = D_psi_dagger_BSM;
