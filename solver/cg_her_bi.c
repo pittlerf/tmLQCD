@@ -66,6 +66,7 @@
 int cg_her_bi(bispinor * const P, bispinor * const Q, const int max_iter, 
        double eps_sq, const int rel_prec, const int N, matrix_mult_bi f) {
   
+  double atime = gettime();
   double normsp, normsq, pro, err, alpha_cg, beta_cg, squarenorm;
   int iteration;
   bispinor ** bisolver_field = NULL;
@@ -123,6 +124,9 @@ int cg_her_bi(bispinor * const P, bispinor * const Q, const int max_iter,
     if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))) {
       assign((spinor*)P, (spinor*)bisolver_field[0], 2*N);
       finalize_bisolver(bisolver_field, nr_sf);
+      if((g_proc_id == g_stdio_proc) && (g_debug_level > 0)){
+        printf("cg_her_bi: Inversion took %lf seconds for %d iterations\n", gettime()-atime, iteration+1);
+      }
       return(iteration+1);
     }
      
