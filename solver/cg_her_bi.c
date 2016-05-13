@@ -59,6 +59,7 @@
 #include "sub_low_ev.h"
 #include "cg_her_bi.h"
 #include "solver_field.h"
+#include "gettime.h"
 #include"solver/matrix_mult_typedef_bi.h"
 
 
