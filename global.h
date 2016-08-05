@@ -194,7 +194,7 @@ EXTERN su3adj ** ddummy;
 
 EXTERN int count00,count01,count10,count11,count20,count21;
 EXTERN double g_kappa, g_c_sw, g_beta;
-EXTERN double g_mu, g_mu1, g_mu2, g_mu3;
+EXTERN double g_mu, g_mu1, g_mu2, g_mu3, g_shift;
 EXTERN double g_rgi_C0, g_rgi_C1;
 
 /* Parameters for non-degenrate case */
@@ -249,6 +249,10 @@ EXTERN int g_nb_t_up, g_nb_t_dn;
 EXTERN int g_nb_z_up, g_nb_z_dn;
 
 #endif
+
+EXTERN int subprocess_flag;
+EXTERN int lowmem_flag;
+EXTERN int g_external_id;
 
 #ifdef TM_USE_OMP
 EXTERN int omp_num_threads;
