@@ -193,7 +193,6 @@ static inline void rmQuotes(char *str){
   int use_preconditioning;
   
   int use_qudainverter;
-  
 %}
 
 %option never-interactive
@@ -283,6 +282,9 @@ static inline void rmQuotes(char *str){
 
 %x DEFLATION
 %x INITDEFLATION
+
+%x MULTIGRID
+%x INITMULTIGRID
 
 %x INITOPERATOR
 %x TMOP
@@ -425,7 +427,7 @@ static inline void rmQuotes(char *str){
 ^MStarSq{EQL}                      BEGIN(MSTARSQ);
 ^NoSourcesZ2{EQL}                  BEGIN(NOSOURCESZ2);
 ^BeginMonomial{SPC}+               BEGIN(INITMONOMIAL);
-^BeginInt                          BEGIN(INITINTEGRATOR);
+^BeginInt                         BEGIN(INITINTEGRATOR);
 ^BeginOperator{SPC}+               BEGIN(INITOPERATOR);
 
 ^PropagatorComparison{EQL}         BEGIN(PCOMP);
@@ -443,6 +445,7 @@ static inline void rmQuotes(char *str){
 
 ^BeginGPU                          BEGIN(INITGPU);
 ^BeginDeflation		           BEGIN(INITDEFLATION);
+^BeginDDalpha       	           BEGIN(INITMULTIGRID);
 ^MixCGInnerEps{EQL}                BEGIN(MIXCGEPS);
 ^MixCGMaxIter{EQL}                 BEGIN(MIXCGIT);
 
@@ -628,6 +631,92 @@ static inline void rmQuotes(char *str){
   }
 }
 
+<INITMULTIGRID>AMG{SPC}* {
+ if(myverbose) printf("Initialising DDalphaAMG line %d\n", line_of_file); 
+ BEGIN(MULTIGRID);
+ }
+<MULTIGRID>{
+  {SPC}*MGSetupIter{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_setup_iter=a;
+    if(myverbose) printf("  MG_Setup_Iter set to %d line %d operator %d\n", mg_setup_iter, line_of_file, current_operator);
+  }
+  {SPC}*MGCoarseSetupIter{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_coarse_setup_iter=a;
+    if(myverbose) printf("  MG_Coarse_Setup_Iter set to %d line %d operator %d\n", mg_coarse_setup_iter, line_of_file, current_operator);
+  }
+  {SPC}*MGNumberOfVectors{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_Nvec=a;
+    if(myverbose) printf("  MGNumberOfVectors set to %d line %d operator %d\n", mg_Nvec, line_of_file, current_operator);
+  }
+  {SPC}*MGNumberOfLevels{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_lvl=a;
+    if(myverbose) printf("  MGNumberOfLevels set to %d line %d operator %d\n", mg_lvl, line_of_file, current_operator);
+  }
+  {SPC}*MGBlockX{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_blk[3]=a;
+    if(myverbose) printf("  MGBlockX set to %d line %d operator %d\n", mg_blk[3], line_of_file, current_operator);
+  }
+  {SPC}*MGBlockY{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_blk[2]=a;
+    if(myverbose) printf("  MGBlockY set to %d line %d operator %d\n", mg_blk[2], line_of_file, current_operator);
+  }
+  {SPC}*MGBlockZ{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_blk[1]=a;
+    if(myverbose) printf("  MGBlockZ set to %d line %d operator %d\n", mg_blk[1], line_of_file, current_operator);
+  }
+  {SPC}*MGBlockT{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_blk[0]=a;
+    if(myverbose) printf("  MGBlockT set to %d line %d operator %d\n", mg_blk[0], line_of_file, current_operator);
+  }
+  {SPC}*MGSetupMu{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mg_setup_mu=c;
+    if(myverbose) printf("  MGSetupMu set to %f line %d operator %d\n", mg_setup_mu, line_of_file, current_operator);
+  }
+  {SPC}*MGCoarseMuFactor{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mg_cmu_factor=c;
+    if(myverbose) printf("  MGCoarseMuFactor set to %f line %d operator %d\n", mg_cmu_factor, line_of_file, current_operator);
+  }
+  {SPC}*MGdtauUpdate{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mg_dtau_update=c;
+    if(myverbose) printf("  MGdtauUpdate set to %f line %d operator %d\n", mg_dtau_update, line_of_file, current_operator);
+  }
+  {SPC}*MGrhoUpdate{EQL}{FLT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
+    mg_rho_update=c;
+    if(myverbose) printf("  MG_rho_Update set to %f line %d operator %d\n", mg_rho_update, line_of_file, current_operator);
+  }
+  {SPC}*MGdtauSetupIter{EQL}{DIGIT}+ { /*START TO_REMOVE*/
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_update_setup_iter=a;
+    if(g_proc_id == 0) printf("  WARNING: MGdtauSetupIter renamed to MGUpdateSetupIter. This parameter will be removed soon.\n");
+    if(myverbose) printf("  MG_dtau_Setup_Iter set to %d line %d operator %d\n", mg_update_setup_iter, line_of_file, current_operator);
+    /*END TO_REMOVE*/ }
+  {SPC}*MGUpdateSetupIter{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_update_setup_iter=a;
+    if(myverbose) printf("  MG_Update_Setup_Iter set to %d line %d operator %d\n", mg_update_setup_iter, line_of_file, current_operator);
+  }
+  {SPC}*MGOMPNumThreads{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    mg_omp_num_threads=a;
+    if(myverbose) printf("  MG_omp_num_threads set to %d line %d operator %d\n", mg_omp_num_threads, line_of_file, current_operator);
+  }
+  EndDDalphaAMG{SPC}* {
+  if(myverbose) printf("DDalphaAMG parsed in line %d\n\n", line_of_file);
+  BEGIN(0);
+  }
+}
 
 
 <INITOPERATOR>{TYPE} {
@@ -756,8 +845,7 @@ static inline void rmQuotes(char *str){
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     (optr->solver_params).eigcg_rand_guess_opt = a;
     if(myverbose) printf("  EigCGrand_guess_opt set to %d line %d operator %d\n", a, line_of_file, current_operator);
-  }
-
+  }  
   {SPC}*ExtraMasses{EQL}{FLTLIST} {
     char * token = NULL;
     optr->no_extra_masses = 0;
@@ -1078,6 +1166,11 @@ static inline void rmQuotes(char *str){
     if(myverbose) printf("  Solver set to INCR-EIG-CG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
+  DDalphaAMG {
+    optr->solver = MG;
+    if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
 }
 
 
@@ -1102,6 +1195,11 @@ static inline void rmQuotes(char *str){
   mixedcg {
     optr->solver=MIXEDCG;
     if(myverbose) printf("  Solver set to MixedCG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+  DDalphaAMG {
+    optr->solver = MG;
+    if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
 }
@@ -1583,6 +1681,11 @@ static inline void rmQuotes(char *str){
   BICGSTAB {
     if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->solver = BICGSTAB;
+    BEGIN(solver_caller);
+  }
+  DDalphaAMG {
+    if(myverbose) printf("  Solver set to DDalphaAMG line %d operator %d\n", line_of_file, current_operator);
+    mnl->solver = MG;
     BEGIN(solver_caller);
   }
 }
@@ -2367,7 +2470,7 @@ static inline void rmQuotes(char *str){
   BEGIN(comment_caller);
 }
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION>{SPC}*\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,CLDETRATRWMONOMIAL,NDPOLYMONOMIAL,NDRATMONOMIAL,NDRATCORMONOMIAL,NDCLRATMONOMIAL,NDCLRATCORMONOMIAL,CLPOLYMONOMIAL,GAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,ORIENTEDPLAQUETTESMEAS,GRADIENTFLOWMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,DBCLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,RATMONOMIAL,RATCORMONOMIAL,CLRATMONOMIAL,CLRATCORMONOMIAL,INITDEFLATION,DEFLATION,INITMULTIGRID,MULTIGRID>{SPC}*\n   {
   line_of_file++;
 }
 <*>{SPC}*\n                       {
@@ -2379,8 +2482,8 @@ static inline void rmQuotes(char *str){
   BEGIN(ERROR);
 }
 <ERROR>[^\t\n]*             {
-  fprintf(stderr, "Parsing error in line %d\nAborting...!\n", line_of_file);
-  fprintf(stderr, "Could not make sense out off: %s\n", yytext);
+  if(g_proc_id == 0) fprintf(stderr, "Parsing error in line %d\nAborting...!\n", line_of_file);
+  if(g_proc_id == 0) fprintf(stderr, "Could not make sense out off: %s\n", yytext);
   exit(1);
 }
 
