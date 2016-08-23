@@ -463,8 +463,8 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
   else if( optr->type == BSM || optr->type == BSM2b || optr->type == BSM2m ) {
     for(i = 0; i < SourceInfo.no_flavours; i++) {
 
-      convert_eo_to_lexic(g_spinor_field[8], optr->sr0, optr->sr1);
-      convert_eo_to_lexic(g_spinor_field[9], optr->sr2, optr->sr3);
+      convert_eo_to_lexic(g_spinor_field[DUM_DERI], optr->sr0, optr->sr1);
+      convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], optr->sr2, optr->sr3);
       compact(g_bispinor_field[1], g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
       
       optr->iterations = cg_her_bi(g_bispinor_field[0], g_bispinor_field[1],
@@ -488,8 +488,8 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       /* write propagator */
       if(write_prop) optr->write_prop(op_id, index_start, 2*i);
 
-      convert_eo_to_lexic(g_spinor_field[8], optr->sr0, optr->sr1);
-      convert_eo_to_lexic(g_spinor_field[9], optr->sr2, optr->sr3);
+      convert_eo_to_lexic(g_spinor_field[DUM_DERI], optr->sr0, optr->sr1);
+      convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], optr->sr2, optr->sr3);
       compact(g_bispinor_field[0], g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
 
       optr->applyMbi(g_bispinor_field[1], g_bispinor_field[0]);
