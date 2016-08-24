@@ -475,12 +475,20 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       double squarenorm = square_norm((spinor*)g_bispinor_field[2], 2*VOLUME, 1);
       optr->reached_prec = squarenorm;
       if(g_proc_id==0) {
-        printf("# BSM Dirac inversion ||A*result1-b||^2 = %e\n\n", squarenorm);
+        printf("# BSM Dirac inversion ||A*result1-b||^2 = %e\n", squarenorm);
         fflush(stdout);
       }
 
-      optr->applyMdagbi(g_bispinor_field[1], g_bispinor_field[0]);
-      decompact(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], g_bispinor_field[1]);
+      optr->applyMdagbi(g_bispinor_field[2], g_bispinor_field[0]);
+      optr->applyMbi(g_bispinor_field[0], g_bispinor_field[2]);
+      assign_diff_mul((spinor*)g_bispinor_field[0], (spinor*)g_bispinor_field[1], 1.0, 2*VOLUME);
+      squarenorm = square_norm((spinor*)g_bispinor_field[0], 2*VOLUME, 1);
+      if(g_proc_id==0) {
+        printf("# BSM Dirac inversion D(D^-1 b) = %e\n\n", squarenorm);
+        fflush(stdout);
+      }
+      
+      decompact(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], g_bispinor_field[2]);
 
       convert_lexic_to_eo(optr->prop0, optr->prop1, g_spinor_field[DUM_DERI]);
       convert_lexic_to_eo(optr->prop2, optr->prop3, g_spinor_field[DUM_DERI+1]);
@@ -495,20 +503,28 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       optr->applyMbi(g_bispinor_field[1], g_bispinor_field[0]);
       
       // accumulate number of iterations
-      optr->iterations += cg_her_bi(g_bispinor_field[0], g_bispinor_field[1],
+      optr->iterations += cg_her_bi(g_bispinor_field[2], g_bispinor_field[1],
                                     optr->maxiter, optr->eps_sq, optr->rel_prec, VOLUME, optr->applyQsqbi);
 
-      optr->applyQsqbi(g_bispinor_field[2], g_bispinor_field[0]);
-      assign_diff_mul((spinor*)g_bispinor_field[2], (spinor*)g_bispinor_field[1], 1.0, 2*VOLUME);
-      squarenorm = square_norm((spinor*)g_bispinor_field[2], 2*VOLUME, 1);
+      optr->applyQsqbi(g_bispinor_field[0], g_bispinor_field[2]);
+      assign_diff_mul((spinor*)g_bispinor_field[0], (spinor*)g_bispinor_field[1], 1.0, 2*VOLUME);
+      squarenorm = square_norm((spinor*)g_bispinor_field[0], 2*VOLUME, 1);
       // store the larger of the two residual norms
       optr->reached_prec = optr->reached_prec > squarenorm ? optr->reached_prec : squarenorm;
       if(g_proc_id==0) {
-        printf("# BSM Dirac inversion ||A*result1-b||^2 = %e\n\n", squarenorm);
+        printf("# BSM Dirac inversion ||A*result1-b||^2 = %e\n", squarenorm);
         fflush(stdout);
       }
 
-      decompact(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], g_bispinor_field[0]);
+      compact(g_bispinor_field[0], g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+      optr->applyMdagbi(g_bispinor_field[1], g_bispinor_field[2]);
+      assign_diff_mul((spinor*)g_bispinor_field[1], (spinor*)g_bispinor_field[0], 1.0, 2*VOLUME);
+      squarenorm = square_norm((spinor*)g_bispinor_field[1], 2*VOLUME, 1);
+      if(g_proc_id==0) {
+        printf("# BSM Dirac inversion D_dag(D_dag^-1 b) = %e\n\n", squarenorm);
+        fflush(stdout);
+      }
+      decompact(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], g_bispinor_field[2]);
 
       convert_lexic_to_eo(optr->prop0, optr->prop1, g_spinor_field[DUM_DERI]);
       convert_lexic_to_eo(optr->prop2, optr->prop3, g_spinor_field[DUM_DERI+1]);
