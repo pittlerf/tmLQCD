@@ -484,7 +484,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       assign_diff_mul((spinor*)g_bispinor_field[0], (spinor*)g_bispinor_field[1], 1.0, 2*VOLUME);
       squarenorm = square_norm((spinor*)g_bispinor_field[0], 2*VOLUME, 1);
       if(g_proc_id==0) {
-        printf("# BSM Dirac inversion D(D^-1 b) = %e\n\n", squarenorm);
+        printf("# BSM Dirac inversion || D(D^dag [DD^dag + m_0 ]^-1 b) - b ||^2 = %e\n\n", squarenorm);
         fflush(stdout);
       }
       
@@ -521,7 +521,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       assign_diff_mul((spinor*)g_bispinor_field[1], (spinor*)g_bispinor_field[0], 1.0, 2*VOLUME);
       squarenorm = square_norm((spinor*)g_bispinor_field[1], 2*VOLUME, 1);
       if(g_proc_id==0) {
-        printf("# BSM Dirac inversion D_dag(D_dag^-1 b) = %e\n\n", squarenorm);
+        printf("# BSM Dirac inversion || D^dag ([DD^dag + m_0 ]^-1 D b) - b ||^2 = %e\n\n", squarenorm);
         fflush(stdout);
       }
       decompact(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], g_bispinor_field[2]);
