@@ -24,5 +24,6 @@
 #include "global.h"
 
 int read_scalar_field(char * filename, scalar ** const sf);
+int read_scalar_field_parallel(char * filename, scalar ** const sf);
 
 #endif
