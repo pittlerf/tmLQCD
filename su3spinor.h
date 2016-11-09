@@ -66,6 +66,9 @@
    (r).s3.c1 = 0.0; \
    (r).s3.c2 = 0.0;
 
+#define _bispinor_null(r) \
+   _spinor_null( (r).sp_up ); \
+   _spinor_null( (r).sp_dn ); 
 
 /* 
  * Real part of the scalar product (r,s)

@@ -141,6 +141,16 @@ typedef double scalar;
   (r).c1 += (c) * (s).c1;			\
   (r).c2 += (c) * (s).c2;
 
+#define _spinor_add_mul(r,c,s)                  \
+  _vector_add_mul( (r).s0, (c), (s).s0);        \
+  _vector_add_mul( (r).s1, (c), (s).s1);        \
+  _vector_add_mul( (r).s2, (c), (s).s2);        \
+  _vector_add_mul( (r).s3, (c), (s).s3);        
+
+#define _bispinor_add_mul(r,c,s)                \
+  _spinor_add_mul( (r).sp_up, (c), (s).sp_up ); \
+  _spinor_add_mul( (r).sp_dn, (c), (s).sp_dn );
+
 
 /* r += I * c * s (c real) */
 #define _vector_add_i_mul(r,c,s) \
