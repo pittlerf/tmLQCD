@@ -1,4 +1,4 @@
-#include "utils_nonblocking.ih"
+#include "utils_nogauge.h"
 
 #ifndef MPI /*Let's deal with this case once and for all*/
 void generic_exchange_nogauge(void *field_in, int bytes_per_site )

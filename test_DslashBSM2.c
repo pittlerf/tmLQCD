@@ -68,6 +68,7 @@
 #include "operator/D_psi_BSM2b.h"
 #include "operator/D_psi_BSM2m.h"
 #include "operator/D_psi_BSM2f.h"
+#include "solver/eigenvalues_krylov.h"
 #include "operator/M_psi.h"
 #include "mpi_init.h"
 #include "measure_gauge_action.h"
@@ -362,12 +363,12 @@ if( strcmp(scalar_input_filename, "create_random_scalarfield") == 0 ) {
 	j_max=1;
 	sdt=0.;
   // w/
-	random_spinor_field_lexic( (spinor*)(g_bispinor_field[4]), 	  reproduce_randomnumber_flag, RN_GAUSS);
-	random_spinor_field_lexic( (spinor*)(g_bispinor_field[4])+VOLUME, reproduce_randomnumber_flag, RN_GAUSS);
+	unit_spinor_field_lexic( (spinor*)(g_bispinor_field[4]));//, 	  reproduce_randomnumber_flag, RN_GAUSS);
+	unit_spinor_field_lexic( (spinor*)(g_bispinor_field[4])+VOLUME);//, reproduce_randomnumber_flag, RN_GAUSS);
 	// for the D^\dagger test:
   // v
-	random_spinor_field_lexic( (spinor*)(g_bispinor_field[5]),	  reproduce_randomnumber_flag, RN_GAUSS);
-	random_spinor_field_lexic( (spinor*)(g_bispinor_field[5])+VOLUME, reproduce_randomnumber_flag, RN_GAUSS);
+	unit_spinor_field_lexic( (spinor*)(g_bispinor_field[5]));//,	  reproduce_randomnumber_flag, RN_GAUSS);
+	unit_spinor_field_lexic( (spinor*)(g_bispinor_field[5])+VOLUME);//, reproduce_randomnumber_flag, RN_GAUSS);
 #if defined MPI
 	generic_exchange_nogauge(g_bispinor_field[4], sizeof(bispinor));
 //        if (g_proc_id == 0  ) printf("Generic exchange for the spinor fields are done\n");
@@ -380,11 +381,8 @@ if( strcmp(scalar_input_filename, "create_random_scalarfield") == 0 ) {
 		printf("\n# square norm of the source: ||w||^2 = %e\n\n", squarenorm);
 		fflush(stdout);
 	}
-     int g_nev = 10;
-     int max_iter_ev = 1000;
-     double stop_prec_ev = 1.e-10;
 
-
+////  eigmax();
   double t_F;
 	/* inversion needs to be done first because it uses loads of the g_bispinor_fields internally */
 #if TEST_INVERSION
