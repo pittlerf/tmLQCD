@@ -19,6 +19,7 @@
  ***********************************************************************/
 
 #include <errno.h>
+#include "global.h"
 #include "scalar.h"
 #include "buffers/utils_nonblocking.h"
 
