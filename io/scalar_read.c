@@ -20,6 +20,7 @@
 
 #include <errno.h>
 #include "scalar.h"
+#include "buffers/utils_nonblocking.h"
 
 extern int scalar_precision_read_flag;
 // TODO consider that input scalar field could be in single prec.
@@ -32,7 +33,6 @@ int read_scalar_field(char * filename, scalar ** const sf) {
   int scalarreadsize = ( scalar_precision_read_flag==64 ? sizeof(double) : sizeof(float) );
 
   ptr = fopen(filename,"rb");  // r for read, b for binary
-
   // read into buffer
   void *buffer;
   if((buffer = malloc(count*scalarreadsize)) == NULL) {
@@ -59,7 +59,7 @@ int read_scalar_field(char * filename, scalar ** const sf) {
 int read_scalar_field_parallel( char * filename, scalar ** const sf){
   int t;
   FILE *ptr;
-  int count = 4*LX*LY*LZ;
+  int count = 4*LX*N_PROC_X*LY*N_PROC_Y*LZ*N_PROC_Z;
   int scalarreadsize = ( scalar_precision_read_flag==64 ? sizeof(double) : sizeof(float) );
 
   ptr = fopen(filename,"rb");  // r for read, b for binary
@@ -102,4 +102,164 @@ int read_scalar_field_parallel( char * filename, scalar ** const sf){
   }
   free(buffer);
   return(0);
+}
+void smear_scalar_fields( scalar ** const sf, scalar ** smearedfield ) {
+
+   int ix;
+   int in;
+
+   scalar *tmps1= (scalar *)malloc(sizeof(scalar)*VOLUMEPLUSRAND );
+   scalar *tmps2= (scalar *)malloc(sizeof(scalar)*VOLUMEPLUSRAND );
+
+   scalar *hyperc= (scalar *)malloc(sizeof(scalar)*VOLUMEPLUSRAND );
+   scalar *nearen= (scalar *)malloc(sizeof(scalar)*VOLUMEPLUSRAND );
+
+   int neit, neix, neiy, neiz;
+   MPI_Status  statuses[8];
+   MPI_Request *request;
+   request=( MPI_Request *) malloc(sizeof(MPI_Request)*8);
+
+   int count=0;
+
+// hypercubic smearing 
+
+   for (in = 0; in<4 ; ++in ){
+      for (ix=0; ix<VOLUME; ++ix){
+         smearedfield[in][ix]=0.0;
+      } 
+   }
+   for (in=0; in<4; ++in) {
+      for (ix=0; ix<VOLUME; ++ix){
+         nearen[ix]=sf[in][ix];
+         hyperc[ix]=sf[in][ix];
+      }
+      for (neit=0; neit<2; ++neit)
+         for (neix=0; neix<2; ++neix)
+            for (neiy=0; neiy<2; ++neiy)
+               for (neiz=0; neiz<2; ++neiz){
+
+                  count=0;
+                  generic_exchange_direction_nonblocking( sf[in], sizeof(scalar), neit ? TDOWN : TUP, request, &count );
+                  MPI_Waitall( count, request, statuses);
+                  for (ix=0; ix<VOLUME; ++ix)
+                     tmps1[ix]= sf[in][    neit ? g_idn[ix][TUP] : g_iup[ix][TUP] ];
+
+                  count=0;
+                  generic_exchange_direction_nonblocking(  tmps1, sizeof(scalar), neix ? XDOWN : XUP, request, &count );
+                  MPI_Waitall( count, request, statuses);
+                  for (ix=0; ix<VOLUME; ++ix)
+                     tmps2[ix]= tmps1[ neix ? g_idn[ix][XUP] : g_iup[ix][XUP] ];
+
+                  count=0;
+                  generic_exchange_direction_nonblocking(  tmps2, sizeof(scalar), neiy ? YDOWN : YUP, request, &count );
+                  MPI_Waitall( count, request, statuses);
+                  for (ix=0; ix<VOLUME; ++ix)
+                     tmps1[ix]= tmps2[ neiy ? g_idn[ix][YUP] : g_iup[ix][YUP] ];
+
+                  count=0;
+                  generic_exchange_direction_nonblocking(  tmps1, sizeof(scalar), neix ? ZDOWN : ZUP, request, &count );
+                  MPI_Waitall( count, request, statuses);
+                  for (ix=0; ix<VOLUME; ++ix)
+                     tmps2[ix]= tmps1[ neiz ? g_idn[ix][ZUP] : g_iup[ix][ZUP] ];
+
+                  for (ix=0; ix<VOLUME; ++ix)
+                     hyperc[ix]+=tmps2[ix];
+               }
+      for (ix =0; ix<VOLUME; ++ix){
+         hyperc[ix]/=17.0;
+      }
+      count=0;
+      generic_exchange_direction_nonblocking( sf[in], sizeof(scalar), TDOWN, request, &count );
+      MPI_Waitall( count, request, statuses);
+      for (ix=0; ix<VOLUME; ++ix)
+         tmps1[ix]= sf[in][g_idn[ix][TUP]];
+      for (ix=0; ix<VOLUME; ++ix)
+         nearen[ix]+= tmps1[ix];
+      
+      count=0;
+      generic_exchange_direction_nonblocking( sf[in], sizeof(scalar), TUP ,  request, &count );
+      MPI_Waitall( count, request, statuses);      
+      for (ix=0; ix<VOLUME; ++ix)
+         tmps1[ix]= sf[in][g_iup[ix][TUP]];
+      for (ix=0; ix<VOLUME; ++ix)
+         nearen[ix]+= tmps1[ix];
+      
+      count=0;
+      generic_exchange_direction_nonblocking( sf[in], sizeof(scalar), XDOWN, request, &count );
+      MPI_Waitall( count, request, statuses);      
+      for (ix=0; ix<VOLUME; ++ix)
+         tmps1[ix]= sf[in][g_idn[ix][XUP]];
+      for (ix=0; ix<VOLUME; ++ix)
+         nearen[ix]+= tmps1[ix];
+
+      count=0;
+      generic_exchange_direction_nonblocking( sf[in], sizeof(scalar), XUP , request, &count );
+      MPI_Waitall( count, request, statuses);
+      for (ix=0; ix<VOLUME; ++ix)
+         tmps1[ix]= sf[in][g_iup[ix][XUP]];
+      for (ix=0; ix<VOLUME; ++ix)
+         nearen[ix]+= tmps1[ix];
+
+      count=0;    
+      generic_exchange_direction_nonblocking( sf[in], sizeof(scalar), YDOWN, request, &count );
+      MPI_Waitall( count, request, statuses);      
+      for (ix=0; ix<VOLUME; ++ix)
+         tmps1[ix]= sf[in][g_idn[ix][YUP]];
+      for (ix=0; ix<VOLUME; ++ix)
+         nearen[ix]+= tmps1[ix];
+    
+      count=0;
+      generic_exchange_direction_nonblocking( sf[in], sizeof(scalar), YUP, request, &count );
+      MPI_Waitall( count, request, statuses);
+      for (ix=0; ix<VOLUME; ++ix)
+         tmps1[ix]= sf[in][g_iup[ix][YUP]];
+      for (ix=0; ix<VOLUME; ++ix)
+         nearen[ix]+= tmps1[ix];
+
+      count=0;
+      generic_exchange_direction_nonblocking( sf[in], sizeof(scalar), ZDOWN, request, &count );
+      MPI_Waitall( count, request, statuses);      
+      for (ix=0; ix<VOLUME; ++ix)
+         tmps1[ix]= sf[in][g_idn[ix][ZUP]];
+      for (ix=0; ix<VOLUME; ++ix)
+         nearen[ix]+= tmps1[ix];
+
+      count=0;
+      generic_exchange_direction_nonblocking( sf[in], sizeof(scalar), ZUP, request, &count );
+      MPI_Waitall( count, request, statuses);
+      for (ix=0; ix<VOLUME; ++ix)
+         tmps1[ix]= sf[in][g_iup[ix][ZUP]];
+      for (ix=0; ix<VOLUME; ++ix)
+         nearen[ix]+= tmps1[ix];
+
+
+      for (ix =0; ix<VOLUME; ++ix){
+         nearen[ix]/=9.0;
+      }
+
+      for (ix=0; ix<VOLUME; ++ix){
+         smearedfield[in][ix]=0.5*(nearen[ix] + hyperc[ix] );
+      }
+   }
+   free(tmps1);
+   free(tmps2);
+
+   free(hyperc);
+   free(nearen);
+   free(request);
+}
+int write_eigenvectors_parallel( char *filename, _Complex double *evecs ){
+  FILE *ptr;
+  int count=12*LX*LY*LZ*T_global*N_PROC_X*N_PROC_Y*N_PROC_Z;
+  int lcount=12*LX*LY*LZ*T;
+  _Complex double *all=(_Complex double *)malloc(sizeof(_Complex double)*count);
+  if (g_cart_id == 0)
+     ptr= fopen( filename, "a" );
+  MPI_Allgather(evecs, lcount, MPI_DOUBLE_COMPLEX, all, lcount, MPI_DOUBLE_COMPLEX, g_cart_grid);
+  if (g_cart_id == 0){
+    fwrite(all, sizeof(_Complex double),count, ptr);
+    fclose(ptr);
+  }
+  free(all);
+
 }

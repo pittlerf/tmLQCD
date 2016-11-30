@@ -73,7 +73,7 @@ void generic_exchange_direction_nonblocking(void *field_in, int bytes_per_site, 
     initialized = bytes_per_site;
   }
 
-  if (direction == 0){
+  if (direction == TUP){
 #    if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
        MPI_Isend(buffer[0],          1, slice_T_cont_type, g_nb_t_dn, 83,
             g_cart_grid, &inreq[*counter  ]);
@@ -82,7 +82,7 @@ void generic_exchange_direction_nonblocking(void *field_in, int bytes_per_site, 
        *counter=*counter+2;
 #     endif
   }
-  if (direction == 7){
+  if (direction == TDOWN){
 #     if (defined PARALLELT || defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
        MPI_Isend(buffer[(T-1)*LX*LY*LZ], 1, slice_T_cont_type, g_nb_t_up, 84,
             g_cart_grid, &inreq[*counter  ]);
@@ -91,7 +91,7 @@ void generic_exchange_direction_nonblocking(void *field_in, int bytes_per_site, 
        *counter=*counter+2;
 #     endif
   }
-  if (direction == 1){
+  if (direction == XUP){
 #    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
       MPI_Isend(buffer[0],              1, slice_X_gath_type, g_nb_x_dn, 87,
             g_cart_grid, &inreq[*counter  ]);
@@ -100,7 +100,7 @@ void generic_exchange_direction_nonblocking(void *field_in, int bytes_per_site, 
       *counter=*counter+2;
 #    endif
   }
-  if (direction == 6){
+  if (direction == XDOWN){
 #    if (defined PARALLELXT || defined PARALLELXYT || defined PARALLELXYZT)
       MPI_Isend(buffer[(LX-1)*LY*LZ],             1, slice_X_gath_type, g_nb_x_up, 88,
             g_cart_grid, &inreq[*counter  ]);
@@ -109,7 +109,7 @@ void generic_exchange_direction_nonblocking(void *field_in, int bytes_per_site, 
       *counter=*counter+2;
 #    endif
   }
-  if (direction == 2){
+  if (direction == YUP){
 #    if (defined PARALLELXYT || defined PARALLELXYZT)
       MPI_Isend(buffer[0],                            1, slice_Y_gath_type, g_nb_y_dn, 106,
             g_cart_grid, &inreq[*counter]);
@@ -118,7 +118,7 @@ void generic_exchange_direction_nonblocking(void *field_in, int bytes_per_site, 
       *counter=*counter+2;
 #    endif
   }
-  if (direction == 5){
+  if (direction == YDOWN){
 #    if (defined PARALLELXYT || defined PARALLELXYZT)
       MPI_Isend(buffer[(LY-1)*LZ],                              1, slice_Y_gath_type, g_nb_y_up, 107,
             g_cart_grid, &inreq[*counter]);
@@ -127,7 +127,7 @@ void generic_exchange_direction_nonblocking(void *field_in, int bytes_per_site, 
       *counter=*counter+2;
 #    endif
   }
-  if (direction == 3){
+  if (direction == ZUP){
 #    if defined PARALLELXYZT
       MPI_Isend(buffer[0],
             1, slice_Z_gath_type, g_nb_z_dn, 122,
@@ -138,7 +138,7 @@ void generic_exchange_direction_nonblocking(void *field_in, int bytes_per_site, 
       *counter=*counter+2;
 #    endif
   }
-  if (direction == 4){
+  if (direction == ZDOWN){
 #    if defined PARALLELXYZT
       MPI_Isend(buffer[LZ-1],
             1, slice_Z_gath_type, g_nb_z_up, 123,

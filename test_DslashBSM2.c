@@ -58,7 +58,6 @@
 #include "io/gauge.h"
 #include "io/scalar.h"
 #include "global.h"
-#include "git_hash.h"
 #include "getopt.h"
 #include "xchange/xchange.h"
 #include "init/init.h"

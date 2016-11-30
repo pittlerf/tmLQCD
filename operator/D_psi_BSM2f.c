@@ -21,7 +21,7 @@
  *******************************************************************************/
 
 /*******************************************************************************
- *
+ 
  * Implementation of symmetric derivative version of Frezzotti-Rossi Dirac operator
  * with a scalar field coupling.
  *
@@ -43,7 +43,6 @@
 # include "xchange/xchange.h"
 #endif
 #include "update_backward_gauge.h"
-//#include "block.h"
 #include "operator/D_psi_BSM2b.h"
 #include "operator/D_psi_BSM2f.h"
 #include "solver/dirac_operator_eigenvectors.h"
@@ -65,6 +64,50 @@
  * sign = -1 -> Fbaradd
  */
 
+static bispinor *vm1;
+static bispinor *vm2;
+static bispinor *vm3;
+static bispinor *vm4;
+
+static bispinor *vp1;
+static bispinor *vp2;
+static bispinor *vp3;
+static bispinor *vp4;
+
+static bispinor *v2m1;
+static bispinor *v2m2;
+static bispinor *v2m3;
+static bispinor *v2m4;
+void init_D_psi_BSM2f(){
+
+     vm1 =(bispinor *)calloc(VOLUMEPLUSRAND,sizeof(bispinor));
+     vm2 =(bispinor *)calloc(VOLUMEPLUSRAND,sizeof(bispinor));
+     vm3 =(bispinor *)calloc(VOLUMEPLUSRAND,sizeof(bispinor));
+     vm4 =(bispinor *)calloc(VOLUMEPLUSRAND,sizeof(bispinor));
+     vp1 =(bispinor *)calloc(VOLUMEPLUSRAND,sizeof(bispinor));
+     vp2 =(bispinor *)calloc(VOLUMEPLUSRAND,sizeof(bispinor));
+     vp3 =(bispinor *)calloc(VOLUMEPLUSRAND,sizeof(bispinor));
+     vp4 =(bispinor *)calloc(VOLUMEPLUSRAND,sizeof(bispinor));
+     v2m1=(bispinor *)calloc(VOLUMEPLUSRAND,sizeof(bispinor));
+     v2m2=(bispinor *)calloc(VOLUMEPLUSRAND,sizeof(bispinor));
+     v2m3=(bispinor *)calloc(VOLUMEPLUSRAND,sizeof(bispinor));
+     v2m4=(bispinor *)calloc(VOLUMEPLUSRAND,sizeof(bispinor));
+
+}
+void free_D_psi_BSM2f(){
+     free(vm1);
+     free(vm2);
+     free(vm3);
+     free(vm4);
+     free(vp1);
+     free(vp2);
+     free(vp3);
+     free(vp4);
+     free(v2m1);
+     free(v2m2);
+     free(v2m3);
+     free(v2m4);
+}
 static inline void Fadd(bispinor * const out, const bispinor * const in, const scalar * const phi, const double c, const double sign) {
   static spinor tmp;
   double s = +1.;
@@ -312,19 +355,19 @@ void D_psi_BSM2f(bispinor * const P, bispinor * const Q){
 
 //start gathering forward
   int count=0;
-  generic_exchange_direction_nonblocking(Q, sizeof(bispinor), 0, request, &count);
-  generic_exchange_direction_nonblocking(Q, sizeof(bispinor), 1, request, &count);
-  generic_exchange_direction_nonblocking(Q, sizeof(bispinor), 2, request, &count);
-  generic_exchange_direction_nonblocking(Q, sizeof(bispinor), 3, request, &count);
+  generic_exchange_direction_nonblocking(Q, sizeof(bispinor), TUP, request, &count);
+  generic_exchange_direction_nonblocking(Q, sizeof(bispinor), XUP, request, &count);
+  generic_exchange_direction_nonblocking(Q, sizeof(bispinor), YUP, request, &count);
+  generic_exchange_direction_nonblocking(Q, sizeof(bispinor), ZUP, request, &count);
 
 //  computing backward
   for (ix=0;ix<VOLUME;ix++)
   {
 // intermediate buffers for storing backward connections : U_mu( x-mu)^dagg psi(x-mu)
-    rr4 = &(g_bispinor_field[16][ix]);
-    rr5 = &(g_bispinor_field[17][ix]);
-    rr6 = &(g_bispinor_field[18][ix]);
-    rr7 = &(g_bispinor_field[19][ix]);
+    rr4 = vm1 + ix;
+    rr5 = vm2 + ix;
+    rr6 = vm3 + ix;
+    rr7 = vm4 + ix;
 
     _bispinor_null(*rr4);
     _bispinor_null(*rr5);
@@ -335,19 +378,19 @@ void D_psi_BSM2f(bispinor * const P, bispinor * const Q){
     s  = (bispinor *) Q + ix;
 
 //  Direction 0 -
-    upm = &g_gauge_field[ix][0];
+    upm = &g_gauge_field[ix][TUP];
     padd(rr7, s, upm, HOP_DN, 0.5*phase_0);
 
 //  Direction 1 -
-    upm = &g_gauge_field[ix][1];
+    upm = &g_gauge_field[ix][XUP];
     padd(rr6, s, upm, HOP_DN, 0.5*phase_1);
 
 //  Direction 2 -
-    upm = &g_gauge_field[ix][2];
+    upm = &g_gauge_field[ix][YUP];
     padd(rr5, s, upm, HOP_DN, 0.5*phase_2);
 
 //  Direction 3 -
-    upm = &g_gauge_field[ix][3];
+    upm = &g_gauge_field[ix][ZUP];
     padd(rr4, s, upm, HOP_DN, 0.5*phase_3);
   }
   
@@ -356,19 +399,19 @@ void D_psi_BSM2f(bispinor * const P, bispinor * const Q){
 //gathering backward
 
   count=0;
-  generic_exchange_direction_nonblocking(g_bispinor_field[19], sizeof(bispinor), 7, request, &count);
-  generic_exchange_direction_nonblocking(g_bispinor_field[18], sizeof(bispinor), 6, request, &count);
-  generic_exchange_direction_nonblocking(g_bispinor_field[17], sizeof(bispinor), 5, request, &count);
-  generic_exchange_direction_nonblocking(g_bispinor_field[16], sizeof(bispinor), 4, request, &count);
+  generic_exchange_direction_nonblocking(vm4, sizeof(bispinor), TDOWN, request, &count);
+  generic_exchange_direction_nonblocking(vm3, sizeof(bispinor), XDOWN, request, &count);
+  generic_exchange_direction_nonblocking(vm2, sizeof(bispinor), YDOWN, request, &count);
+  generic_exchange_direction_nonblocking(vm1, sizeof(bispinor), ZDOWN, request, &count);
 
 //computing forward
   for (ix=0;ix<VOLUME;ix++)
   {
 // intermediate buffers for storing forward connections : U_mu(x) psi(x+mu)
-    rr0 = &(g_bispinor_field[12][ix]);
-    rr1 = &(g_bispinor_field[13][ix]);
-    rr2 = &(g_bispinor_field[14][ix]);
-    rr3 = &(g_bispinor_field[15][ix]);
+    rr0 = vp1 + ix;
+    rr1 = vp2 + ix;
+    rr2 = vp3 + ix;
+    rr3 = vp4 + ix;
 
 // intermedieate buffer for multiplication with gamma_mu 
     _bispinor_null(*rr0);
@@ -377,23 +420,23 @@ void D_psi_BSM2f(bispinor * const P, bispinor * const Q){
     _bispinor_null(*rr3);
 
 //  Direction 0 +
-    upm = &g_gauge_field[ix][0];
-    spm = (bispinor *) Q + g_iup[ix][0];
+    upm = &g_gauge_field[ix][TUP];
+    spm = (bispinor *) Q + g_iup[ix][TUP];
     padd(rr0, spm,  upm, HOP_UP, 0.5*phase_0);
 
 //  Direction 1 +
-    upm = &g_gauge_field[ix][1];
-    spm = (bispinor *) Q + g_iup[ix][1];
+    upm = &g_gauge_field[ix][XUP];
+    spm = (bispinor *) Q + g_iup[ix][XUP];
     padd(rr1, spm,  upm, HOP_UP, 0.5*phase_1);
 
 //  Direction 2 +
-    upm = &g_gauge_field[ix][2];
-    spm = (bispinor *) Q + g_iup[ix][2];
+    upm = &g_gauge_field[ix][YUP];
+    spm = (bispinor *) Q + g_iup[ix][YUP];
     padd(rr2, spm,  upm, HOP_UP, 0.5*phase_2);
 
 //  Direction 3 +
-    upm = &g_gauge_field[ix][3];
-    spm = (bispinor *) Q + g_iup[ix][3];
+    upm = &g_gauge_field[ix][ZUP];
+    spm = (bispinor *) Q + g_iup[ix][ZUP];
     padd(rr3, spm,  upm, HOP_UP, 0.5*phase_3);
 
   }
@@ -408,16 +451,16 @@ void D_psi_BSM2f(bispinor * const P, bispinor * const Q){
     _bispinor_null(*rr);
 
 // intermediate buffers for storing backward connections : U_mu( x )^dagg psi(x+mu)
-    rr0 = &(g_bispinor_field[12][ix]);
-    rr1 = &(g_bispinor_field[13][ix]);
-    rr2 = &(g_bispinor_field[14][ix]);
-    rr3 = &(g_bispinor_field[15][ix]);
+    rr0 = vp1 + ix;
+    rr1 = vp2 + ix;
+    rr2 = vp3 + ix;
+    rr3 = vp4 + ix;
 
 // intermediate buffers for storing backward connections : U_mu( x-mu)^dagg psi(x-mu)
-    rr4 = &(g_bispinor_field[16][g_idn[ix][3]]);
-    rr5 = &(g_bispinor_field[17][g_idn[ix][2]]);
-    rr6 = &(g_bispinor_field[18][g_idn[ix][1]]);
-    rr7 = &(g_bispinor_field[19][g_idn[ix][0]]);
+    rr4 = vm1 + g_idn[ix][ZUP];
+    rr5 = vm2 + g_idn[ix][YUP];
+    rr6 = vm3 + g_idn[ix][XUP];
+    rr7 = vm4 + g_idn[ix][TUP];
 
     _bispinor_null( stmp2 );
     _bispinor_add_mul( stmp2, +1.0, *rr0 );
@@ -444,25 +487,25 @@ void D_psi_BSM2f(bispinor * const P, bispinor * const Q){
 
 //start gathering forward
   count=0;
-  generic_exchange_direction_nonblocking(g_bispinor_field[12], sizeof(bispinor), 0, request, &count);
-  generic_exchange_direction_nonblocking(g_bispinor_field[13], sizeof(bispinor), 1, request, &count);
-  generic_exchange_direction_nonblocking(g_bispinor_field[14], sizeof(bispinor), 2, request, &count);
-  generic_exchange_direction_nonblocking(g_bispinor_field[15], sizeof(bispinor), 3, request, &count);
+  generic_exchange_direction_nonblocking(vp1, sizeof(bispinor), TUP, request, &count);
+  generic_exchange_direction_nonblocking(vp2, sizeof(bispinor), XUP, request, &count);
+  generic_exchange_direction_nonblocking(vp3, sizeof(bispinor), YUP, request, &count);
+  generic_exchange_direction_nonblocking(vp4, sizeof(bispinor), ZUP, request, &count);
 
 
 //start computing backward
   for (ix=0;ix<VOLUME;ix++)
   {
 // intermediate buffers for storing backward connections : U_mu( x-mu)^dagg psi(x-mu)
-    rr4 = &(g_bispinor_field[16][g_idn[ix][3]]);
-    rr5 = &(g_bispinor_field[17][g_idn[ix][2]]);
-    rr6 = &(g_bispinor_field[18][g_idn[ix][1]]);
-    rr7 = &(g_bispinor_field[19][g_idn[ix][0]]);
+    rr4 = vm1 + g_idn[ix][ZUP];
+    rr5 = vm2 + g_idn[ix][YUP];
+    rr6 = vm3 + g_idn[ix][XUP];
+    rr7 = vm4 + g_idn[ix][TUP];
  
-    rrs0 =  &(g_bispinor_field[20][ix]);
-    rrs1 =  &(g_bispinor_field[21][ix]);
-    rrs2 =  &(g_bispinor_field[22][ix]);
-    rrs3 =  &(g_bispinor_field[23][ix]);
+    rrs0 =  v2m1 + ix;
+    rrs1 =  v2m2 + ix;
+    rrs2 =  v2m3 + ix;
+    rrs3 =  v2m4 + ix;
 
     _bispinor_null( *rrs0 );
     _bispinor_null( *rrs1 );
@@ -476,28 +519,28 @@ void D_psi_BSM2f(bispinor * const P, bispinor * const Q){
     phi[3] = g_scalar_field[3][ix];
 
 //  Direction 0 -
-    upm = &g_gauge_field[ix][0];
+    upm = &g_gauge_field[ix][TUP];
     _bispinor_null( stmp2 );
     padd(&stmp2, rr7,  upm, HOP_DN, 2.0*phase_0);
     Fadd( rrs0, &stmp2, phi, -0.125*rho_BSM, +1. );
 
 
 //  Direction 1 -
-    upm = &g_gauge_field[ix][1];
+    upm = &g_gauge_field[ix][XUP];
     _bispinor_null( stmp2 );
     padd(&stmp2, rr6, upm, HOP_DN, 2.0*phase_1);
     Fadd( rrs1, &stmp2, phi, -0.125*rho_BSM, +1. );
 
 
 //  Direction 2 -
-    upm = &g_gauge_field[ix][2];
+    upm = &g_gauge_field[ix][YUP];
     _bispinor_null( stmp2 );
     padd(&stmp2, rr5, upm, HOP_DN, 2.0*phase_2);
     Fadd( rrs2, &stmp2, phi, -0.125*rho_BSM, +1. );
 
 
 //  Direction 3 -
-    upm = &g_gauge_field[ix][3];
+    upm = &g_gauge_field[ix][ZUP];
     _bispinor_null( stmp2 );
     padd(&stmp2, rr4, upm, HOP_DN, 2.0*phase_3);
     Fadd( rrs3, &stmp2, phi, -0.125*rho_BSM, +1. );
@@ -507,19 +550,19 @@ void D_psi_BSM2f(bispinor * const P, bispinor * const Q){
 
 //gathering backward
   count=0;
-  generic_exchange_direction_nonblocking(g_bispinor_field[20], sizeof(bispinor), 7, request, &count);
-  generic_exchange_direction_nonblocking(g_bispinor_field[21], sizeof(bispinor), 6, request, &count);
-  generic_exchange_direction_nonblocking(g_bispinor_field[22], sizeof(bispinor), 5, request, &count);
-  generic_exchange_direction_nonblocking(g_bispinor_field[23], sizeof(bispinor), 4, request, &count);
+  generic_exchange_direction_nonblocking(v2m1, sizeof(bispinor), TDOWN, request, &count);
+  generic_exchange_direction_nonblocking(v2m2, sizeof(bispinor), XDOWN, request, &count);
+  generic_exchange_direction_nonblocking(v2m3, sizeof(bispinor), YDOWN, request, &count);
+  generic_exchange_direction_nonblocking(v2m4, sizeof(bispinor), ZDOWN, request, &count);
 
 //computing forward
   for (ix=0;ix<VOLUME;ix++)
   {
 // intermediate buffers for storing forward connections : U_mu(x) psi(x+mu)
-    rr0 = &(g_bispinor_field[12][g_iup[ix][0]]);
-    rr1 = &(g_bispinor_field[13][g_iup[ix][1]]);
-    rr2 = &(g_bispinor_field[14][g_iup[ix][2]]);
-    rr3 = &(g_bispinor_field[15][g_iup[ix][3]]);
+    rr0 = vp1 + g_iup[ix][TUP];
+    rr1 = vp2 + g_iup[ix][XUP];
+    rr2 = vp3 + g_iup[ix][YUP];
+    rr3 = vp4 + g_iup[ix][ZUP];
 
     for ( int mu=0; mu<4; mu++ )
     {
@@ -532,28 +575,28 @@ void D_psi_BSM2f(bispinor * const P, bispinor * const Q){
     rr = (bispinor *) P + ix;
 
 //  Direction 0 +
-    upm = &g_gauge_field[ix][0];
+    upm = &g_gauge_field[ix][TUP];
     _bispinor_null( stmp2 );
     padd( &stmp2, rr0, upm, HOP_UP, 2.0*phase_0);
-    Fadd( rr, &stmp2, phip[0], -0.125*rho_BSM, +1. );
+    Fadd( rr, &stmp2, phip[TUP], -0.125*rho_BSM, +1. );
 
 //  Direction 1 +
-    upm = &g_gauge_field[ix][1];
+    upm = &g_gauge_field[ix][XUP];
      _bispinor_null( stmp2 );
     padd( &stmp2, rr1, upm, HOP_UP, 2.0*phase_1);
-    Fadd( rr, &stmp2, phip[1], -0.125*rho_BSM, +1. );
+    Fadd( rr, &stmp2, phip[XUP], -0.125*rho_BSM, +1. );
 
 //  Direction 2 +
-    upm = &g_gauge_field[ix][2];
+    upm = &g_gauge_field[ix][YUP];
     _bispinor_null( stmp2 );
     padd( &stmp2, rr2, upm, HOP_UP, 2.0*phase_2);
-    Fadd( rr, &stmp2, phip[2], -0.125*rho_BSM, +1. );
+    Fadd( rr, &stmp2, phip[YUP], -0.125*rho_BSM, +1. );
 
 //  Direction 3 +
-    upm = &g_gauge_field[ix][3];
+    upm = &g_gauge_field[ix][ZUP];
     _bispinor_null( stmp2 );
     padd( &stmp2, rr3, upm, HOP_UP, 2.0*phase_3);
-    Fadd( rr, &stmp2, phip[3], -0.125*rho_BSM, +1. );
+    Fadd( rr, &stmp2, phip[ZUP], -0.125*rho_BSM, +1. );
   }
 
   MPI_Waitall( count, request, statuses);
@@ -584,10 +627,10 @@ void D_psi_BSM2f(bispinor * const P, bispinor * const Q){
     }
     
 // intermediate buffers for storing backward connections : U_mu( x-mu)^dagg psi(x-mu)
-    rr4 = &(g_bispinor_field[20][g_idn[ix][0]]);
-    rr5 = &(g_bispinor_field[21][g_idn[ix][1]]);
-    rr6 = &(g_bispinor_field[22][g_idn[ix][2]]);
-    rr7 = &(g_bispinor_field[23][g_idn[ix][3]]);
+    rr4 = v2m1 + g_idn[ix][TUP];
+    rr5 = v2m2 + g_idn[ix][XUP];
+    rr6 = v2m3 + g_idn[ix][YUP];
+    rr7 = v2m4 + g_idn[ix][ZUP];
 
     _bispinor_add_mul( *rr, +1.0, *rr4 );
     _bispinor_add_mul( *rr, +1.0, *rr5 );
@@ -597,10 +640,10 @@ void D_psi_BSM2f(bispinor * const P, bispinor * const Q){
     Fadd(rr, s, phi, eta_BSM, +1. );
 
     // tmpr += \sum_\mu (\rho_BSM/8) * F(x+-\mu)*Q
-    for( int mu=0; mu<4; mu++ ) {
-       Fadd(rr, s, phip[mu], 0.125*rho_BSM, +1. );
-       Fadd(rr, s, phim[mu], 0.125*rho_BSM, +1. );
-    }
+   for( int mu=0; mu<4; mu++ ) {
+      Fadd(rr, s, phip[mu], 0.125*rho_BSM, +1. );
+      Fadd(rr, s, phim[mu], 0.125*rho_BSM, +1. );
+   }
 
 
   } // end volume loop
@@ -650,19 +693,19 @@ void D_psi_dagger_BSM2f(bispinor * const P, bispinor * const Q){
 
 //start gathering forward
   int count=0;
-  generic_exchange_direction_nonblocking(Q, sizeof(bispinor), 0, request, &count);
-  generic_exchange_direction_nonblocking(Q, sizeof(bispinor), 1, request, &count);
-  generic_exchange_direction_nonblocking(Q, sizeof(bispinor), 2, request, &count);
-  generic_exchange_direction_nonblocking(Q, sizeof(bispinor), 3, request, &count);
+  generic_exchange_direction_nonblocking(Q, sizeof(bispinor), TUP, request, &count);
+  generic_exchange_direction_nonblocking(Q, sizeof(bispinor), XUP, request, &count);
+  generic_exchange_direction_nonblocking(Q, sizeof(bispinor), YUP, request, &count);
+  generic_exchange_direction_nonblocking(Q, sizeof(bispinor), ZUP, request, &count);
 
 //  computing backward
   for (ix=0;ix<VOLUME;ix++)
   {
 // intermediate buffers for storing backward connections : U_mu( x-mu)^dagg psi(x-mu)
-    rr4 = &(g_bispinor_field[16][ix]);
-    rr5 = &(g_bispinor_field[17][ix]);
-    rr6 = &(g_bispinor_field[18][ix]);
-    rr7 = &(g_bispinor_field[19][ix]);
+    rr4 = vm1 + ix;
+    rr5 = vm2 + ix;
+    rr6 = vm3 + ix;
+    rr7 = vm4 + ix;
 
     _bispinor_null(*rr4);
     _bispinor_null(*rr5);
@@ -673,19 +716,19 @@ void D_psi_dagger_BSM2f(bispinor * const P, bispinor * const Q){
     s  = (bispinor *) Q + ix;
 
 //  Direction 0 -
-    upm = &g_gauge_field[ix][0];
+    upm = &g_gauge_field[ix][TUP];
     padd(rr7, s, upm, HOP_DN, 0.5*phase_0);
 
 //  Direction 1 -
-    upm = &g_gauge_field[ix][1];
+    upm = &g_gauge_field[ix][XUP];
     padd(rr6, s, upm, HOP_DN, 0.5*phase_1);
 
 //  Direction 2 -
-    upm = &g_gauge_field[ix][2];
+    upm = &g_gauge_field[ix][YUP];
     padd(rr5, s, upm, HOP_DN, 0.5*phase_2);
 
 //  Direction 3 -
-    upm = &g_gauge_field[ix][3];
+    upm = &g_gauge_field[ix][ZUP];
     padd(rr4, s, upm, HOP_DN, 0.5*phase_3);
   }
 
@@ -703,10 +746,10 @@ void D_psi_dagger_BSM2f(bispinor * const P, bispinor * const Q){
   for (ix=0;ix<VOLUME;ix++)
   {
 // intermediate buffers for storing forward connections : U_mu(x) psi(x+mu)
-    rr0 = &(g_bispinor_field[12][ix]);
-    rr1 = &(g_bispinor_field[13][ix]);
-    rr2 = &(g_bispinor_field[14][ix]);
-    rr3 = &(g_bispinor_field[15][ix]);
+    rr0 = vp1 + ix;
+    rr1 = vp2 + ix;
+    rr2 = vp3 + ix;
+    rr3 = vp4 + ix;
 
 // intermedieate buffer for multiplication with gamma_mu 
     _bispinor_null(*rr0);
@@ -715,23 +758,23 @@ void D_psi_dagger_BSM2f(bispinor * const P, bispinor * const Q){
     _bispinor_null(*rr3);
 
 //  Direction 0 +
-    upm = &g_gauge_field[ix][0];
-    spm = (bispinor *) Q + g_iup[ix][0];
+    upm = &g_gauge_field[ix][TUP];
+    spm = (bispinor *) Q + g_iup[ix][TUP];
     padd(rr0, spm,  upm, HOP_UP, 0.5*phase_0);
 
 //  Direction 1 +
-    upm = &g_gauge_field[ix][1];
-    spm = (bispinor *) Q + g_iup[ix][1];
+    upm = &g_gauge_field[ix][XUP];
+    spm = (bispinor *) Q + g_iup[ix][XUP];
     padd(rr1, spm,  upm, HOP_UP, 0.5*phase_1);
 
 //  Direction 2 +
-    upm = &g_gauge_field[ix][2];
-    spm = (bispinor *) Q + g_iup[ix][2];
+    upm = &g_gauge_field[ix][YUP];
+    spm = (bispinor *) Q + g_iup[ix][YUP];
     padd(rr2, spm,  upm, HOP_UP, 0.5*phase_2);
 
 //  Direction 3 +
-    upm = &g_gauge_field[ix][3];
-    spm = (bispinor *) Q + g_iup[ix][3];
+    upm = &g_gauge_field[ix][ZUP];
+    spm = (bispinor *) Q + g_iup[ix][ZUP];
     padd(rr3, spm,  upm, HOP_UP, 0.5*phase_3);
 
   }
@@ -746,26 +789,21 @@ void D_psi_dagger_BSM2f(bispinor * const P, bispinor * const Q){
     _bispinor_null(*rr);
 
 // intermediate buffers for storing backward connections : U_mu( x )^dagg psi(x+mu)
-    rr0 = &(g_bispinor_field[12][ix]);
-    rr1 = &(g_bispinor_field[13][ix]);
-    rr2 = &(g_bispinor_field[14][ix]);
-    rr3 = &(g_bispinor_field[15][ix]);
+    rr0 = vp1 + ix;
+    rr1 = vp2 + ix;
+    rr2 = vp3 + ix;
+    rr3 = vp4 + ix;
 
 // intermediate buffers for storing backward connections : U_mu( x-mu)^dagg psi(x-mu)
-    rr4 = &(g_bispinor_field[16][g_idn[ix][3]]);
-    rr5 = &(g_bispinor_field[17][g_idn[ix][2]]);
-    rr6 = &(g_bispinor_field[18][g_idn[ix][1]]);
-    rr7 = &(g_bispinor_field[19][g_idn[ix][0]]);
+    rr4 = vm1 + g_idn[ix][ZUP];
+    rr5 = vm2 + g_idn[ix][YUP];
+    rr6 = vm3 + g_idn[ix][XUP];
+    rr7 = vm4 + g_idn[ix][TUP];
 
     _bispinor_null( stmp2 );
     _bispinor_add_mul( stmp2, -1.0, *rr0 );
-//    printf("endgammamuDmu time positive direction source= %e %e  \n", creal(rr0->sp_up.s0.c0),cimag(rr0->sp_up.s0.c0) );
     _bispinor_add_mul( stmp2, +1.0, *rr7 );
-//    printf("endgammamuDmu time negative direction source= %e %e  \n", creal(rr7->sp_up.s0.c0),cimag(rr7->sp_up.s0.c0) );
     _bispinor_add_mult_gamma0(rr, &stmp2 );
-//    printf("endgammamuDmu summ time direction source= %e %e  \n", creal(stmp2.sp_up.s0.c0),cimag(stmp2.sp_up.s0.c0) );
-//    printf("endgammamuDmu rrr time direction source= %e %e  \n", creal(rr->sp_up.s0.c0),cimag(rr->sp_up.s0.c0) );
-
 
     _bispinor_null( stmp2 );
     _bispinor_add_mul( stmp2, -1.0, *rr1 );
@@ -791,24 +829,24 @@ void D_psi_dagger_BSM2f(bispinor * const P, bispinor * const Q){
 
 //start gathering forward
   count=0;
-  generic_exchange_direction_nonblocking(g_bispinor_field[12], sizeof(bispinor), 0, request, &count);
-  generic_exchange_direction_nonblocking(g_bispinor_field[13], sizeof(bispinor), 1, request, &count);
-  generic_exchange_direction_nonblocking(g_bispinor_field[14], sizeof(bispinor), 2, request, &count);
-  generic_exchange_direction_nonblocking(g_bispinor_field[15], sizeof(bispinor), 3, request, &count);
+  generic_exchange_direction_nonblocking(vp1, sizeof(bispinor), TUP, request, &count);
+  generic_exchange_direction_nonblocking(vp2, sizeof(bispinor), XUP, request, &count);
+  generic_exchange_direction_nonblocking(vp3, sizeof(bispinor), YUP, request, &count);
+  generic_exchange_direction_nonblocking(vp4, sizeof(bispinor), ZUP, request, &count);
 
 //start computing backward
   for (ix=0;ix<VOLUME;ix++)
   {
 // intermediate buffers for storing backward connections : U_mu( x-mu)^dagg psi(x-mu)
-    rr4 = &(g_bispinor_field[16][g_idn[ix][3]]);
-    rr5 = &(g_bispinor_field[17][g_idn[ix][2]]);
-    rr6 = &(g_bispinor_field[18][g_idn[ix][1]]);
-    rr7 = &(g_bispinor_field[19][g_idn[ix][0]]);
+    rr4 = vm1 + g_idn[ix][ZUP];
+    rr5 = vm2 + g_idn[ix][YUP];
+    rr6 = vm3 + g_idn[ix][XUP];
+    rr7 = vm4 + g_idn[ix][TUP];
 
-    rrs0 =  &(g_bispinor_field[20][ix]);
-    rrs1 =  &(g_bispinor_field[21][ix]);
-    rrs2 =  &(g_bispinor_field[22][ix]);
-    rrs3 =  &(g_bispinor_field[23][ix]);
+    rrs0 = v2m1 + ix;
+    rrs1 = v2m2 + ix;
+    rrs2 = v2m3 + ix;
+    rrs3 = v2m4 + ix;
 
     _bispinor_null( *rrs0 );
     _bispinor_null( *rrs1 );
@@ -822,28 +860,28 @@ void D_psi_dagger_BSM2f(bispinor * const P, bispinor * const Q){
     phi[3] = g_scalar_field[3][ix];
 
 //  Direction 0 -
-    upm = &g_gauge_field[ix][0];
+    upm = &g_gauge_field[ix][TUP];
     _bispinor_null( stmp2 );
     padd(&stmp2, rr7,  upm, HOP_DN, 2.0*phase_0);
     Fadd( rrs0, &stmp2, phi, -0.125*rho_BSM, -1. );
 
 
 //  Direction 1 -
-    upm = &g_gauge_field[ix][1];
+    upm = &g_gauge_field[ix][XUP];
     _bispinor_null( stmp2 );
     padd(&stmp2, rr6, upm, HOP_DN, 2.0*phase_1);
     Fadd( rrs1, &stmp2, phi, -0.125*rho_BSM, -1. );
 
 
 //  Direction 2 -
-    upm = &g_gauge_field[ix][2];
+    upm = &g_gauge_field[ix][YUP];
     _bispinor_null( stmp2 );
     padd(&stmp2, rr5, upm, HOP_DN, 2.0*phase_2);
     Fadd( rrs2, &stmp2, phi, -0.125*rho_BSM, -1. );
 
 
 //  Direction 3 -
-    upm = &g_gauge_field[ix][3];
+    upm = &g_gauge_field[ix][ZUP];
     _bispinor_null( stmp2 );
     padd(&stmp2, rr4, upm, HOP_DN, 2.0*phase_3);
     Fadd( rrs3, &stmp2, phi, -0.125*rho_BSM, -1. );
@@ -853,19 +891,20 @@ void D_psi_dagger_BSM2f(bispinor * const P, bispinor * const Q){
 
 //gathering backward
   count=0;
-  generic_exchange_direction_nonblocking(g_bispinor_field[20], sizeof(bispinor), 7, request, &count);
-  generic_exchange_direction_nonblocking(g_bispinor_field[21], sizeof(bispinor), 6, request, &count);
-  generic_exchange_direction_nonblocking(g_bispinor_field[22], sizeof(bispinor), 5, request, &count);
-  generic_exchange_direction_nonblocking(g_bispinor_field[23], sizeof(bispinor), 4, request, &count);
+
+  generic_exchange_direction_nonblocking(v2m1, sizeof(bispinor), TDOWN, request, &count);
+  generic_exchange_direction_nonblocking(v2m2, sizeof(bispinor), XDOWN, request, &count);
+  generic_exchange_direction_nonblocking(v2m3, sizeof(bispinor), YDOWN, request, &count);
+  generic_exchange_direction_nonblocking(v2m4, sizeof(bispinor), ZDOWN, request, &count);
 
 //computing forward
   for (ix=0;ix<VOLUME;ix++)
   {
 // intermediate buffers for storing forward connections : U_mu(x) psi(x+mu)
-    rr0 = &(g_bispinor_field[12][g_iup[ix][0]]);
-    rr1 = &(g_bispinor_field[13][g_iup[ix][1]]);
-    rr2 = &(g_bispinor_field[14][g_iup[ix][2]]);
-    rr3 = &(g_bispinor_field[15][g_iup[ix][3]]);
+    rr0 = vp1 + g_iup[ix][TUP];
+    rr1 = vp2 + g_iup[ix][XUP];
+    rr2 = vp3 + g_iup[ix][YUP];
+    rr3 = vp4 + g_iup[ix][ZUP];
 
     for ( int mu=0; mu<4; mu++ )
     {
@@ -878,28 +917,28 @@ void D_psi_dagger_BSM2f(bispinor * const P, bispinor * const Q){
     rr = (bispinor *) P + ix;
 
 //  Direction 0 +
-    upm = &g_gauge_field[ix][0];
+    upm = &g_gauge_field[ix][TUP];
     _bispinor_null( stmp2 );
     padd( &stmp2, rr0, upm, HOP_UP, 2.0*phase_0);
-    Fadd( rr, &stmp2, phip[0], -0.125*rho_BSM, -1. );
+    Fadd( rr, &stmp2, phip[TUP], -0.125*rho_BSM, -1. );
 
 //  Direction 1 +
-    upm = &g_gauge_field[ix][1];
+    upm = &g_gauge_field[ix][XUP];
      _bispinor_null( stmp2 );
     padd( &stmp2, rr1, upm, HOP_UP, 2.0*phase_1);
-    Fadd( rr, &stmp2, phip[1], -0.125*rho_BSM, -1. );
+    Fadd( rr, &stmp2, phip[XUP], -0.125*rho_BSM, -1. );
 
 //  Direction 2 +
-    upm = &g_gauge_field[ix][2];
+    upm = &g_gauge_field[ix][YUP];
     _bispinor_null( stmp2 );
     padd( &stmp2, rr2, upm, HOP_UP, 2.0*phase_2);
-    Fadd( rr, &stmp2, phip[2], -0.125*rho_BSM, -1. );
+    Fadd( rr, &stmp2, phip[YUP], -0.125*rho_BSM, -1. );
 
 //  Direction 3 +
-    upm = &g_gauge_field[ix][3];
+    upm = &g_gauge_field[ix][ZUP];
     _bispinor_null( stmp2 );
     padd( &stmp2, rr3, upm, HOP_UP, 2.0*phase_3);
-    Fadd( rr, &stmp2, phip[3], -0.125*rho_BSM, -1. );
+    Fadd( rr, &stmp2, phip[ZUP], -0.125*rho_BSM, -1. );
   }
 
   MPI_Waitall( count, request, statuses);
@@ -931,17 +970,17 @@ void D_psi_dagger_BSM2f(bispinor * const P, bispinor * const Q){
     }
 
 // intermediate buffers for storing backward connections : U_mu( x-mu)^dagg psi(x-mu)
-    rr4 = &(g_bispinor_field[20][g_idn[ix][0]]);
-    rr5 = &(g_bispinor_field[21][g_idn[ix][1]]);
-    rr6 = &(g_bispinor_field[22][g_idn[ix][2]]);
-    rr7 = &(g_bispinor_field[23][g_idn[ix][3]]);
+    rr4 = v2m1 + g_idn[ix][TUP];
+    rr5 = v2m2 + g_idn[ix][XUP];
+    rr6 = v2m3 + g_idn[ix][YUP];
+    rr7 = v2m4 + g_idn[ix][ZUP];
 
     _bispinor_add_mul( *rr, +1.0, *rr4 );
     _bispinor_add_mul( *rr, +1.0, *rr5 );
     _bispinor_add_mul( *rr, +1.0, *rr6 );
     _bispinor_add_mul( *rr, +1.0, *rr7 );
 
-    Fadd(rr, s, phi, eta_BSM, -1. );
+    Fadd(rr, s, phi, eta_BSM, - 1. );
 
     // tmpr += \sum_\mu (\rho_BSM/8) * F(x+-\mu)*Q
     for( int mu=0; mu<4; mu++ ) {
@@ -953,23 +992,12 @@ void D_psi_dagger_BSM2f(bispinor * const P, bispinor * const Q){
   } // end volume loop
   free(request);
 }
-/* Q2_psi_BSM2b acts on bispinor fields */
+/* Q2_psi_BSM2f acts on bispinor fields */
 void Q2_psi_BSM2f(bispinor * const P, bispinor * const Q){
 
   /* TODO: the use of [3] has to be changed to avoid future conflicts */
   D_psi_dagger_BSM2f(g_bispinor_field[3] , Q);
-//int ix;
-//  bispinor *spm;
-//  for (ix=0; ix<VOLUME; ++ix){
-//      spm=(bispinor*)g_bispinor_field[3]+ix;
-//      printf("Forward source= %e %e  \n", creal(spm->sp_up.s0.c0),cimag(spm->sp_up.s0.c0) );
-//  }
   D_psi_BSM2f(P, g_bispinor_field[3]);
-//  for (ix=0; ix<VOLUME; ++ix){
-//      spm=(bispinor*)P+ix;
-//      printf("secondForward source= %e %e  \n", creal(spm->sp_up.s0.c0),cimag(spm->sp_up.s0.c0) );
-//  }
-
   // only use these cycles if the m0_BSM parameter is really nonzero...
   if( fabs(m0_BSM) > 1.e-10 ){
     /* Q and P are spinor, not bispinor ==> made a cast */

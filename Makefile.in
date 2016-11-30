@@ -115,7 +115,7 @@ ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir
 	${COMPILE} ${OPTARGS} -c $<
 
 ${PROGRAMS}: %: %.o libhmc.a $(SUBDIRS)
-	 ${LINK} $@.o $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS) //usr/lib/libblas.so.3
+	 ${LINK} $@.o $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS) -lblas -llapack
 
 # The rules for unit tests are kept in a separate file for tidyness
 include ${top_srcdir}/Makefile.tests

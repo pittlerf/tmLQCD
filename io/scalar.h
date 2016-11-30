@@ -25,5 +25,6 @@
 
 int read_scalar_field(char * filename, scalar ** const sf);
 int read_scalar_field_parallel(char * filename, scalar ** const sf);
+int write_eigenvectors_parallel( char *filename, _Complex double *evecs );
 
 #endif
