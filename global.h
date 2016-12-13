@@ -73,6 +73,8 @@ EXTERN double eta_BSM, rho_BSM, m0_BSM;
 #define YDOWN 5
 #define XDOWN 6
 #define TDOWN 7
+#define NODIR 8
+EXTERN scalar ** smearedscalar;
 
 EXTERN int DUM_DERI, DUM_SOLVER, DUM_MATRIX;
 EXTERN int NO_OF_SPINORFIELDS;

@@ -147,6 +147,14 @@ typedef double scalar;
   _vector_add_mul( (r).s2, (c), (s).s2);        \
   _vector_add_mul( (r).s3, (c), (s).s3);        
 
+#define _spinor_mul(r,c,s)                  \
+  _vector_mul( (r).s0, (c), (s).s0);        \
+  _vector_mul( (r).s1, (c), (s).s1);        \
+  _vector_mul( (r).s2, (c), (s).s2);        \
+  _vector_mul( (r).s3, (c), (s).s3);        
+
+
+
 #define _bispinor_add_mul(r,c,s)                \
   _spinor_add_mul( (r).sp_up, (c), (s).sp_up ); \
   _spinor_add_mul( (r).sp_dn, (c), (s).sp_dn );
@@ -157,6 +165,17 @@ typedef double scalar;
   (r).c0 += I*(c)*(s).c0; \
   (r).c1 += I*(c)*(s).c1; \
   (r).c2 += I*(c)*(s).c2;
+
+#define _vector_i_mul(r,c,s) \
+  (r).c0 = I*(c)*(s).c0; \
+  (r).c1 = I*(c)*(s).c1; \
+  (r).c2 = I*(c)*(s).c2;
+
+#define _spinor_i_mul(r,c,s) \
+  _vector_i_mul( (r).s0, (c), (s).s0); \
+  _vector_i_mul( (r).s1, (c), (s).s1); \
+  _vector_i_mul( (r).s2, (c), (s).s2); \
+  _vector_i_mul( (r).s3, (c), (s).s3); 
 
 #if ((defined SSE2)||(defined SSE3))
 

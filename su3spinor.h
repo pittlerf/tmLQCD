@@ -113,6 +113,18 @@
  * Stefano Capitani <stefano@ifh.de>, June 2003 
  */
 
+#define _vector_mul_complex(r,c,s) \
+   (r).c0 = c * (s).c0; \
+   (r).c1 = c * (s).c1; \
+   (r).c2 = c * (s).c2; \
+
+#define _vector_add_mul_complex(r,c,s) \
+   (r).c0 += c * (s).c0; \
+   (r).c1 += c * (s).c1; \
+   (r).c2 += c * (s).c2; \
+
+
+
 #define _spinor_mul_complex(r,c,s) \
    (r).s0.c0 = c * (s).s0.c0; \
    (r).s0.c1 = c * (s).s0.c1; \
@@ -126,6 +138,21 @@
    (r).s3.c0 = c * (s).s3.c0; \
    (r).s3.c1 = c * (s).s3.c1; \
    (r).s3.c2 = c * (s).s3.c2;
+
+#define _spinor_add_mul_complex(r,c,s) \
+   (r).s0.c0 += c * (s).s0.c0; \
+   (r).s0.c1 += c * (s).s0.c1; \
+   (r).s0.c2 += c * (s).s0.c2; \
+   (r).s1.c0 += c * (s).s1.c0; \
+   (r).s1.c1 += c * (s).s1.c1; \
+   (r).s1.c2 += c * (s).s1.c2; \
+   (r).s2.c0 += c * (s).s2.c0; \
+   (r).s2.c1 += c * (s).s2.c1; \
+   (r).s2.c2 += c * (s).s2.c2; \
+   (r).s3.c0 += c * (s).s3.c0; \
+   (r).s3.c1 += c * (s).s3.c1; \
+   (r).s3.c2 += c * (s).s3.c2;
+
 
 /* square norm of spinor s */
 
