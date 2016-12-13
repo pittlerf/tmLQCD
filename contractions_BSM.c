@@ -446,34 +446,35 @@ void trace_in_spinor( _Complex double *dest, _Complex double *src, int spinorind
 }
 void trace_in_color(_Complex double *dest, bispinor *src, int colorindex){
    if      ( colorindex == 0 ){
-     dest[0]+= src->sp_dn.s0.c0;
-     dest[1]+= src->sp_dn.s1.c0;
-     dest[2]+= src->sp_dn.s2.c0;
-     dest[3]+= src->sp_dn.s3.c0;
-     dest[4]+= src->sp_up.s0.c0;
-     dest[5]+= src->sp_up.s1.c0;
-     dest[6]+= src->sp_up.s2.c0;
-     dest[7]+= src->sp_up.s3.c0;
+     dest[0]+= src->sp_up.s0.c0;
+     dest[1]+= src->sp_up.s1.c0;
+     dest[2]+= src->sp_up.s2.c0;
+     dest[3]+= src->sp_up.s3.c0;
+     dest[4]+= src->sp_dn.s0.c0;
+     dest[5]+= src->sp_dn.s1.c0;
+     dest[6]+= src->sp_dn.s2.c0;
+     dest[7]+= src->sp_dn.s3.c0;
+
    }
    else if ( colorindex == 1 ){
-     dest[0]+= src->sp_dn.s0.c1;
-     dest[1]+= src->sp_dn.s1.c1;
-     dest[2]+= src->sp_dn.s2.c1;
-     dest[3]+= src->sp_dn.s3.c1;
-     dest[4]+= src->sp_up.s0.c1;
-     dest[5]+= src->sp_up.s1.c1;
-     dest[6]+= src->sp_up.s2.c1;
-     dest[7]+= src->sp_up.s3.c1;
+     dest[0]+= src->sp_up.s0.c1;
+     dest[1]+= src->sp_up.s1.c1;
+     dest[2]+= src->sp_up.s2.c1;
+     dest[3]+= src->sp_up.s3.c1;
+     dest[4]+= src->sp_dn.s0.c1;
+     dest[5]+= src->sp_dn.s1.c1;
+     dest[6]+= src->sp_dn.s2.c1;
+     dest[7]+= src->sp_dn.s3.c1;
    }
    else if ( colorindex == 2 ){
-     dest[0]+= src->sp_dn.s0.c0;
-     dest[1]+= src->sp_dn.s1.c0;
-     dest[2]+= src->sp_dn.s2.c0;
-     dest[3]+= src->sp_dn.s3.c0;
-     dest[4]+= src->sp_up.s0.c0;
-     dest[5]+= src->sp_up.s1.c0;
-     dest[6]+= src->sp_up.s2.c0;
-     dest[7]+= src->sp_up.s3.c0;
+     dest[0]+= src->sp_up.s0.c0;
+     dest[1]+= src->sp_up.s1.c0;
+     dest[2]+= src->sp_up.s2.c0;
+     dest[3]+= src->sp_up.s3.c0;
+     dest[4]+= src->sp_dn.s0.c0;
+     dest[5]+= src->sp_dn.s1.c0;
+     dest[6]+= src->sp_dn.s2.c0;
+     dest[7]+= src->sp_dn.s3.c0;
    }
 }
 void trace_in_space(_Complex double *dest, _Complex double *source, int idx){
@@ -522,12 +523,15 @@ void density_density_1234( bispinor ** propfields, int type_1234 ){
       paulitrace[i]=0.;
 
    for (tauindex=0; tauindex<3; ++tauindex){
+
+//Trace over up and down flavors
       for (i=0; i<T_global; ++i)
          flavortrace[i]=0.;
 
       for (f1=0; f1<2; ++f1){
 
-//Trace over the spinor indices
+//Trace over the spinor indices you have to trace only over those two spinor 
+//component that appear in the final spinor
          for (i=0; i<2*T_global; ++i)
             spinortrace[i]=0.;
 
@@ -536,7 +540,8 @@ void density_density_1234( bispinor ** propfields, int type_1234 ){
 //Trace over the spatial indices
             for (i=0; i<8*T_global; ++i)
                spacetrace[i]=0.;
-            for (ix = 0; ix< VOLUME; ++ix){
+  
+          for (ix = 0; ix< VOLUME; ++ix){
 
 //Trace over the color indices for each sites
 
@@ -587,10 +592,11 @@ void density_density_1234( bispinor ** propfields, int type_1234 ){
 */
                   multiply_backward_propagator(&running, propfields, &running, ix, NODIR );
 
+                  //delta( color component of bispinor running, c1) for all spinor and flavor indices
                   trace_in_color(colortrace,&running,c1);
 
                }  //End of trace color
-
+               //sum over all lattice sites the result of the color trace
                trace_in_space(spacetrace,colortrace,ix);
 
             } //End of trace space
@@ -601,7 +607,7 @@ void density_density_1234( bispinor ** propfields, int type_1234 ){
                MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
                spacetrace[i]= tmp;
             }
-
+            // delta (spinor components of spacetrace, s1) for all time slices and flavor indices
             trace_in_spinor(spinortrace, spacetrace, s1);
 
          }//End of trace in spinor space
@@ -617,9 +623,10 @@ void density_density_1234( bispinor ** propfields, int type_1234 ){
          else if ( type_1234 == TYPE_4 && type_1234 == TYPE_2 ){
            taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER  );
          }
-
+         //delta(flavor component in spinortrace, f1) for all time slices
          trace_in_flavor( flavortrace, spinortrace, f1 );
-      } //End of trace in flavor space
+      }  //End of trace in flavor space
+      //sum for all Pauli matrices
       for (i=0;i<T_global; ++i)
          paulitrace[i]+=flavortrace[i];
    } //End of trace for Pauli matrices
@@ -771,11 +778,11 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
                   else if ( type_12 == TYPE_II ){
                     multiply_backward_propagator(&running, propfields, &running, ix,NODIR);
                   }
-
+                  //delta( color component of bispinor running, c1) for all spinor and flavor indices
                   trace_in_color(colortrace,&running,c1);
 
                }  //End of trace color
-
+               //sum over all lattice sites the result of the color trace
                trace_in_space(spacetrace,colortrace,ix);
 
             } //End of trace space
@@ -786,7 +793,7 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
                MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
                spacetrace[i]= tmp;
             }
-
+            // delta (spinor components of spacetrace, s1) for all time slices and flavor components
             trace_in_spinor(spinortrace, spacetrace, s1);
 
          }//End of trace in spinor space
@@ -805,9 +812,10 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
          else if ( type_ab == TYPE_B){
            taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER  );
          }
- 
+         //delta(flavor component in spinortrace, f1) for all time slices 
          trace_in_flavor( flavortrace, spinortrace, f1 );
       } //End of trace in flavor space
+      //sum for all Pauli matrices
       for (i=0;i<T_global; ++i)
          paulitrace[i]+=flavortrace[i];
    } //End of trace for Pauli matrices
@@ -952,10 +960,10 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
        TYPE III.2.a OR  III.2.b     S(ytilde, x-0)*tau_i*phi(x)*               (1+gamma5)/2 *  S(x-0,ytilde)
 */
                   multiply_backward_propagator(&running, propfields, &running, ix,-1);
-                  
+                  //delta( color component of bispinor running, c1) for all spinor and flavor indices                  
                   trace_in_color(colortrace, &running, c1 );
                } //End of trace color
-
+               //sum over all lattice sites the result of the color trace
                trace_in_space( spacetrace, colortrace, ix);
             }  //End of trace in space
 
@@ -965,7 +973,7 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
                MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
                spacetrace[i]= tmp;
             }
-
+            // delta (spinor components of spacetrace, s1) for all time slices and flavor indices 
             trace_in_spinor(spinortrace, spacetrace, s1);
 
          } //End of trace in spinor space
@@ -984,11 +992,11 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
          else if ( type_ab == TYPE_B){
            taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER  );
          }
-
+         //delta(flavor component in spinortrace, f1) for all time slices
          trace_in_flavor( flavortrace, spinortrace, f1 );
 
       } //End of trace in flavor space
-
+      //sum for all Pauli matrices
       for (i=0;i<T_global; ++i)
          paulitrace[i]+=flavortrace[i];
    } //End of trace for Pauli matrices
@@ -1175,7 +1183,6 @@ Creating U^dagger(x-0)*U^dagger(x-2*0)*S(x-2*0,ytilde) in three steps:
 */
                   taui_scalarfield_spinor( &running, &running, GAMMA_UP, tauindex, ix, TDOWN, NO_DAGG);
 
-
 /*   
        TYPE IV.1.a OR  IV.1.b   S(ytilde, x)*tau_i*phi(x)*                                  (1+gamma5)/2*S(x+   ,ytilde)
        TYPE IV.2.a OR  IV.2.b   S(ytilde, x)*tau_i*phi(x)*  U0^dagger(x-0)*U0^dagger(x-2*0)*(1+gamma5)/2*S(x-2*0,ytilde)
@@ -1190,9 +1197,10 @@ Creating U^dagger(x-0)*U^dagger(x-2*0)*S(x-2*0,ytilde) in three steps:
        TYPE IV.2.a tau_i*phi(ytilde)*         S(ytilde, x)*tau_i*phi(x)*  U0^dagger(x-0)*U0^dagger(x-2*0)*(1+gamma5)/2*S(x-2*0,ytilde)
        TYPE IV.2.b phi^dagger(ytilde)*tau_i*  S(ytilde, x)*tau_i*phi(x)*  U0^dagger(x-0)*U0^dagger(x-2*0)*(1+gamma5)/2*S(x-2*0,ytilde)
 */
+                  //delta( color component of bispinor running, c1) for all spinor and flavor indices
                   trace_in_color(colortrace, &running, c1 );
                } //End of trace color
-
+               //sum over all lattice sites the result of the color trace
                trace_in_space( spacetrace, colortrace, ix);
             }  //End of trace in space
 
@@ -1202,7 +1210,7 @@ Creating U^dagger(x-0)*U^dagger(x-2*0)*S(x-2*0,ytilde) in three steps:
                MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
                spacetrace[i]= tmp;
             }
-
+            // delta (spinor components of spacetrace, s1) for all time slices and flavor indices
             trace_in_spinor(spinortrace, spacetrace, s1);
 
          } //End of trace in spinor space
@@ -1213,11 +1221,11 @@ Creating U^dagger(x-0)*U^dagger(x-2*0)*S(x-2*0,ytilde) in three steps:
          else if ( type_ab == TYPE_B){
            taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER  );
          }
-
+         //delta(flavor component in spinortrace, f1) for all time slices
          trace_in_flavor( flavortrace, spinortrace, f1 );
 
       } //End of trace in flavor space
-
+      //sum for all Pauli matrices
       for (i=0;i<T_global; ++i)
          paulitrace[i]+=flavortrace[i];
    } //End of trace for Pauli matrices
@@ -1391,9 +1399,10 @@ void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int 
        TYPE V.2.b                 phi^dagger(ytilde)*tau_i*(1-gamma5)/2* S(ytilde, x-0)*tau_i*phi(x)*               (1+gamma5)/2 *  S(x-0,ytilde)
 
 */
+                  //delta( color component of bispinor running, c1) for all spinor and flavor indices
                   trace_in_color(colortrace, &running, c1 );
                } //End of trace color
-
+               //sum over all lattice sites the result of the color trace
                trace_in_space( spacetrace, colortrace, ix);
             }  //End of trace in space
 
@@ -1403,7 +1412,7 @@ void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int 
                MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
                spacetrace[i]= tmp;
             }
-
+            // delta (spinor components of spacetrace, s1) for all time slices and flavor indices
             trace_in_spinor(spinortrace, spacetrace, s1);
 
          } //End of trace in spinor space
@@ -1414,7 +1423,7 @@ void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int 
          else if ( type_ab == TYPE_B){
            taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER  );
          }
-
+         //delta(flavor component in spinortrace, f1) for all time slices
          trace_in_flavor( flavortrace, spinortrace, f1 );
 
       } //End of trace in flavor space
@@ -1644,11 +1653,11 @@ Multiplication with Stilde(x-2*0,ytilde)P(x) in three steps:
                for (i=0; i<8; ++i)
                   colortrace[i]=0.;
                for (c1=0; c1<3; ++c1){
-
+                  //delta( color component of bispinor running, c1) for all spinor and flavor indices
                   trace_in_color(colortrace,&running2d[12*f1 + 3*s1 +c1][ix],c1);
                
                }  //End of trace in color
-
+               //sum over all lattice sites the result of the color trace
                trace_in_space(spacetrace,colortrace,ix);
 
             } //End of trace in space
@@ -1660,7 +1669,7 @@ Multiplication with Stilde(x-2*0,ytilde)P(x) in three steps:
                MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
                spacetrace[i]= tmp;
             }
-
+            // delta (spinor components of spacetrace, s1) for all time slices and flavor indices
             trace_in_spinor(spinortrace, spacetrace, s1);
 
          }//End of trace in spinor space
@@ -1679,11 +1688,11 @@ Multiplication with Stilde(x-2*0,ytilde)P(x) in three steps:
          else if ( type_ab == TYPE_B ){
            taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER  );
          }
-
+         //delta(flavor component in spinortrace, f1) for all time slices
          trace_in_flavor( flavortrace, spinortrace, f1 );
 
       } //End of trace in flavor space
-
+      //sum for all Pauli matrices
       for (i=0;i<T_global; ++i)
          paulitrace[i]+=flavortrace[i];
    } //End of trace for Pauli matrices
@@ -1875,26 +1884,3 @@ void main(int argc, char *argv[]){
   MPI_Finalize();
 
 }
-/*
-void contractions( bispinor **propfields) {
-    bispinor **bistmp;
-    int i;
-#ifdef MPI
-    xchange_gauge(g_gauge_field);
-    for ( int s=0; s<4; s++ )
-       generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
-
-#endif
-    bistmp=( bispinor **)malloc(sizeof(bispinor *)*48);
-    for (i=0; i<48; ++i)
-       bistmp[i]=(bispinor *)malloc(sizeof(bispinor)*VOLUMEPLUSRAND);
-   
-    for (i=0; i<48; ++i)
-       assign( (spinor *)bistmp[i], (spinor *)propfields[i], 2*VOLUME);
-    
-    dirac_current_density_1a(bistmp);
-    
-    for (i=0; i<48; ++i)
-       free(bistmp[i]);
-    free(bistmp);
-}*/
