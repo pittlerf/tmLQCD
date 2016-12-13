@@ -467,14 +467,14 @@ void trace_in_color(_Complex double *dest, bispinor *src, int colorindex){
      dest[7]+= src->sp_dn.s3.c1;
    }
    else if ( colorindex == 2 ){
-     dest[0]+= src->sp_up.s0.c0;
-     dest[1]+= src->sp_up.s1.c0;
-     dest[2]+= src->sp_up.s2.c0;
-     dest[3]+= src->sp_up.s3.c0;
-     dest[4]+= src->sp_dn.s0.c0;
-     dest[5]+= src->sp_dn.s1.c0;
-     dest[6]+= src->sp_dn.s2.c0;
-     dest[7]+= src->sp_dn.s3.c0;
+     dest[0]+= src->sp_up.s0.c2;
+     dest[1]+= src->sp_up.s1.c2;
+     dest[2]+= src->sp_up.s2.c2;
+     dest[3]+= src->sp_up.s3.c2;
+     dest[4]+= src->sp_dn.s0.c2;
+     dest[5]+= src->sp_dn.s1.c2;
+     dest[6]+= src->sp_dn.s2.c2;
+     dest[7]+= src->sp_dn.s3.c2;
    }
 }
 void trace_in_space(_Complex double *dest, _Complex double *source, int idx){
