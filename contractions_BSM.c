@@ -1823,10 +1823,10 @@ void main(int argc, char *argv[]){
     printf("# Finished reading scalar field.\n");
     fflush(stdout);
   }
-  smearedscalar=(scalar *)malloc(sizeof(scalar *)*4);
+  g_smearedscalar=(scalar *)malloc(sizeof(scalar *)*4);
   for (i=0; i<4; ++i)
-    smearedscalar[i]= (scalar *)malloc(sizeof(scalar)*(VOLUMEPLUSRAND));
-  smear_scalar_fields(g_scalar_field, smearedscalar);
+    g_smearedscalar[i]= (scalar *)malloc(sizeof(scalar)*(VOLUMEPLUSRAND));
+  smear_scalar_fields(g_scalar_field, g_smearedscalar);
 
   xchange_gauge(g_gauge_field);
   /*compute the energy of the gauge field*/
@@ -1878,8 +1878,8 @@ void main(int argc, char *argv[]){
   free_scalar_field();
   int ii;	
   for ( ii= 0; ii< 4; ++ii)
-     free(smearedscalar[ii]);
-  free(smearedscalar);
+     free(g_smearedscalar[ii]);
+  free(g_smearedscalar);
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 

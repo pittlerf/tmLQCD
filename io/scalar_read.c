@@ -249,18 +249,3 @@ void smear_scalar_fields( scalar ** const sf, scalar ** smearedfield ) {
    free(nearen);
    free(request);
 }
-int write_eigenvectors_parallel( char *filename, _Complex double *evecs ){
-  FILE *ptr;
-  int count=12*LX*LY*LZ*T_global*N_PROC_X*N_PROC_Y*N_PROC_Z;
-  int lcount=12*LX*LY*LZ*T;
-  _Complex double *all=(_Complex double *)malloc(sizeof(_Complex double)*count);
-  if (g_cart_id == 0)
-     ptr= fopen( filename, "a" );
-  MPI_Allgather(evecs, lcount, MPI_DOUBLE_COMPLEX, all, lcount, MPI_DOUBLE_COMPLEX, g_cart_grid);
-  if (g_cart_id == 0){
-    fwrite(all, sizeof(_Complex double),count, ptr);
-    fclose(ptr);
-  }
-  free(all);
-
-}
