@@ -1840,10 +1840,10 @@ void main(int argc, char *argv[]){
 
   for( int s=0; s<numbScalarFields; s++ ){
     count=0;
-    generic_exchange_direction_nonblocking( g_scalar_field[s], sizeof(bispinor), TDOWN, request, &count );
+    generic_exchange_direction_nonblocking( g_scalar_field[s], sizeof(scalar), TDOWN, request, &count );
     MPI_Waitall( count, request, statuses);
     count=0;
-    generic_exchange_direction_nonblocking( g_scalar_field[s], sizeof(bispinor), TUP  , request, &count );
+    generic_exchange_direction_nonblocking( g_scalar_field[s], sizeof(scalar), TUP  , request, &count );
     MPI_Waitall( count, request, statuses);
   }
 
