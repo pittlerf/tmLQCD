@@ -737,10 +737,10 @@ void D_psi_dagger_BSM2f(bispinor * const P, bispinor * const Q){
 //gathering backward
 
   count=0;
-  generic_exchange_direction_nonblocking(g_bispinor_field[19], sizeof(bispinor), 7, request, &count);
-  generic_exchange_direction_nonblocking(g_bispinor_field[18], sizeof(bispinor), 6, request, &count);
-  generic_exchange_direction_nonblocking(g_bispinor_field[17], sizeof(bispinor), 5, request, &count);
-  generic_exchange_direction_nonblocking(g_bispinor_field[16], sizeof(bispinor), 4, request, &count);
+  generic_exchange_direction_nonblocking(vm4, sizeof(bispinor), TDOWN, request, &count);
+  generic_exchange_direction_nonblocking(vm3, sizeof(bispinor), XDOWN, request, &count);
+  generic_exchange_direction_nonblocking(vm2, sizeof(bispinor), YDOWN, request, &count);
+  generic_exchange_direction_nonblocking(vm1, sizeof(bispinor), ZDOWN, request, &count);
 
 //computing forward
   for (ix=0;ix<VOLUME;ix++)
@@ -1005,4 +1005,3 @@ void Q2_psi_BSM2f(bispinor * const P, bispinor * const Q){
   }
 
 }
-
