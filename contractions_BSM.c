@@ -236,7 +236,7 @@ void taui_scalarfield_flavoronly( _Complex double *dest, int tauindex, int dagge
    _Complex double a11, a12, a21, a22;
    int i;
   
-   source_copy=(_Complex double *)malloc(2*T_global);
+   source_copy=(_Complex double *)malloc(sizeof(_Complex double)*2*T_global);
    for (i=0; i<2*T_global; ++i)
      source_copy[i]=dest[i];
    if (dagger == DAGGER){
@@ -287,8 +287,8 @@ void taui_scalarfield_flavoronly( _Complex double *dest, int tauindex, int dagge
      }
    }
    for (i=0; i<T_global; ++i){
-     dest[2*T_global +0]= a11* source_copy[2*T_global + 0] + a12* source_copy[2*T_global + 1];
-     dest[2*T_global +1]= a21* source_copy[2*T_global + 0] + a22* source_copy[2*T_global + 1];
+     dest[2*i +0]= a11* source_copy[2*i + 0] + a12* source_copy[2*i + 1];
+     dest[2*i +1]= a21* source_copy[2*i + 0] + a22* source_copy[2*i + 1];
    }
    free(source_copy);  
 }
@@ -509,11 +509,11 @@ void density_density_1234( bispinor ** propfields, int type_1234 ){
    flavortrace=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
    paulitrace= (_Complex double *)malloc(sizeof(_Complex double)*T_global);
 
-   if ( type_1234 == TYPE_1 || type_1234 == TYPE_3 ) {
+   if ( (type_1234 == TYPE_1) || (type_1234 == TYPE_3 )) {
      spinorstart=0;
      spinorend  =2;
    }
-   else if ( type_1234 == TYPE_2 || type_1234 == TYPE_4 ){
+   else if ( (type_1234 == TYPE_2) || (type_1234 == TYPE_4) ){
      spinorstart=2;
      spinorend  =4;
    }
@@ -555,7 +555,7 @@ void density_density_1234( bispinor ** propfields, int type_1234 ){
                   upm = &g_gauge_field[g_idn[ix][TUP]][TUP];
 
 //for the up quark
-                  if (type_1234 == TYPE_1 || type_1234 == TYPE_2 ){
+                  if ( (type_1234 == TYPE_1) || (type_1234 == TYPE_2) ){
                     _vector_null( running.sp_up.s0 );
                     _vector_null( running.sp_up.s1 );
                     _vector_assign( running.sp_up.s2, propfields[12*s1+4*c1+2*f1][ix].sp_up.s2 );
@@ -565,7 +565,7 @@ void density_density_1234( bispinor ** propfields, int type_1234 ){
                     _vector_assign( running.sp_dn.s2, propfields[12*s1+4*c1+2*f1][ix].sp_dn.s2 );
                     _vector_assign( running.sp_dn.s3, propfields[12*s1+4*c1+2*f1][ix].sp_dn.s3 );
                   }
-                  if (type_1234 == TYPE_3 || type_1234 == TYPE_4 ){
+                  if ((type_1234 == TYPE_3) || (type_1234 == TYPE_4)){
                     _vector_null( running.sp_up.s2 );
                     _vector_null( running.sp_up.s3 );
                     _vector_assign( running.sp_up.s0, propfields[12*s1+4*c1+2*f1][ix].sp_up.s0 );
@@ -580,10 +580,10 @@ void density_density_1234( bispinor ** propfields, int type_1234 ){
        TYPE  1 OR  2     phi^dagger(x)*tau_i*  (1-g5)/2*S(x  ,ytilde)
        TYPE  3 OR  4     tau_i*phi(x)          (1+g5)/2*S(x  ,ytilde)
 */
-                  if ( type_1234 == TYPE_1 || type_1234 == TYPE_2 ){
+                  if (( type_1234 == TYPE_1) || ( type_1234 == TYPE_2) ){
                     taui_scalarfield_spinor( &running, &running, GAMMA_DN, tauindex, ix, NODIR, DAGGER );
                   }
-                  else if ( type_1234 == TYPE_3 || type_1234 == TYPE_4 ){
+                  else if ( (type_1234 == TYPE_3) || (type_1234 == TYPE_4) ){
                     taui_scalarfield_spinor( &running, &running, GAMMA_UP, tauindex, ix, NODIR, NO_DAGG);
                   }
 /*   
@@ -617,10 +617,10 @@ void density_density_1234( bispinor ** propfields, int type_1234 ){
        TYPE  3      tau_i*phi(ytilde)*       (1+gamma5)/2*S(ytilde, x)*tau_i*phi(x)          (1+g5)/2*S(x  ,ytilde)
        TYPE  4      phi(ytilde)^dagger*tau_i*(1-gamma5)/2*S(ytilde, x)*tau_i*phi(x)          (1+g5)/2*S(x  ,ytilde)
 */
-         if ( type_1234 == TYPE_1 && type_1234 == TYPE_3 ){
+         if ( (type_1234 == TYPE_1) || (type_1234 == TYPE_3) ){
            taui_scalarfield_flavoronly( spinortrace, tauindex, NO_DAGG );
          }
-         else if ( type_1234 == TYPE_4 && type_1234 == TYPE_2 ){
+         else if ( ( type_1234 == TYPE_4) || ( type_1234 == TYPE_2 )){
            taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER  );
          }
          //delta(flavor component in spinortrace, f1) for all time slices
