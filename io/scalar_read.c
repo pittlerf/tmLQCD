@@ -86,7 +86,7 @@ int read_scalar_field_parallel( char * filename, scalar ** const sf){
       MPI_Bcast(buffer, count,  scalar_precision_read_flag==64 ? MPI_DOUBLE : MPI_FLOAT ,0, MPI_COMM_WORLD );
 
       int ix, j;
-      for (ix=0; ix< VOLUME*N_PROC_X*N_PROC_Y*N_PROC_Z; ++ix)
+      for (ix=0; ix< VOLUME; ++ix)
          if ( g_coord[ix][0] == t ){
             int ind = LY*N_PROC_Y*LZ*N_PROC_Z*g_coord[ix][1] + LZ*N_PROC_Z*g_coord[ix][2] + g_coord[ix][3];
             for (j=0; j<4; ++j){
