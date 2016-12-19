@@ -153,7 +153,7 @@ void generic_exchange_direction_nonblocking(void *field_in, int bytes_per_site, 
             g_cart_grid, &inreq[*counter]);
       MPI_Irecv(buffer[VOLUME + 2*LZ*(LX*LY + T*LY) + 2*LZ*T*LX],
             1, slice_Z_cont_type, g_nb_z_up, 122,
-            g_cart_grid, &inreq[*counter]);
+            g_cart_grid, &inreq[*counter+1]);
       *counter=*counter+2;
 #    endif
   }
