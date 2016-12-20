@@ -249,3 +249,40 @@ void smear_scalar_fields( scalar ** const sf, scalar ** smearedfield ) {
    free(nearen);
    free(request);
 }
+void smear_scalar_fields_correlator( scalar ** const sf, scalar ** smearedfield ) {
+
+   int x0,y0,z0,t0;
+   double timeslicesum[4];
+   int neit, neix, neiy, neiz;
+   double mpi_res;
+
+   for (in = 0; in<4 ; ++in ){
+      for (ix=0; ix<VOLUME; ++ix){
+         smearedfield[in][ix]=0.0;
+      }
+   }
+   for (t0=0; t0<T; ++t0){
+      for (j=0; j<4; ++j){
+         timeslicesum[j]=0.0;
+         mpi_res=0.;
+//summing over the local volume
+
+         for (x0; x0<LX; x0++)
+            for (y0=0; y0<LY; ++y0)
+               for (z0=0; z0<LZ; ++z0){
+                  timeslicesum[j]+=sf[j][((t0*LX + x0)*LY + y0)*LZ + z0];
+               }
+#if defined MPI
+         MPI_Reduce(&timeslicesum[j], &mpi_res, 1, MPI_DOUBLE, MPI_SUM, 0, g_mpi_time_slices);
+#endif
+         mpi_res/=(double)VOLUME*N_PROC_X*N_PROC_Y*N_PROC_Z;
+         for (x0; x0<LX; x0++)
+            for (y0=0; y0<LY; ++y0)
+               for (z0=0; z0<LZ; ++z0){
+                  smearedfield[j][((t0*LX + x0)*LY + y0)*LZ + z0]=mpi_res;
+
+         }
+      }
+   }
+}
+
