@@ -253,12 +253,11 @@ void smear_scalar_fields_correlator( scalar ** const sf, scalar ** smearedfield 
 
    int x0,y0,z0,t0;
    double timeslicesum[4];
-   int neit, neix, neiy, neiz;
    double mpi_res;
-
-   for (in = 0; in<4 ; ++in ){
-      for (ix=0; ix<VOLUME; ++ix){
-         smearedfield[in][ix]=0.0;
+   int j;
+   for (j = 0; j<4 ; ++j ){
+      for (x0=0; x0<VOLUME; ++x0){
+         smearedfield[j][x0]=0.0;
       }
    }
    for (t0=0; t0<T; ++t0){
