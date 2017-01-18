@@ -235,99 +235,62 @@ void taui_scalarfield_flavoronly( _Complex double *dest, int tauindex, int dagge
    _Complex double *source_copy;
    _Complex double a11, a12, a21, a22;
    int i;
-   double *scalarfield_spatialzero_0=( double *)malloc(sizeof(double)*T_global);
-   double *scalarfield_spatialzero_1=( double *)malloc(sizeof(double)*T_global);
-   double *scalarfield_spatialzero_2=( double *)malloc(sizeof(double)*T_global);
-   double *scalarfield_spatialzero_3=( double *)malloc(sizeof(double)*T_global);
+  
+   source_copy=(_Complex double *)malloc(sizeof(_Complex double)*2*T_global);
+   for (i=0; i<2*T_global; ++i)
+     source_copy[i]=dest[i];
+   if (dagger == DAGGER){
+     if (tauindex == 0){
+       a11=  -1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
+       a12=  +1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
 
-   double *scalarfield_spatialzero_0_local=(double *)malloc(sizeof(double)*T);
-   double *scalarfield_spatialzero_1_local=(double *)malloc(sizeof(double)*T);
-   double *scalarfield_spatialzero_2_local=(double *)malloc(sizeof(double)*T);
-   double *scalarfield_spatialzero_3_local=(double *)malloc(sizeof(double)*T);
+       a21=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
+       a22=  +1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
+     }
+     else  if (tauindex == 1){
+       a11=  +1.*g_scalar_field[1][0] - I*g_scalar_field[2][0];
+       a12=  -1.*g_scalar_field[3][0] - I*g_scalar_field[0][0];
 
-//Storing locally
-   for (i=0;i<T;++i){
-     scalarfield_spatialzero_0_local[i]=g_scalar_field[0][i*LX*LY*LZ];
-     scalarfield_spatialzero_1_local[i]=g_scalar_field[1][i*LX*LY*LZ];
-     scalarfield_spatialzero_2_local[i]=g_scalar_field[2][i*LX*LY*LZ];
-     scalarfield_spatialzero_3_local[i]=g_scalar_field[3][i*LX*LY*LZ];
+       a21=  -1.*g_scalar_field[3][0] + I*g_scalar_field[0][0];
+       a22=  -1.*g_scalar_field[1][0] - I*g_scalar_field[2][0];
+
+     }
+     else  if (tauindex == 2){
+       a11=  +1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
+       a12=  +1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
+
+       a21=  +1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
+       a22=  -1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
+     }
    }
+   else if (dagger == NO_DAGG){
+     if (tauindex == 0){
+      a11=  -1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
+      a12=  +1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
 
-//Storing globally
-   MPI_Gather(scalarfield_spatialzero_0_local, T, MPI_DOUBLE, scalarfield_spatialzero_0, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
-   MPI_Gather(scalarfield_spatialzero_1_local, T, MPI_DOUBLE, scalarfield_spatialzero_1, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
-   MPI_Gather(scalarfield_spatialzero_2_local, T, MPI_DOUBLE, scalarfield_spatialzero_2, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
-   MPI_Gather(scalarfield_spatialzero_3_local, T, MPI_DOUBLE, scalarfield_spatialzero_3, T, MPI_DOUBLE, 0, g_mpi_SV_slices);
+      a21=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
+      a22=  +1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
+     }
+     if (tauindex == 1){
+      a11=  +1.*g_scalar_field[1][0] + I*g_scalar_field[2][0];
+      a12=  -1.*g_scalar_field[3][0] - I*g_scalar_field[0][0];
 
-   source_copy=(_Complex double *)malloc( sizeof(_Complex double)*2*T_global) ;
+      a21=  -1.*g_scalar_field[3][0] + I*g_scalar_field[0][0];
+      a22=  -1.*g_scalar_field[1][0] + I*g_scalar_field[2][0];
+     }
+     if (tauindex == 2){
+      a11=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
+      a12=  +1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
 
+      a21=  +1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
+      a22=  -1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
+     }
+   }
    for (i=0; i<T_global; ++i){
-     source_copy[2*i+0]=dest[2*i+0];
-     source_copy[2*i+1]=dest[2*i+1];
-
-     if (dagger == DAGGER){
-       if (tauindex == 0){
-         a11=  -1.*scalarfield_spatialzero_2[i] - I*scalarfield_spatialzero_1[i];
-         a12=  +1.*scalarfield_spatialzero_0[i] - I*scalarfield_spatialzero_3[i];
-
-         a21=  +1.*scalarfield_spatialzero_0[i] + I*scalarfield_spatialzero_3[i];
-         a22=  +1.*scalarfield_spatialzero_2[i] - I*scalarfield_spatialzero_1[i];
-       }
-       else  if (tauindex == 1){
-         a11=  +1.*scalarfield_spatialzero_1[i] - I*scalarfield_spatialzero_2[i];
-         a12=  -1.*scalarfield_spatialzero_3[i] - I*scalarfield_spatialzero_0[i];
-
-         a21=  -1.*scalarfield_spatialzero_3[i] + I*scalarfield_spatialzero_0[i];
-         a22=  -1.*scalarfield_spatialzero_1[i] - I*scalarfield_spatialzero_2[i];
-       }
-       else  if (tauindex == 2){
-         a11=  +1.*scalarfield_spatialzero_0[i] - I*scalarfield_spatialzero_3[i];
-         a12=  +1.*scalarfield_spatialzero_2[i] + I*scalarfield_spatialzero_1[i];
-
-         a21=  +1.*scalarfield_spatialzero_2[i] - I*scalarfield_spatialzero_1[i];
-         a22=  -1.*scalarfield_spatialzero_0[i] - I*scalarfield_spatialzero_3[i];
-       }
-     }
-     else if (dagger == NO_DAGG){
-       if (tauindex == 0){
-         a11=  -1.*scalarfield_spatialzero_2[i] + I*scalarfield_spatialzero_1[i];
-         a12=  +1.*scalarfield_spatialzero_0[i] - I*scalarfield_spatialzero_3[i];
-
-         a21=  +1.*scalarfield_spatialzero_0[i] + I*scalarfield_spatialzero_3[i];
-         a22=  +1.*scalarfield_spatialzero_2[i] + I*scalarfield_spatialzero_1[i];
-       }
-       else if (tauindex == 1){
-         a11=  +1.*scalarfield_spatialzero_1[i] + I*scalarfield_spatialzero_2[i];
-         a12=  -1.*scalarfield_spatialzero_3[i] - I*scalarfield_spatialzero_0[i];
-
-         a21=  -1.*scalarfield_spatialzero_3[i] + I*scalarfield_spatialzero_0[i];
-         a22=  -1.*scalarfield_spatialzero_1[i] + I*scalarfield_spatialzero_2[i];
-       }
-       else if (tauindex == 2){
-         a11=  +1.*scalarfield_spatialzero_0[i] + I*scalarfield_spatialzero_3[i];
-         a12=  +1.*scalarfield_spatialzero_2[i] + I*scalarfield_spatialzero_1[i];
-
-         a21=  +1.*scalarfield_spatialzero_2[i] - I*scalarfield_spatialzero_1[i];
-         a22=  -1.*scalarfield_spatialzero_0[i] + I*scalarfield_spatialzero_3[i];
-       }
-     }
-
      dest[2*i +0]= a11* source_copy[2*i + 0] + a12* source_copy[2*i + 1];
      dest[2*i +1]= a21* source_copy[2*i + 0] + a22* source_copy[2*i + 1];
-
    }
-   free(source_copy);
-
-   free(scalarfield_spatialzero_0_local);
-   free(scalarfield_spatialzero_1_local);
-   free(scalarfield_spatialzero_2_local);
-   free(scalarfield_spatialzero_3_local);
-
-   free(scalarfield_spatialzero_0);
-   free(scalarfield_spatialzero_1);
-   free(scalarfield_spatialzero_2);
-   free(scalarfield_spatialzero_3);
-
+   free(source_copy);  
 }
 void taui_spinor( bispinor *dest, bispinor *source, int tauindex){
 
