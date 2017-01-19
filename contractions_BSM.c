@@ -490,6 +490,247 @@ void trace_in_flavor(_Complex double *dest, _Complex double *source, int f1){
      }
 }
 
+/* indexing of propfields;
+   
+   propagator for  (dagger or nondagger source)
+              for  flavor component f
+              for  color  component c    
+              for  spinor component s
+   is the following bispinor array of size VOLUME(PLUSRAND)
+
+   propfields[12*s + 4*c + 2*f + dagg ? 1: 0]  
+     
+ */
+/**************************
+Multiplication with the backward propagator
+
+S == matrix element of D^-1 between the following states
+
+S( ytilde , x+-dir )       psi   x
+   flavor2, flavor1    x         flavor1
+   spinor2, spinor1              spinor1
+   color 2, color 1              color1
+
+=
+Stilde* (x+-dir , ytilde)      psi   x
+         flavor1, flavor2  x         flavor1
+         spinor1, spinor2            spinor1  
+         color 1, color 2            color1
+where Stilde is the matrix element of D^dagger^-1 between 
+the correspondig states
+
+**************************/
+
+void trace_in_spinor_and_color( _Complex double *c, bispinor **prop, int ix, int f3, int f4, int f6, int f1){
+     int alpha2;
+     int c1;
+     c[ix]=0.;
+     for (alpha2=0; alpha2<2;++alpha2)
+       for (c1=0; c1<3; ++c1){
+          if ( (f6 == 0) && (f4==0) ){
+             c[ix]+= prop[12*alpha2+4*c1+2*f1][ix].sp_up.s2.c0*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_up.s2.c0)
+                    +prop[12*alpha2+4*c1+2*f1][ix].sp_up.s2.c1*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_up.s2.c1)
+                    +prop[12*alpha2+4*c1+2*f1][ix].sp_up.s2.c2*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_up.s2.c2)
+                    +prop[12*alpha2+4*c1+2*f1][ix].sp_up.s3.c0*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_up.s3.c0)
+                    +prop[12*alpha2+4*c1+2*f1][ix].sp_up.s3.c1*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_up.s3.c1)
+                    +prop[12*alpha2+4*c1+2*f1][ix].sp_up.s3.c2*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_up.s3.c2);
+          }
+          if ( (f6 == 1) && (f4==0) ){
+             c[ix]+= prop[12*alpha2+4*c1+2*f1][ix].sp_dn.s2.c0*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_up.s2.c0)
+                    +prop[12*alpha2+4*c1+2*f1][ix].sp_dn.s2.c1*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_up.s2.c1)
+                    +prop[12*alpha2+4*c1+2*f1][ix].sp_dn.s2.c2*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_up.s2.c2)
+                    +prop[12*alpha2+4*c1+2*f1][ix].sp_dn.s3.c0*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_up.s3.c0)
+                    +prop[12*alpha2+4*c1+2*f1][ix].sp_dn.s3.c1*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_up.s3.c1)
+                    +prop[12*alpha2+4*c1+2*f1][ix].sp_dn.s3.c2*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_up.s3.c2);
+          }
+          if ( (f6 == 0) && (f4==1) ){
+             c[ix]+= prop[12*alpha2+4*c1+2*f1][ix].sp_up.s2.c0*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_dn.s2.c0)
+                    +prop[12*alpha2+4*c1+2*f1][ix].sp_up.s2.c1*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_dn.s2.c1)
+                    +prop[12*alpha2+4*c1+2*f1][ix].sp_up.s2.c2*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_dn.s2.c2)
+                    +prop[12*alpha2+4*c1+2*f1][ix].sp_up.s3.c0*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_dn.s3.c0)
+                    +prop[12*alpha2+4*c1+2*f1][ix].sp_up.s3.c1*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_dn.s3.c1)
+                    +prop[12*alpha2+4*c1+2*f1][ix].sp_up.s3.c2*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_dn.s3.c2);
+          }
+          if ( (f6 == 1) && (f4==1) ){
+             c[ix]+= prop[12*alpha2+4*c1+2*f1][ix].sp_dn.s2.c0*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_dn.s2.c0)
+                    +prop[12*alpha2+4*c1+2*f1][ix].sp_dn.s2.c1*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_dn.s2.c1)
+                    +prop[12*alpha2+4*c1+2*f1][ix].sp_dn.s2.c2*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_dn.s2.c2)
+                    +prop[12*alpha2+4*c1+2*f1][ix].sp_dn.s3.c0*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_dn.s3.c0)
+                    +prop[12*alpha2+4*c1+2*f1][ix].sp_dn.s3.c1*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_dn.s3.c1)
+                    +prop[12*alpha2+4*c1+2*f1][ix].sp_dn.s3.c2*conj(prop[12*alpha2+4*c1+2*f3+1][ix].sp_dn.s3.c2);
+          }
+       }
+}
+
+void density_density_1234_petros( bispinor **propfields )
+{
+
+    _Complex double **phimatrix=(_Complex double **)malloc(sizeof(_Complex double *)*4);
+
+    _Complex double *C0000=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C0001=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C0010=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C0011=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C0100=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C0101=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C0110=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C0111=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1000=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1001=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1010=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1011=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1100=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1101=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1110=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1111=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+
+    _Complex double *final_corr=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
+
+    _Complex double *phimatrixspatialnull=(_Complex double *)malloc(sizeof(_Complex double)*4);
+
+    int ix;
+    for (ix=0;ix<4;++ix)
+       phimatrix[ix]=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    for (ix=0;ix<VOLUME;++ix)
+    {
+       phimatrix[0][ix]= 1.*g_scalar_field[0][ix] + I*g_scalar_field[3][ix];
+       phimatrix[1][ix]= 1.*g_scalar_field[2][ix] + I*g_scalar_field[1][ix];
+       phimatrix[2][ix]=-1.*g_scalar_field[2][ix] + I*g_scalar_field[1][ix];
+       phimatrix[3][ix]= 1.*g_scalar_field[0][ix] - I*g_scalar_field[3][ix];
+    }
+
+    for (ix=0;ix<4;++ix)
+       phimatrixspatialnull[ix]=phimatrix[ix][0];
+
+    for (ix=0;ix<4;++ix)
+       MPI_Gather(&phimatrixspatialnull[ix], 1, MPI_DOUBLE_COMPLEX, &phimatrixspatialnull[ix], 1, MPI_DOUBLE_COMPLEX, 0, g_cart_grid);
+
+//    printf("%e %e\n",creal(phimatrixspatialnull[0]),cimag(phimatrixspatialnull[0]));
+//    exit(1); 
+    for (ix=0; ix<VOLUME; ++ix){
+       trace_in_spinor_and_color(C0000,propfields,ix,0,0,0,0);
+       trace_in_spinor_and_color(C0001,propfields,ix,0,0,0,1);
+       trace_in_spinor_and_color(C0010,propfields,ix,0,0,1,0);
+       trace_in_spinor_and_color(C0011,propfields,ix,0,0,1,1);
+       trace_in_spinor_and_color(C0100,propfields,ix,0,1,0,0);
+       trace_in_spinor_and_color(C0101,propfields,ix,0,1,0,1);
+       trace_in_spinor_and_color(C0110,propfields,ix,0,1,1,0);
+       trace_in_spinor_and_color(C0111,propfields,ix,0,1,1,1);
+       trace_in_spinor_and_color(C1000,propfields,ix,1,0,0,0);
+       trace_in_spinor_and_color(C1001,propfields,ix,1,0,0,1);
+       trace_in_spinor_and_color(C1010,propfields,ix,1,0,1,0);
+       trace_in_spinor_and_color(C1011,propfields,ix,1,0,1,1);
+       trace_in_spinor_and_color(C1100,propfields,ix,1,1,0,0);
+       trace_in_spinor_and_color(C1101,propfields,ix,1,1,0,1);
+       trace_in_spinor_and_color(C1110,propfields,ix,1,1,1,0);
+       trace_in_spinor_and_color(C1111,propfields,ix,1,1,1,1);
+
+    }
+    for (ix=0; ix<T_global; ++ix)
+       final_corr[ix]=0.;
+    for (ix=0; ix<VOLUME; ++ix){
+
+//tau_1
+       final_corr[g_coord[ix][TUP]]+=  1.*phimatrixspatialnull[1*2+0]*C0010[ix]*conj(phimatrix[0*2+0][ix])
+                                     + 1.*phimatrixspatialnull[1*2+0]*C0000[ix]*conj(phimatrix[1*2+0][ix])
+                                     + 1.*phimatrixspatialnull[1*2+0]*C0110[ix]*conj(phimatrix[0*2+1][ix])
+                                     + 1.*phimatrixspatialnull[1*2+0]*C0100[ix]*conj(phimatrix[1*2+1][ix])
+
+                                     + 1.*phimatrixspatialnull[1*2+1]*C1010[ix]*conj(phimatrix[0*2+0][ix])
+                                     + 1.*phimatrixspatialnull[1*2+1]*C1000[ix]*conj(phimatrix[1*2+0][ix])
+                                     + 1.*phimatrixspatialnull[1*2+1]*C1110[ix]*conj(phimatrix[0*2+1][ix])
+                                     + 1.*phimatrixspatialnull[1*2+1]*C1100[ix]*conj(phimatrix[1*2+1][ix])
+
+                                     + 1.*phimatrixspatialnull[0*2+0]*C0011[ix]*conj(phimatrix[0*2+0][ix])
+                                     + 1.*phimatrixspatialnull[0*2+0]*C0001[ix]*conj(phimatrix[1*2+0][ix])
+                                     + 1.*phimatrixspatialnull[0*2+0]*C0111[ix]*conj(phimatrix[0*2+1][ix])
+                                     + 1.*phimatrixspatialnull[0*2+0]*C0101[ix]*conj(phimatrix[1*2+1][ix])
+
+                                     + 1.*phimatrixspatialnull[0*2+1]*C1011[ix]*conj(phimatrix[0*2+0][ix])
+                                     + 1.*phimatrixspatialnull[0*2+1]*C1001[ix]*conj(phimatrix[1*2+0][ix])
+                                     + 1.*phimatrixspatialnull[0*2+1]*C1111[ix]*conj(phimatrix[0*2+1][ix])
+                                     + 1.*phimatrixspatialnull[0*2+1]*C1101[ix]*conj(phimatrix[1*2+1][ix]);
+
+//tau_2
+       final_corr[g_coord[ix][TUP]]+= -1.*phimatrixspatialnull[1*2+0]*C0010[ix]*conj(phimatrix[0*2+0][ix])
+                                     + 1.*phimatrixspatialnull[1*2+0]*C0000[ix]*conj(phimatrix[1*2+0][ix])
+                                     +-1.*phimatrixspatialnull[1*2+0]*C0110[ix]*conj(phimatrix[0*2+1][ix])
+                                     + 1.*phimatrixspatialnull[1*2+0]*C0100[ix]*conj(phimatrix[1*2+1][ix])
+
+                                     +-1.*phimatrixspatialnull[1*2+1]*C1010[ix]*conj(phimatrix[0*2+0][ix])
+                                     + 1.*phimatrixspatialnull[1*2+1]*C1000[ix]*conj(phimatrix[1*2+0][ix])
+                                     +-1.*phimatrixspatialnull[1*2+1]*C1110[ix]*conj(phimatrix[0*2+1][ix])
+                                     + 1.*phimatrixspatialnull[1*2+1]*C1100[ix]*conj(phimatrix[1*2+1][ix])
+
+                                     + 1.*phimatrixspatialnull[0*2+0]*C0011[ix]*conj(phimatrix[0*2+0][ix])
+                                     +-1.*phimatrixspatialnull[0*2+0]*C0001[ix]*conj(phimatrix[1*2+0][ix])
+                                     + 1.*phimatrixspatialnull[0*2+0]*C0111[ix]*conj(phimatrix[0*2+1][ix])
+                                     +-1.*phimatrixspatialnull[0*2+0]*C0101[ix]*conj(phimatrix[1*2+1][ix])
+
+                                     + 1.*phimatrixspatialnull[0*2+1]*C1011[ix]*conj(phimatrix[0*2+0][ix])
+                                     +-1.*phimatrixspatialnull[0*2+1]*C1001[ix]*conj(phimatrix[1*2+0][ix])
+                                     + 1.*phimatrixspatialnull[0*2+1]*C1111[ix]*conj(phimatrix[0*2+1][ix])
+                                     +-1.*phimatrixspatialnull[0*2+1]*C1101[ix]*conj(phimatrix[1*2+1][ix]);
+
+//tau3
+       final_corr[g_coord[ix][TUP]]+=  1.*phimatrixspatialnull[0*2+0]*C0000[ix]*conj(phimatrix[0*2+0][ix])
+                                     +-1.*phimatrixspatialnull[0*2+0]*C0010[ix]*conj(phimatrix[1*2+0][ix])
+                                     + 1.*phimatrixspatialnull[0*2+0]*C0100[ix]*conj(phimatrix[0*2+1][ix])
+                                     +-1.*phimatrixspatialnull[0*2+0]*C0110[ix]*conj(phimatrix[1*2+1][ix])
+
+                                     + 1.*phimatrixspatialnull[0*2+1]*C1000[ix]*conj(phimatrix[0*2+0][ix])
+                                     +-1.*phimatrixspatialnull[0*2+1]*C1010[ix]*conj(phimatrix[1*2+0][ix])
+                                     + 1.*phimatrixspatialnull[0*2+1]*C1100[ix]*conj(phimatrix[0*2+1][ix])
+                                     +-1.*phimatrixspatialnull[0*2+1]*C1110[ix]*conj(phimatrix[1*2+1][ix])
+
+                                     +-1.*phimatrixspatialnull[1*2+0]*C0001[ix]*conj(phimatrix[0*2+0][ix])
+                                     + 1.*phimatrixspatialnull[1*2+0]*C0011[ix]*conj(phimatrix[1*2+0][ix])
+                                     +-1.*phimatrixspatialnull[1*2+0]*C0101[ix]*conj(phimatrix[0*2+1][ix])
+                                     + 1.*phimatrixspatialnull[1*2+0]*C0111[ix]*conj(phimatrix[1*2+1][ix])
+
+                                     +-1.*phimatrixspatialnull[1*2+1]*C1001[ix]*conj(phimatrix[0*2+0][ix])
+                                     + 1.*phimatrixspatialnull[1*2+1]*C1011[ix]*conj(phimatrix[1*2+0][ix])
+                                     +-1.*phimatrixspatialnull[1*2+1]*C1101[ix]*conj(phimatrix[0*2+1][ix])
+                                     + 1.*phimatrixspatialnull[1*2+1]*C1111[ix]*conj(phimatrix[1*2+1][ix]);
+
+    }
+    for (ix=0; ix<T_global; ++ix){
+       _Complex double tmp;
+       MPI_Allreduce(&final_corr[ix], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+       final_corr[ix]= tmp;
+    }
+    if (g_cart_id == 0){printf("Density Density correlator type a la Petros (1) results\n");}
+      for (ix=0; ix<T_global; ++ix){
+        if (g_cart_id == 0){
+        printf("%3d %10.10e %10.10e\n", ix, creal(final_corr[ix])/4.,cimag(final_corr[ix])/4.);
+      }
+    }
+
+
+    free(C0000);
+    free(C0001);
+    free(C0010);
+    free(C0011);
+    free(C0100);
+    free(C0101);
+    free(C0110);
+    free(C0111);
+    free(C1000);
+    free(C1001);
+    free(C1010);
+    free(C1011);
+    free(C1100);
+    free(C1101);
+    free(C1110);
+    free(C1111);
+
+    for (ix=0;ix<4;++ix)
+       free(phimatrix[ix]);
+    free(phimatrix);
+    free(final_corr);
+
+}
+
 void density_density_1234( bispinor ** propfields, int type_1234 ){
    int ix,i;
    int f1,c1,s1,tauindex;
