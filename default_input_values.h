@@ -61,6 +61,7 @@
 #define _default_Ntherm 0
 #define _default_Nmeas 1
 #define _default_Nsave 9
+#define _default_Nscalarstep 9
 #define _default_write_cp_flag 1
 #define _default_cp_interval 5
 #define _default_nstore 0

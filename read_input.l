@@ -110,6 +110,7 @@ inline void rmQuotes(char *str){
   int Ntherm;
   int Nmeas;
   int Nsave;
+  int Nscalarstep;
   int gmres_m_parameter, gmresdr_nr_ev;
   int write_cp_flag;
   int cp_interval;
@@ -198,6 +199,7 @@ inline void rmQuotes(char *str){
 %x SEED
 %x RLXDLEVEL
 %x NSAVE
+%x NSCALARSTEP
 %x RLXDINPUTFILE
 %x GAUGEINPUTFILE
 %x SCALARINPUTFILE
@@ -349,6 +351,7 @@ inline void rmQuotes(char *str){
 ^ThermalisationSweeps{EQL}         BEGIN(THERMSWEEPS);
 ^Measurements{EQL}                 BEGIN(NMEAS);
 ^NSave{EQL}                        BEGIN(NSAVE);
+^Nscalarsteo{EQL}                  BEGIN(NSCALARSTEP);
 ^GaugeFieldInFile{EQL}             BEGIN(GAUGEINPUTFILE);
 ^ScalarFieldInFile{EQL}            BEGIN(SCALARINPUTFILE);
 ^RlxdStateInFile{EQL}              BEGIN(RLXDINPUTFILE);
@@ -1739,6 +1742,10 @@ inline void rmQuotes(char *str){
   Nsave=atoi(yytext);
   if(myverbose!=0) printf("Nsave= %s \n",yytext);
 }
+<NSCALARSTEP>{DIGIT}+ {
+  Nscalarstep=atoi(yytext);
+  if(myverbose!=0) printf("Nscalarstep= %s \n",yytext);
+}
 <GMRESM>{DIGIT}+ {
   gmres_m_parameter = atoi(yytext);
   if(myverbose!=0) printf("Use Krylov Space of size %d in GMRES \n", gmres_m_parameter);
@@ -2205,6 +2212,7 @@ int read_input(char * conf_file){
   Ntherm = _default_Ntherm;
   Nmeas = _default_Nmeas;
   Nsave = _default_Nsave;
+  Nscalarstep = _default_Nscalarstep;
   write_cp_flag = _default_write_cp_flag;
   cp_interval = _default_cp_interval;
   nstore = _default_nstore;
