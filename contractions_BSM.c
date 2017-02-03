@@ -2194,13 +2194,12 @@ int main(int argc, char *argv[]){
           g_mu = 0.;
           if (g_cart_id == 0) printf("# npergauge=%d\n", operator_list[op_id].npergauge);
 
-          /* set scalar field counter to InitialScalarCounter */
-          int iscalar = nscalar+j*Nscalarstep;
-
           if (g_cart_id == 0) printf("# Starting scalar counter is %d for gauge field %d \n", iscalar, nstore );
           /* support multiple inversions for the BSM operator, one for each scalar field */
 
           for(int i_pergauge = 0; i_pergauge < operator_list[op_id].npergauge; ++i_pergauge){
+             /* set scalar field counter to InitialScalarCounter */
+             int iscalar = nscalar+j*Nscalarstep*operator_list[op_id].npergauge+i_pergauge*Nscalarstep;
              operator_list[op_id].n = iscalar;
           // read scalar field
              if( strcmp(scalar_input_filename, "create_random_scalarfield") == 0 )

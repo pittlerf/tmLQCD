@@ -715,23 +715,23 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
   if(SourceInfo.type != 1) {
     if (PropInfo.splitted) {
       /* operators with additional external fields require one more index */
-      if( optr->type==BSM || optr->type==BSM2b || optr->type==BSM2m ){
-        snprintf(filename, strl, "%s.%.4d.%.2d.%.2d.%03d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, optr->n, ending);
+      if( optr->type==BSM || optr->type==BSM2b || optr->type==BSM2m || optr->type==BSM2f ){
+        snprintf(filename, strl, "%s.%.4d.%.2d.%.2d.%.8d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, optr->n, ending);
       }else{
         snprintf(filename, strl, "%s.%.4d.%.2d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, ending);
       }
     }
     else {
-      if( optr->type==BSM || optr->type == BSM2b || optr->type==BSM2m ){
-        snprintf(filename, strl, "%s.%.4d.%.2d.%03d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, optr->n, ending);
+      if( optr->type==BSM || optr->type == BSM2b || optr->type==BSM2m || optr->type==BSM2f ){
+        snprintf(filename, strl, "%s.%.4d.%.2d.%.8d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, optr->n, ending);
       }else{
         snprintf(filename, strl, "%s.%.4d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, ending);
       }
     }
   }
   else {
-    if(optr->type==BSM || optr->type==BSM2b || optr->type==BSM2m ){
-      snprintf(filename, strl, "%s.%.4d.%.5d.%03d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, optr->n, ending);
+    if(optr->type==BSM || optr->type==BSM2b || optr->type==BSM2m || optr->type==BSM2f ){
+      snprintf(filename, strl, "%s.%.4d.%.5d.%.8d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, optr->n, ending);
     } else {
       snprintf(filename, strl, "%s.%.4d.%.5d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, ending);
     }
