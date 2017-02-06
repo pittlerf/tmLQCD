@@ -253,7 +253,7 @@ void multiply_backward_propagator( bispinor *dest, bispinor **propagator, bispin
 //dest used as a source, an output it is overwritten
 void taui_scalarfield_flavoronly( _Complex double *dest, int tauindex, int dagger ){
    _Complex double *source_copy;
-   _Complex double a11, a12, a21, a22;
+   _Complex double a11=0.0, a12=0.0, a21=0.0, a22=0.0;
    int i;
   
    source_copy=(_Complex double *)malloc(sizeof(_Complex double)*2*T_global);
@@ -291,26 +291,67 @@ void taui_scalarfield_flavoronly( _Complex double *dest, int tauindex, int dagge
       a21=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
       a22=  +1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
      }
-     if (tauindex == 1){
+     else if (tauindex == 1){
       a11=  +1.*g_scalar_field[1][0] + I*g_scalar_field[2][0];
       a12=  -1.*g_scalar_field[3][0] - I*g_scalar_field[0][0];
 
       a21=  -1.*g_scalar_field[3][0] + I*g_scalar_field[0][0];
       a22=  -1.*g_scalar_field[1][0] + I*g_scalar_field[2][0];
      }
-     if (tauindex == 2){
+     else if (tauindex == 2){
       a11=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
       a12=  +1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
 
       a21=  +1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
       a22=  -1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
      }
+     else{
+      if (g_cart_id == 0)printf("Wrong Pauli matrix index\n");
+      exit(1);
+    }
    }
    for (i=0; i<T_global; ++i){
      dest[2*i +0]= a11* source_copy[2*i + 0] + a12* source_copy[2*i + 1];
      dest[2*i +1]= a21* source_copy[2*i + 0] + a22* source_copy[2*i + 1];
    }
    free(source_copy);  
+}
+//dest used as a source, an output it is overwritten
+void taui_scalarfield_flavoronly_s0s0( _Complex double *dest, int dagger ){
+   _Complex double *source_copy;
+   _Complex double a11=0.0, a12=0.0, a21=0.0, a22=0.0;
+   int i;
+
+   source_copy=(_Complex double *)malloc(sizeof(_Complex double)*2*T_global);
+   for (i=0; i<2*T_global; ++i)
+     source_copy[i]=dest[i];
+   if (dagger == DAGGER){
+       a11=  +1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
+       a12=  -1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
+
+       a21=  +1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
+       a22=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
+   }
+   else if (dagger==NO_DAGG){
+       a11=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
+       a12=  +1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
+
+       a21=  -1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
+       a22=  +1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
+
+   }
+   else{
+      a11=0.;
+      a12=0.;
+      a21=0.;
+      a22=0.;
+      if (g_cart_id == 0){printf("Wrong Dagger index\n"); exit(1);}
+   }
+   for (i=0; i<T_global; ++i){
+     dest[2*i +0]= a11* source_copy[2*i + 0] + a12* source_copy[2*i + 1];
+     dest[2*i +1]= a21* source_copy[2*i + 0] + a22* source_copy[2*i + 1];
+   }
+   free(source_copy);
 }
 
 void taui_spinor( bispinor *dest, bispinor *source, int tauindex ){
@@ -352,11 +393,95 @@ void taui_spinor( bispinor *dest, bispinor *source, int tauindex ){
     _spinor_assign(dest->sp_dn, tmp.sp_dn);
    }
 }
+
+void taui_scalarfield_spinor_s0s0( bispinor *dest, bispinor *source, int gamma5, int idx, int direction, int dagger){
+
+  bispinor tmp;
+  bispinor tmpbi2;
+  _Complex double a11=0., a12=0., a21=0., a22=0.;
+
+  int scalarcoord;
+
+  _spinor_assign(tmp.sp_up, source->sp_up);
+  _spinor_assign(tmp.sp_dn, source->sp_dn);
+
+ if (direction == NODIR)
+   scalarcoord=idx;
+ else if (direction<4){
+   scalarcoord= g_iup[idx][direction];
+ }
+ else if (direction<8){
+   scalarcoord= g_idn[idx][7-direction];
+ }
+ else{
+   scalarcoord=0;
+   if (g_cart_id == 0) {printf("Wrong direction in tau scalar field spinor\n"); exit(1);}
+ }
+ if (dagger == DAGGER){
+   a11=  +1.*g_scalar_field[0][scalarcoord] - I*g_scalar_field[3][scalarcoord];
+   a12=  -1.*g_scalar_field[2][scalarcoord] - I*g_scalar_field[1][scalarcoord];
+
+   a21=  +1.*g_scalar_field[2][scalarcoord] - I*g_scalar_field[1][scalarcoord];
+   a22=  +1.*g_scalar_field[0][scalarcoord] + I*g_scalar_field[3][scalarcoord];
+ }
+ else if (dagger == NO_DAGG){
+   a11=  +1.*g_scalar_field[0][scalarcoord] + I*g_scalar_field[3][scalarcoord];
+   a12=  +1.*g_scalar_field[2][scalarcoord] + I*g_scalar_field[1][scalarcoord];
+
+   a21=  -1.*g_scalar_field[2][scalarcoord] + I*g_scalar_field[1][scalarcoord];
+   a22=  +1.*g_scalar_field[0][scalarcoord] - I*g_scalar_field[3][scalarcoord];
+ }
+ else {
+   fprintf(stdout, "The sixth argument must be either DAGGER or NO_DAGG\n");
+ }
+ _spinor_null(tmpbi2.sp_up);
+ _spinor_null(tmpbi2.sp_dn);
+
+ if ( gamma5 == GAMMA_UP){
+  _vector_mul_complex(    tmpbi2.sp_up.s0, a11, tmp.sp_up.s0);
+  _vector_add_mul_complex(tmpbi2.sp_up.s0, a12, tmp.sp_dn.s0);
+
+  _vector_mul_complex    (tmpbi2.sp_dn.s0, a21, tmp.sp_up.s0);
+  _vector_add_mul_complex(tmpbi2.sp_dn.s0, a22, tmp.sp_dn.s0);
+
+  _vector_mul_complex(    tmpbi2.sp_up.s1, a11, tmp.sp_up.s1);
+  _vector_add_mul_complex(tmpbi2.sp_up.s1, a12, tmp.sp_dn.s1);
+
+  _vector_mul_complex    (tmpbi2.sp_dn.s1, a21, tmp.sp_up.s1);
+  _vector_add_mul_complex(tmpbi2.sp_dn.s1, a22, tmp.sp_dn.s1);
+ }
+ else if  ( gamma5 == GAMMA_DN ){
+  _vector_mul_complex(    tmpbi2.sp_up.s2, a11, tmp.sp_up.s2);
+  _vector_add_mul_complex(tmpbi2.sp_up.s2, a12, tmp.sp_dn.s2);
+
+  _vector_mul_complex    (tmpbi2.sp_dn.s2, a21, tmp.sp_up.s2);
+  _vector_add_mul_complex(tmpbi2.sp_dn.s2, a22, tmp.sp_dn.s2);
+
+  _vector_mul_complex(    tmpbi2.sp_up.s3, a11, tmp.sp_up.s3);
+  _vector_add_mul_complex(tmpbi2.sp_up.s3, a12, tmp.sp_dn.s3);
+
+  _vector_mul_complex    (tmpbi2.sp_dn.s3, a21, tmp.sp_up.s3);
+  _vector_add_mul_complex(tmpbi2.sp_dn.s3, a22, tmp.sp_dn.s3);
+ }
+ else if ( gamma5 == NO_GAMMA ){
+  _spinor_mul_complex    (tmpbi2.sp_up,    a11, tmp.sp_up);
+  _spinor_add_mul_complex(tmpbi2.sp_up,    a12, tmp.sp_dn);
+
+  _spinor_mul_complex    (tmpbi2.sp_dn,    a21, tmp.sp_up);
+  _spinor_add_mul_complex(tmpbi2.sp_dn,    a22, tmp.sp_dn);
+ }
+
+ _spinor_assign(dest->sp_up, tmpbi2.sp_up);
+ _spinor_assign(dest->sp_dn, tmpbi2.sp_dn);
+
+}
+
+
 void taui_scalarfield_spinor( bispinor *dest, bispinor *source, int gamma5, int tauindex, int idx, int direction, int dagger){
     
   bispinor tmp;
   bispinor tmpbi2;
-  _Complex double a11, a12, a21, a22;
+  _Complex double a11=0.0, a12=0.0, a21=0.0, a22=0.0;
 
   int scalarcoord;
 
@@ -399,7 +524,7 @@ void taui_scalarfield_spinor( bispinor *dest, bispinor *source, int gamma5, int 
   }
  }
  else if (dagger == NO_DAGG){
-   if (tauindex == 0){
+  if (tauindex == 0){
    a11=  -1.*g_scalar_field[2][scalarcoord] + I*g_scalar_field[1][scalarcoord];
    a12=  +1.*g_scalar_field[0][scalarcoord] - I*g_scalar_field[3][scalarcoord];
 
@@ -756,10 +881,152 @@ void density_density_1234_petros( bispinor **propfields )
 
 }
 
+void density_density_1234_s0s0( bispinor ** propfields, int type_1234 ){
+   int ix,i;
+   int f1,c1,s1;
+   int spinorstart=0, spinorend=4;
+   bispinor running;
+
+   _Complex double *colortrace;
+   _Complex double *spacetrace;
+   _Complex double *spinortrace;
+   _Complex double *flavortrace;
+   int type;
+   colortrace=(_Complex double *)malloc(sizeof(_Complex double) *8);
+   spacetrace=(_Complex double *)malloc(sizeof(_Complex double) *8*T_global);
+   spinortrace=(_Complex double *)malloc(sizeof(_Complex double)*2*T_global);
+   flavortrace=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
+
+   if ( ( type_1234 == TYPE_1 )|| ( type_1234 == TYPE_3 ) ) {
+     spinorstart=0;
+     spinorend  =2;
+   }
+   else if ( ( type_1234 == TYPE_2) || (type_1234 == TYPE_4) ){
+     spinorstart=2;
+     spinorend  =4;
+   }
+   else{
+     fprintf(stdout,"Wrong argument for type_ab, it can only be TYPE_1, TYPE_2, TYPE_3 or TYPE_4\n");
+     exit(1);
+   }
+
+   for (i=0; i<T_global; ++i)
+      flavortrace[i]=0.;
+//Trace over flavor space
+   for (f1=0; f1<2; ++f1){
+//Trace over the spinor indices
+      for (i=0; i<2*T_global; ++i)
+         spinortrace[i]=0.;
+
+      for (s1= spinorstart; s1<spinorend; ++s1){
+
+//Trace over the spatial indices
+         for (i=0; i<8*T_global; ++i)
+            spacetrace[i]=0.;
+
+         for (ix = 0; ix< VOLUME; ++ix){
+
+//Trace over the color indices for each sites
+            for (i=0; i<8; ++i)
+               colortrace[i]=0.;
+            for (c1=0; c1<3; ++c1){
+/*   
+       TYPE  1 OR  2            (1-g5)/2*S(x  ,ytilde) fixed indices (c1, s1, f1)
+       TYPE  3 OR  4            (1+g5)/2*S(x  ,ytilde) running indices bispinor
+*/
+
+//for the up quark
+               if ( (type_1234 == TYPE_1) || (type_1234 == TYPE_2) ){
+                 _vector_null( running.sp_up.s0 );
+                 _vector_null( running.sp_up.s1 );
+                 _vector_assign( running.sp_up.s2, propfields[12*s1+4*c1+2*f1][ix].sp_up.s2 );
+                 _vector_assign( running.sp_up.s3, propfields[12*s1+4*c1+2*f1][ix].sp_up.s3 );
+                 _vector_null( running.sp_dn.s0 );
+                 _vector_null( running.sp_dn.s1 );
+                 _vector_assign( running.sp_dn.s2, propfields[12*s1+4*c1+2*f1][ix].sp_dn.s2 );
+                 _vector_assign( running.sp_dn.s3, propfields[12*s1+4*c1+2*f1][ix].sp_dn.s3 );
+               }
+               else if ((type_1234 == TYPE_3) || ( type_1234 == TYPE_4) ){
+                 _vector_null( running.sp_up.s2 );
+                 _vector_null( running.sp_up.s3 );
+                 _vector_assign( running.sp_up.s0, propfields[12*s1+4*c1+2*f1][ix].sp_up.s0 );
+                 _vector_assign( running.sp_up.s1, propfields[12*s1+4*c1+2*f1][ix].sp_up.s1 );
+                 _vector_null( running.sp_dn.s2 );
+                 _vector_null( running.sp_dn.s3 );
+                 _vector_assign( running.sp_dn.s0, propfields[12*s1+4*c1+2*f1][ix].sp_dn.s0 );
+                 _vector_assign( running.sp_dn.s1, propfields[12*s1+4*c1+2*f1][ix].sp_dn.s1 );
+               }
+
+/*   
+       TYPE  1 OR  2     phi^dagger(x)*tau_i*  (1-g5)/2*S(x  ,ytilde)
+       TYPE  3 OR  4     tau_i*phi(x)          (1+g5)/2*S(x  ,ytilde)
+*/
+               if ( (type_1234 == TYPE_1) || (type_1234 == TYPE_2)){
+                 taui_scalarfield_spinor_s0s0( &running, &running, GAMMA_DN, ix, NODIR, DAGGER );
+               }
+               else if ( (type_1234 == TYPE_3) || (type_1234 == TYPE_4) ){
+                 taui_scalarfield_spinor_s0s0( &running, &running, GAMMA_UP, ix, NODIR, NO_DAGG);
+               }
+/*   
+       TYPE  1 OR  2     S(ytilde, x)*phi^dagger(x)*tau_i*  (1-g5)/2*S(x  ,ytilde)
+       TYPE  3 OR  4     S(ytilde, x)*tau_i*phi(x)          (1+g5)/2*S(x  ,ytilde)
+*/
+               multiply_backward_propagator(&running, propfields, &running, ix, NODIR );
+
+               trace_in_color(colortrace,&running,c1);
+
+            }  //End of trace color
+
+            trace_in_space(spacetrace,colortrace,ix);
+
+         } //End of trace space
+
+//Gather the results from all nodes to complete the trace in space
+         for (i=0; i<8*T_global; ++i){
+            _Complex double tmp;
+            MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+            spacetrace[i]= tmp;
+         }
+
+         trace_in_spinor(spinortrace, spacetrace, s1);
+      }
+
+//End of trace in spinor space
+/*   
+       TYPE  1      tau_i*phi(ytilde)*       (1+gamma5)/2*S(ytilde, x)*phi^dagger(x)*tau_i*  (1-g5)/2*S(x  ,ytilde)
+       TYPE  2      phi(ytilde)^dagger*tau_i*(1-gamma5)/2*S(ytilde, x)*phi^dagger(x)*tau_i*  (1-g5)/2*S(x  ,ytilde)
+       TYPE  3      tau_i*phi(ytilde)*       (1+gamma5)/2*S(ytilde, x)*tau_i*phi(x)          (1+g5)/2*S(x  ,ytilde)
+       TYPE  4      phi(ytilde)^dagger*tau_i*(1-gamma5)/2*S(ytilde, x)*tau_i*phi(x)          (1+g5)/2*S(x  ,ytilde)
+*/
+      if ( (type_1234 == TYPE_1) || (type_1234 == TYPE_3) ){
+         taui_scalarfield_flavoronly_s0s0( spinortrace, NO_DAGG );
+      }
+      else if ( (type_1234 == TYPE_4) || ( type_1234 == TYPE_2) ){
+         taui_scalarfield_flavoronly_s0s0( spinortrace, DAGGER  );
+      }
+
+      trace_in_flavor( flavortrace, spinortrace, f1 );
+   } //End of traCe in flavor space
+
+   type = type_1234 == TYPE_1 ? 1 : type_1234 == TYPE_2 ? 2 : type_1234 == TYPE_3 ? 3 : 4 ;
+   if (g_cart_id == 0){printf("Density Density correlator type (%s) results\n", type_1234 == TYPE_1 ? "1" : type_1234 == TYPE_2 ? "2" : type_1234 == TYPE_3 ? "3" : "4");}
+   for (i=0; i<T_global; ++i){
+      if (g_cart_id == 0){
+        printf("Typecorrelator %d %.3d %10.10e %10.10e\n", type, i, creal(flavortrace[i])/4.,cimag(flavortrace[i])/4.);
+      }
+   }
+   free(flavortrace);
+   free(spacetrace);
+   free(spinortrace);
+   free(colortrace);
+
+}
+
+
 void density_density_1234( bispinor ** propfields, int type_1234 ){
    int ix,i;
    int f1,c1,s1,tauindex;
-   int spinorstart, spinorend;
+   int spinorstart=0, spinorend=4;
    su3 * restrict upm;
    bispinor running;
 
@@ -777,13 +1044,17 @@ void density_density_1234( bispinor ** propfields, int type_1234 ){
    paulitrace= (_Complex double *)malloc(sizeof(_Complex double)*T_global);
 
    if ( ( type_1234 == TYPE_1 )|| ( type_1234 == TYPE_3 ) ) {
-     spinorstart=0;
+     spinorstart=0; 
      spinorend  =2;
    }
    else if ( ( type_1234 == TYPE_2) || (type_1234 == TYPE_4) ){
      spinorstart=2;
      spinorend  =4;
    }
+   else{
+     if (g_cart_id ==0) fprintf(stdout, "Wrong arument for type_1234, it can only be TYPE_1, TYPE_2, TYPE_3, TYPE_4\n");
+     exit(1);
+  }
 
 //Trace over the Pauli matrices
    for (i=0; i<T_global; ++i)
@@ -917,7 +1188,7 @@ void density_density_1234( bispinor ** propfields, int type_1234 ){
 void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int type_ab ){
    int ix,i;
    int f1,c1,s1,tauindex;
-   int spinorstart, spinorend;
+   int spinorstart=0, spinorend=4;
    su3 * restrict upm;
    bispinor running;
    int count;
@@ -938,13 +1209,19 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
    paulitrace= (_Complex double *)malloc(sizeof(_Complex double)*T_global);
 
    if ( type_ab == TYPE_A ) {
-     spinorstart=0;
+     spinorstart=0; 
      spinorend  =2;
    }
    else if ( type_ab == TYPE_B ){
      spinorstart=2;
      spinorend  =4;
    }
+   else{
+    fprintf(stdout, "Wrong argument for type_ab, it can only be TYPE_A or TYPE_B\n");                                                                      
+    exit(1);                                                                                                                                                                  
+   }
+
+
 //Doing the neccessary communication
    for (s1=spinorstart; s1<spinorend; ++s1)
       for (c1=0; c1<3; ++c1)
@@ -1103,7 +1380,7 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
 void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int type_ab ){
    int ix,i;
    int f1,c1,s1,tauindex;
-   int spinorstart, spinorend;
+   int spinorstart=0, spinorend=4;
    su3 * restrict upm;
    su3_vector tmpvec;
    bispinor running;
@@ -1131,6 +1408,12 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
       spinorstart=2;
       spinorend  =4;
    }
+   else{
+      fprintf(stdout,"Wrong argument for type_1234, it can only be TYPE_1, TYPE_2,  TYPE_3 or TYPE_4 \n");                                                                      
+      exit(1);                                                                                                                                                                  
+   }
+
+
 // Doing the neccessary communication
    for (s1=spinorstart; s1<spinorend; ++s1)
       for (c1=0; c1<3; ++c1)
@@ -1220,7 +1503,7 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
        TYPE III.1.a OR  III.1.b     tau_i*phi(x)*U0(x-0)*U0(x)* (1+gamma5)/2 *  S(x+0,ytilde)
        TYPE III.2.a OR  III.2.b     tau_i*phi(x)*               (1+gamma5)/2 *  S(x-0,ytilde)
 */
-                   taui_scalarfield_spinor( &running, &running, GAMMA_UP, tauindex, ix, NODIR, NO_DAGG);
+                  taui_scalarfield_spinor( &running, &running, GAMMA_UP, tauindex, ix, NODIR, NO_DAGG);
 
 /*   
        TYPE III.1.a OR  III.1.b     S(ytilde, x-0)*tau_i*phi(x)*U0(x-0)*U0(x)* (1+gamma5)/2 *  S(x+0,ytilde)
@@ -1284,9 +1567,9 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
 void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int type_ab ){
    int ix,i;
    int f1,c1,s1,tauindex;
-   int spinorstart, spinorend;
-   bispinor **propsecneighbour;
-   bispinor **tmpbisp2d;
+   int spinorstart=0, spinorend=4;
+   bispinor **propsecneighbour=NULL;
+   bispinor **tmpbisp2d=NULL;
    su3 * restrict upm;
    bispinor running;
    su3_vector tmpvec;
@@ -1314,6 +1597,11 @@ void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int 
         spinorstart=2;
         spinorend  =4;
    }
+   else{
+       fprintf(stdout,"Wrong argument for type_1234, it can only be TYPE_1, TYPE_2,  TYPE_3 or TYPE_4 \n");                                                                      
+       exit(1);                                                                                                                                                                  
+   }
+
 
    if (type_12 == TYPE_2){
 /**********************************
@@ -1523,7 +1811,7 @@ Creating U^dagger(x-0)*U^dagger(x-2*0)*S(x-2*0,ytilde) in three steps:
 void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int type_ab ){
    int ix,i;
    int f1,c1,s1,tauindex;
-   int spinorstart, spinorend;
+   int spinorstart=0, spinorend=4;
    su3 * restrict upm;
    bispinor running;
    su3_vector tmpvec;
@@ -1552,6 +1840,11 @@ void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int 
      spinorstart=2;
      spinorend  =4;
    }
+   else{
+     if (g_cart_id == 0) fprintf(stdout,"Wrong argument for type_1234, it can only be TYPE_1, TYPE_2,  TYPE_3 or TYPE_4 \n");                                                                      
+     exit(1);                                                                                                                                                                  
+   }
+
 //Doing the neccesary communication
    for (s1=spinorstart; s1<spinorend; ++s1)
      for (c1=0; c1<3; ++c1)
@@ -1715,7 +2008,7 @@ void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int 
 void wilsonterm_current_density_612ab( bispinor ** propfields, int type_12, int type_ab ){
    int ix,i;
    int f1,c1,s1,tauindex;
-   int spinorstart, spinorend;
+   int spinorstart=0, spinorend=4;
    bispinor **starting2d;
    bispinor **running2d;
    bispinor **tmpbisp2d;
@@ -1745,6 +2038,10 @@ void wilsonterm_current_density_612ab( bispinor ** propfields, int type_12, int 
    else if ( type_ab == TYPE_B ){
         spinorstart=2;
         spinorend  =4;
+   }
+   else{
+       if (g_cart_id == 0) fprintf(stdout,"Wrong argument for type_1234, it can only be TYPE_1, TYPE_2,  TYPE_3 or TYPE_4 \n");                                                                      
+       exit(1);                                                                                                                                                                  
    }
    tmpbisp2d= (bispinor **)malloc(sizeof(bispinor *)*24);
    running2d= (bispinor **)malloc(sizeof(bispinor *)*24);
@@ -2194,7 +2491,7 @@ int main(int argc, char *argv[]){
           g_mu = 0.;
           if (g_cart_id == 0) printf("# npergauge=%d\n", operator_list[op_id].npergauge);
 
-          if (g_cart_id == 0) printf("# Starting scalar counter is %d for gauge field %d \n", iscalar, nstore );
+          if (g_cart_id == 0) printf("# Starting scalar counter is %d for gauge field %d \n", nscalar, nstore );
           /* support multiple inversions for the BSM operator, one for each scalar field */
 
           for(int i_pergauge = 0; i_pergauge < operator_list[op_id].npergauge; ++i_pergauge){

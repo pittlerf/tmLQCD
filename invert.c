@@ -458,7 +458,7 @@ int main(int argc, char *argv[])
       /* support multiple inversions for the BSM operator, one for each scalar field */
       for(int i_pergauge = 0; i_pergauge < operator_list[op_id].npergauge; ++i_pergauge){
         /* set scalar field counter to InitialScalarCounter */
-        iscalar= nscalar+j*Nscalarstep*operator_list[op_id].npergauge + i_pergauge*Nscalarstep;
+        int iscalar= nscalar+j*Nscalarstep*operator_list[op_id].npergauge + i_pergauge*Nscalarstep;
         // generate or read the scalar field for the BSM operator
         if(operator_list[op_id].type == BSM || operator_list[op_id].type == BSM2b || operator_list[op_id].type == BSM2m || operator_list[op_id].type == BSM2f ){
           /* used by op_write_prop to generate an appropriate output filename */
