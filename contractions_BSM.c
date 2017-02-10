@@ -2604,6 +2604,12 @@ int main(int argc, char *argv[]){
 #endif
 //    density_density_tmp(g_bispinor_field );
 
+                 smear_scalar_fields_correlator(g_scalar_field, g_smeared_scalar_field);
+
+                 for( int s=0; s<4; s++ )
+                    generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
+
+
                  density_density_1234(g_bispinor_field, TYPE_1);
                  density_density_1234(g_bispinor_field, TYPE_2);
                  density_density_1234(g_bispinor_field, TYPE_3);
