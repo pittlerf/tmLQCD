@@ -266,7 +266,7 @@ void smear_scalar_fields_correlator( scalar ** const sf, scalar ** smearedfield 
          mpi_res=0.;
 //summing over the local volume
 
-         for (x0; x0<LX; x0++)
+         for (x0=0; x0<LX; x0++)
             for (y0=0; y0<LY; ++y0)
                for (z0=0; z0<LZ; ++z0){
                   timeslicesum[j]+=sf[j][((t0*LX + x0)*LY + y0)*LZ + z0];
