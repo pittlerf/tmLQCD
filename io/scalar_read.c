@@ -284,7 +284,7 @@ void smear_scalar_fields_correlator( scalar ** const sf, scalar ** smearedfield 
       }
    }
    for (j=0; j<4; ++j)
-     for (t0=0; t0<t; ++t0)
+     for (t0=0; t0<T; ++t0)
        for (x0; x0<LX; x0++)
          for (y0=0; y0<LY; ++y0)
            for (z0=0; z0<LZ; ++z0){
