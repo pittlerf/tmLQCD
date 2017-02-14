@@ -437,6 +437,9 @@ int main(int argc, char *argv[])
       boundary(operator_list[op_id].kappa);
       g_kappa = operator_list[op_id].kappa; 
       g_mu = 0.;
+      if (operator_list[op_id].type == BSM2f){
+        init_D_psi_BSM2f();
+      }
 
       if(use_preconditioning==1 && PRECWSOPERATORSELECT[operator_list[op_id].solver]!=PRECWS_NO ){
         printf("# Using preconditioning with treelevel preconditioning operator: %s \n",
@@ -458,7 +461,7 @@ int main(int argc, char *argv[])
       /* support multiple inversions for the BSM operator, one for each scalar field */
       for(int i_pergauge = 0; i_pergauge < operator_list[op_id].npergauge; ++i_pergauge){
         /* set scalar field counter to InitialScalarCounter */
-        int iscalar= nscalar+j*Nscalarstep*operator_list[op_id].npergauge + i_pergauge*Nscalarstep;
+        int iscalar= nscalar+j*operator_list[op_id].nscalarstep*operator_list[op_id].npergauge + i_pergauge*operator_list[op_id].nscalarstep;
         // generate or read the scalar field for the BSM operator
         if(operator_list[op_id].type == BSM || operator_list[op_id].type == BSM2b || operator_list[op_id].type == BSM2m || operator_list[op_id].type == BSM2f ){
           /* used by op_write_prop to generate an appropriate output filename */
@@ -468,7 +471,6 @@ int main(int argc, char *argv[])
             for( int s = 0; s < 4; s++) { ranlxd(g_scalar_field[s], VOLUME); }
           } else {
             snprintf(scalar_filename, 50, "%s.%d", scalar_input_filename, iscalar);
-            ++iscalar;
     	      if (g_cart_id == 0) {
     	        printf("#\n# Trying to read scalar field from file %s in %s precision.\n",
     		             scalar_filename, (scalar_precision_read_flag == 32 ? "single" : "double"));
@@ -520,6 +522,9 @@ int main(int argc, char *argv[])
       if(operator_list[op_id].type == OVERLAP){
         free_Dov_WS();
       }
+      if (operator_list[op_id].type == BSM2f){
+        free_D_psi_BSM2f();
+      }
 
     }
     nstore += Nsave;
@@ -542,7 +547,6 @@ int main(int argc, char *argv[])
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 #endif
-  free_D_psi_BSM2f();
   return(0);
 #ifdef _KOJAK_INST
 #pragma pomp inst end(main)

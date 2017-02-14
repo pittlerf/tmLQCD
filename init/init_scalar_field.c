@@ -35,6 +35,8 @@
 
 scalar * sca = NULL;
 
+scalar * scasmeared = NULL;
+
 int init_scalar_field(const int V, const int nr) {
   int i = 0;
 
@@ -58,10 +60,33 @@ int init_scalar_field(const int V, const int nr) {
     g_scalar_field[i] = g_scalar_field[i-1]+V;
   }
 
+  if((void*)(scasmeared = (scalar*)calloc(nr*V+1, sizeof(scalar))) == NULL) {
+    printf ("malloc errno : %d\n",errno);
+    errno = 0;
+    return(1);
+  }
+  if((void*)(g_smeared_scalar_field = malloc(nr*sizeof(scalar*))) == NULL) {
+    printf ("malloc errno : %d\n",errno);
+    errno = 0;
+    return(2);
+  }
+#if ( defined SSE || defined SSE2 || defined SSE3)
+  g_smeared_scalar_field[0] = (scalar*)(((unsigned long int)(scasmeared)+ALIGN_BASE)&~ALIGN_BASE);
+#else
+  g_smeared_scalar_field[0] = scasmeared;
+#endif
+
+  for(i = 1; i < nr; i++){
+    g_smeared_scalar_field[i] = g_smeared_scalar_field[i-1]+V;
+  }
+
+
+
   return(0);
 }
 
 void free_scalar_field() {
   free(sca);
+  free(scasmeared);
 }
 

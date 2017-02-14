@@ -78,6 +78,9 @@ static bispinor *v2m1;
 static bispinor *v2m2;
 static bispinor *v2m3;
 static bispinor *v2m4;
+
+static bispinor *tempor;
+
 void init_D_psi_BSM2f(){
 
      vm1 =(bispinor *)calloc(VOLUMEPLUSRAND,sizeof(bispinor));
@@ -93,6 +96,7 @@ void init_D_psi_BSM2f(){
      v2m3=(bispinor *)calloc(VOLUMEPLUSRAND,sizeof(bispinor));
      v2m4=(bispinor *)calloc(VOLUMEPLUSRAND,sizeof(bispinor));
 
+     tempor=(bispinor *)calloc(VOLUMEPLUSRAND,sizeof(bispinor));
 }
 void free_D_psi_BSM2f(){
      free(vm1);
@@ -107,6 +111,8 @@ void free_D_psi_BSM2f(){
      free(v2m2);
      free(v2m3);
      free(v2m4);
+
+     free(tempor);
 }
 static inline void Fadd(bispinor * const out, const bispinor * const in, const scalar * const phi, const double c, const double sign) {
   static spinor tmp;
@@ -996,8 +1002,8 @@ void D_psi_dagger_BSM2f(bispinor * const P, bispinor * const Q){
 void Q2_psi_BSM2f(bispinor * const P, bispinor * const Q){
 
   /* TODO: the use of [3] has to be changed to avoid future conflicts */
-  D_psi_dagger_BSM2f(g_bispinor_field[3] , Q);
-  D_psi_BSM2f(P, g_bispinor_field[3]);
+  D_psi_dagger_BSM2f(tempor , Q);
+  D_psi_BSM2f(P, tempor);
   // only use these cycles if the m0_BSM parameter is really nonzero...
   if( fabs(m0_BSM) > 1.e-10 ){
     /* Q and P are spinor, not bispinor ==> made a cast */

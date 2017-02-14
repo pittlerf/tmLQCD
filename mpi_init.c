@@ -770,6 +770,5 @@ void tmlqcd_mpi_init(int argc,char *argv[]) {
 #endif
     exit(-1);
   }
-  init_D_psi_BSM2f();
 }
 

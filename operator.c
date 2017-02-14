@@ -69,6 +69,8 @@
 void dummy_D(spinor * const, spinor * const);
 void dummy_DbD(spinor * const s, spinor * const r, spinor * const p, spinor * const q);
 void op_invert(const int op_id, const int index_start, const int write_prop);
+void op_invert_save(const int op_id, const int index_start, const int write_prop);
+
 void op_write_prop(const int op_id, const int index_start, const int append_);
 
 operator operator_list[max_no_operators];
@@ -111,6 +113,7 @@ int add_operator(const int type) {
   optr->no_extra_masses = 0;
 
   optr->npergauge = 1;
+  optr->nscalarstep = 1;
   optr->n = 0;
 
   optr->applyM = &dummy_D;
@@ -138,7 +141,8 @@ int add_operator(const int type) {
     optr->m = 0.;
     optr->inverter = &op_invert;
   }
-  if(optr->type == DBTMWILSON || optr->type == DBCLOVER || optr->type == BSM || optr->type == BSM2m || optr->type == BSM2b || optr->type == BSM2f ) {
+  if(optr->type == DBTMWILSON || optr->type == DBCLOVER || optr->type == BSM || optr->type == BSM2m 
+      || optr->type == BSM2b || optr->type == BSM2f ) {
     optr->no_flavours = 2;
     g_running_phmc = 1;
   }
@@ -472,7 +476,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], optr->sr2, optr->sr3);
       compact(g_bispinor_field[1], g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
       
-      optr->iterations = cg_her_bi(g_bispinor_field[0], g_bispinor_field[1],
+       optr->iterations = cg_her_bi(g_bispinor_field[0], g_bispinor_field[1],
                 optr->maxiter, optr->eps_sq, optr->rel_prec, VOLUME, optr->applyQsqbi);
 
       optr->applyQsqbi(g_bispinor_field[2], g_bispinor_field[0]);
@@ -680,7 +684,7 @@ void op_invert_save(const int op_id, const int index_start, const int write_prop
     fprintf(stdout, "# Inversion done in %d iterations, squared residue = %e!\n",
             optr->iterations, optr->reached_prec);
     fprintf(stdout, "# Inversion done in %1.2e sec. \n", etime - atime);
-  }
+  } 
   free(src);
   free(dest);
   free(tmp);

@@ -223,7 +223,7 @@ void multiply_backward_propagator( bispinor *dest, bispinor **propagator, bispin
    dest->sp_up.s0.c2= bispinor_scalar_product ( &propagator[ 9][propcoord], &source_copy );
 
    dest->sp_up.s1.c0= bispinor_scalar_product ( &propagator[13][propcoord], &source_copy );
-    dest->sp_up.s1.c1= bispinor_scalar_product ( &propagator[17][propcoord], &source_copy );
+   dest->sp_up.s1.c1= bispinor_scalar_product ( &propagator[17][propcoord], &source_copy );
    dest->sp_up.s1.c2= bispinor_scalar_product ( &propagator[21][propcoord], &source_copy );
 
    dest->sp_up.s2.c0= bispinor_scalar_product ( &propagator[25][propcoord], &source_copy );
@@ -261,53 +261,109 @@ void taui_scalarfield_flavoronly( _Complex double *dest, int tauindex, int dagge
      source_copy[i]=dest[i];
    if (dagger == DAGGER){
      if (tauindex == 0){
-       a11=  -1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
-       a12=  +1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
+       if (smearedcorrelator_BSM == 1){
+         a11=  -1.*g_smeared_scalar_field[2][0] - I*g_smeared_scalar_field[1][0];
+         a12=  +1.*g_smeared_scalar_field[0][0] - I*g_smeared_scalar_field[3][0];
 
-       a21=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
-       a22=  +1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
+         a21=  +1.*g_smeared_scalar_field[0][0] + I*g_smeared_scalar_field[3][0];
+         a22=  +1.*g_smeared_scalar_field[2][0] - I*g_smeared_scalar_field[1][0];
+       }
+       else{
+         a11=  -1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
+         a12=  +1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
+
+         a21=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
+         a22=  +1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
+       }
      }
      else  if (tauindex == 1){
-       a11=  +1.*g_scalar_field[1][0] - I*g_scalar_field[2][0];
-       a12=  -1.*g_scalar_field[3][0] - I*g_scalar_field[0][0];
+       if (smearedcorrelator_BSM == 1) {
+         a11=  +1.*g_smeared_scalar_field[1][0] - I*g_smeared_scalar_field[2][0];
+         a12=  -1.*g_smeared_scalar_field[3][0] - I*g_smeared_scalar_field[0][0];
 
-       a21=  -1.*g_scalar_field[3][0] + I*g_scalar_field[0][0];
-       a22=  -1.*g_scalar_field[1][0] - I*g_scalar_field[2][0];
+         a21=  -1.*g_smeared_scalar_field[3][0] + I*g_smeared_scalar_field[0][0];
+         a22=  -1.*g_smeared_scalar_field[1][0] - I*g_smeared_scalar_field[2][0];
+       }
+       else{
+         a11=  +1.*g_scalar_field[1][0] - I*g_scalar_field[2][0];
+         a12=  -1.*g_scalar_field[3][0] - I*g_scalar_field[0][0];
 
+         a21=  -1.*g_scalar_field[3][0] + I*g_scalar_field[0][0];
+         a22=  -1.*g_scalar_field[1][0] - I*g_scalar_field[2][0];
+       }
      }
      else  if (tauindex == 2){
-       a11=  +1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
-       a12=  +1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
+       if (smearedcorrelator_BSM == 1){ 
+         a11=  +1.*g_smeared_scalar_field[0][0] - I*g_smeared_scalar_field[3][0];
+         a12=  +1.*g_smeared_scalar_field[2][0] + I*g_smeared_scalar_field[1][0];
 
-       a21=  +1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
-       a22=  -1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
+         a21=  +1.*g_smeared_scalar_field[2][0] - I*g_smeared_scalar_field[1][0];
+         a22=  -1.*g_smeared_scalar_field[0][0] - I*g_smeared_scalar_field[3][0];
+       }
+       else{
+         a11=  +1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
+         a12=  +1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
+
+         a21=  +1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
+         a22=  -1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
+       }
      }
    }
    else if (dagger == NO_DAGG){
      if (tauindex == 0){
-      a11=  -1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
-      a12=  +1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
+       if (smearedcorrelator_BSM == 1){
+         a11=  -1.*g_smeared_scalar_field[2][0] + I*g_smeared_scalar_field[1][0];
+         a12=  +1.*g_smeared_scalar_field[0][0] - I*g_smeared_scalar_field[3][0];
 
-      a21=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
-      a22=  +1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
+         a21=  +1.*g_smeared_scalar_field[0][0] + I*g_smeared_scalar_field[3][0];
+         a22=  +1.*g_smeared_scalar_field[2][0] + I*g_smeared_scalar_field[1][0];
+       }
+       else{
+         a11=  -1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
+         a12=  +1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
+
+         a21=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
+         a22=  +1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
+       }
      }
      else if (tauindex == 1){
-      a11=  +1.*g_scalar_field[1][0] + I*g_scalar_field[2][0];
-      a12=  -1.*g_scalar_field[3][0] - I*g_scalar_field[0][0];
+      if (smearedcorrelator_BSM == 1){
+         a11=  +1.*g_smeared_scalar_field[1][0] + I*g_smeared_scalar_field[2][0];
+         a12=  -1.*g_smeared_scalar_field[3][0] - I*g_smeared_scalar_field[0][0];
 
-      a21=  -1.*g_scalar_field[3][0] + I*g_scalar_field[0][0];
-      a22=  -1.*g_scalar_field[1][0] + I*g_scalar_field[2][0];
+         a21=  -1.*g_smeared_scalar_field[3][0] + I*g_smeared_scalar_field[0][0];
+         a22=  -1.*g_smeared_scalar_field[1][0] + I*g_smeared_scalar_field[2][0];
+      }
+      else{
+         a11=  +1.*g_scalar_field[1][0] + I*g_scalar_field[2][0];
+         a12=  -1.*g_scalar_field[3][0] - I*g_scalar_field[0][0];
+
+         a21=  -1.*g_scalar_field[3][0] + I*g_scalar_field[0][0];
+         a22=  -1.*g_scalar_field[1][0] + I*g_scalar_field[2][0];
+      }
      }
      else if (tauindex == 2){
-      a11=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
-      a12=  +1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
+      if (smearedcorrelator_BSM == 1){
+         a11=  +1.*g_smeared_scalar_field[0][0] + I*g_smeared_scalar_field[3][0];
+         a12=  +1.*g_smeared_scalar_field[2][0] + I*g_smeared_scalar_field[1][0];
 
-      a21=  +1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
-      a22=  -1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
+         a21=  +1.*g_smeared_scalar_field[2][0] - I*g_smeared_scalar_field[1][0];
+         a22=  -1.*g_smeared_scalar_field[0][0] + I*g_smeared_scalar_field[3][0];
+      }
+      else{
+         a11=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
+         a12=  +1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
+
+         a21=  +1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
+         a22=  -1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
+      }
      }
      else{
-      if (g_cart_id == 0)printf("Wrong Pauli matrix index\n");
-      exit(1);
+      a11=0.;
+      a12=0.;
+      a21=0.;
+      a22=0.;
+      if (g_cart_id == 0){printf("Wrong Pauli matrix index\n");exit(1);};
     }
    }
    for (i=0; i<T_global; ++i){
@@ -321,24 +377,41 @@ void taui_scalarfield_flavoronly_s0s0( _Complex double *dest, int dagger ){
    _Complex double *source_copy;
    _Complex double a11=0.0, a12=0.0, a21=0.0, a22=0.0;
    int i;
-
+ 
    source_copy=(_Complex double *)malloc(sizeof(_Complex double)*2*T_global);
    for (i=0; i<2*T_global; ++i)
      source_copy[i]=dest[i];
    if (dagger == DAGGER){
+     if (smearedcorrelator_BSM == 1){
+       a11=  +1.*g_smeared_scalar_field[0][0] - I*g_smeared_scalar_field[3][0];
+       a12=  -1.*g_smeared_scalar_field[2][0] - I*g_smeared_scalar_field[1][0];
+
+       a21=  +1.*g_smeared_scalar_field[2][0] - I*g_smeared_scalar_field[1][0];
+       a22=  +1.*g_smeared_scalar_field[0][0] + I*g_smeared_scalar_field[3][0];
+     }
+     else{
        a11=  +1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
        a12=  -1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
 
        a21=  +1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
-       a22=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
+       a22=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];     
+     }
    }
    else if (dagger==NO_DAGG){
+     if (smearedcorrelator_BSM == 1){
+       a11=  +1.*g_smeared_scalar_field[0][0] + I*g_smeared_scalar_field[3][0];
+       a12=  +1.*g_smeared_scalar_field[2][0] + I*g_smeared_scalar_field[1][0];
+
+       a21=  -1.*g_smeared_scalar_field[2][0] + I*g_smeared_scalar_field[1][0];
+       a22=  +1.*g_smeared_scalar_field[0][0] - I*g_smeared_scalar_field[3][0];
+     }
+     else{
        a11=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
        a12=  +1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
 
        a21=  -1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
        a22=  +1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
-
+     }
    }
    else{
       a11=0.;
@@ -418,18 +491,38 @@ void taui_scalarfield_spinor_s0s0( bispinor *dest, bispinor *source, int gamma5,
    if (g_cart_id == 0) {printf("Wrong direction in tau scalar field spinor\n"); exit(1);}
  }
  if (dagger == DAGGER){
-   a11=  +1.*g_scalar_field[0][scalarcoord] - I*g_scalar_field[3][scalarcoord];
-   a12=  -1.*g_scalar_field[2][scalarcoord] - I*g_scalar_field[1][scalarcoord];
+   if (smearedcorrelator_BSM == 1){
+     a11=  +1.*g_smeared_scalar_field[0][scalarcoord] - I*g_smeared_scalar_field[3][scalarcoord];
+     a12=  -1.*g_smeared_scalar_field[2][scalarcoord] - I*g_smeared_scalar_field[1][scalarcoord];
 
-   a21=  +1.*g_scalar_field[2][scalarcoord] - I*g_scalar_field[1][scalarcoord];
-   a22=  +1.*g_scalar_field[0][scalarcoord] + I*g_scalar_field[3][scalarcoord];
+     a21=  +1.*g_smeared_scalar_field[2][scalarcoord] - I*g_smeared_scalar_field[1][scalarcoord];
+     a22=  +1.*g_smeared_scalar_field[0][scalarcoord] + I*g_smeared_scalar_field[3][scalarcoord];
+
+   }
+   else{
+     a11=  +1.*g_scalar_field[0][scalarcoord] - I*g_scalar_field[3][scalarcoord];
+     a12=  -1.*g_scalar_field[2][scalarcoord] - I*g_scalar_field[1][scalarcoord];
+
+     a21=  +1.*g_scalar_field[2][scalarcoord] - I*g_scalar_field[1][scalarcoord];
+     a22=  +1.*g_scalar_field[0][scalarcoord] + I*g_scalar_field[3][scalarcoord];
+   }
  }
  else if (dagger == NO_DAGG){
-   a11=  +1.*g_scalar_field[0][scalarcoord] + I*g_scalar_field[3][scalarcoord];
-   a12=  +1.*g_scalar_field[2][scalarcoord] + I*g_scalar_field[1][scalarcoord];
+   if (smearedcorrelator_BSM == 1){
+     a11=  +1.*g_smeared_scalar_field[0][scalarcoord] + I*g_smeared_scalar_field[3][scalarcoord];
+     a12=  +1.*g_smeared_scalar_field[2][scalarcoord] + I*g_smeared_scalar_field[1][scalarcoord];
 
-   a21=  -1.*g_scalar_field[2][scalarcoord] + I*g_scalar_field[1][scalarcoord];
-   a22=  +1.*g_scalar_field[0][scalarcoord] - I*g_scalar_field[3][scalarcoord];
+     a21=  -1.*g_smeared_scalar_field[2][scalarcoord] + I*g_smeared_scalar_field[1][scalarcoord];
+     a22=  +1.*g_smeared_scalar_field[0][scalarcoord] - I*g_smeared_scalar_field[3][scalarcoord];
+
+   }
+   else{
+     a11=  +1.*g_scalar_field[0][scalarcoord] + I*g_scalar_field[3][scalarcoord];
+     a12=  +1.*g_scalar_field[2][scalarcoord] + I*g_scalar_field[1][scalarcoord];
+
+     a21=  -1.*g_scalar_field[2][scalarcoord] + I*g_scalar_field[1][scalarcoord];
+     a22=  +1.*g_scalar_field[0][scalarcoord] - I*g_scalar_field[3][scalarcoord];
+   }
  }
  else {
    fprintf(stdout, "The sixth argument must be either DAGGER or NO_DAGG\n");
@@ -502,48 +595,106 @@ void taui_scalarfield_spinor( bispinor *dest, bispinor *source, int gamma5, int 
  }
  if (dagger == DAGGER){
   if (tauindex == 0){
-   a11=  -1.*g_scalar_field[2][scalarcoord] - I*g_scalar_field[1][scalarcoord];
-   a12=  +1.*g_scalar_field[0][scalarcoord] - I*g_scalar_field[3][scalarcoord];
+   if (smearedcorrelator_BSM  == 1){
+     a11=  -1.*g_smeared_scalar_field[2][scalarcoord] - I*g_smeared_scalar_field[1][scalarcoord];
+     a12=  +1.*g_smeared_scalar_field[0][scalarcoord] - I*g_smeared_scalar_field[3][scalarcoord];
 
-   a21=  +1.*g_scalar_field[0][scalarcoord] + I*g_scalar_field[3][scalarcoord];
-   a22=  +1.*g_scalar_field[2][scalarcoord] - I*g_scalar_field[1][scalarcoord];
+     a21=  +1.*g_smeared_scalar_field[0][scalarcoord] + I*g_smeared_scalar_field[3][scalarcoord];
+     a22=  +1.*g_smeared_scalar_field[2][scalarcoord] - I*g_smeared_scalar_field[1][scalarcoord];
+
+   }
+   else{
+     a11=  -1.*g_scalar_field[2][scalarcoord] - I*g_scalar_field[1][scalarcoord];
+     a12=  +1.*g_scalar_field[0][scalarcoord] - I*g_scalar_field[3][scalarcoord];
+
+     a21=  +1.*g_scalar_field[0][scalarcoord] + I*g_scalar_field[3][scalarcoord];
+     a22=  +1.*g_scalar_field[2][scalarcoord] - I*g_scalar_field[1][scalarcoord];
+   }
   }
   else  if (tauindex == 1){
-   a11=  +1.*g_scalar_field[1][scalarcoord] - I*g_scalar_field[2][scalarcoord];
-   a12=  -1.*g_scalar_field[3][scalarcoord] - I*g_scalar_field[0][scalarcoord];
+   if (smearedcorrelator_BSM  == 1){
+     a11=  +1.*g_smeared_scalar_field[1][scalarcoord] - I*g_smeared_scalar_field[2][scalarcoord];
+     a12=  -1.*g_smeared_scalar_field[3][scalarcoord] - I*g_smeared_scalar_field[0][scalarcoord];
 
-   a21=  -1.*g_scalar_field[3][scalarcoord] + I*g_scalar_field[0][scalarcoord];
-   a22=  -1.*g_scalar_field[1][scalarcoord] - I*g_scalar_field[2][scalarcoord];
+     a21=  -1.*g_smeared_scalar_field[3][scalarcoord] + I*g_smeared_scalar_field[0][scalarcoord];
+     a22=  -1.*g_smeared_scalar_field[1][scalarcoord] - I*g_smeared_scalar_field[2][scalarcoord];
+
+   }
+   else{
+     a11=  +1.*g_scalar_field[1][scalarcoord] - I*g_scalar_field[2][scalarcoord];
+     a12=  -1.*g_scalar_field[3][scalarcoord] - I*g_scalar_field[0][scalarcoord];
+
+     a21=  -1.*g_scalar_field[3][scalarcoord] + I*g_scalar_field[0][scalarcoord];
+     a22=  -1.*g_scalar_field[1][scalarcoord] - I*g_scalar_field[2][scalarcoord];
+   }
   }
   else  if (tauindex == 2){
-   a11=  +1.*g_scalar_field[0][scalarcoord] - I*g_scalar_field[3][scalarcoord];
-   a12=  +1.*g_scalar_field[2][scalarcoord] + I*g_scalar_field[1][scalarcoord];
+   if (smearedcorrelator_BSM  == 1){
+     a11=  +1.*g_smeared_scalar_field[0][scalarcoord] - I*g_smeared_scalar_field[3][scalarcoord];
+     a12=  +1.*g_smeared_scalar_field[2][scalarcoord] + I*g_smeared_scalar_field[1][scalarcoord];
 
-   a21=  +1.*g_scalar_field[2][scalarcoord] - I*g_scalar_field[1][scalarcoord];
-   a22=  -1.*g_scalar_field[0][scalarcoord] - I*g_scalar_field[3][scalarcoord];
+     a21=  +1.*g_smeared_scalar_field[2][scalarcoord] - I*g_smeared_scalar_field[1][scalarcoord];
+     a22=  -1.*g_smeared_scalar_field[0][scalarcoord] - I*g_smeared_scalar_field[3][scalarcoord];
+
+   }
+   else{
+     a11=  +1.*g_scalar_field[0][scalarcoord] - I*g_scalar_field[3][scalarcoord];
+     a12=  +1.*g_scalar_field[2][scalarcoord] + I*g_scalar_field[1][scalarcoord];
+
+     a21=  +1.*g_scalar_field[2][scalarcoord] - I*g_scalar_field[1][scalarcoord];
+     a22=  -1.*g_scalar_field[0][scalarcoord] - I*g_scalar_field[3][scalarcoord];
+   }
   }
  }
  else if (dagger == NO_DAGG){
   if (tauindex == 0){
-   a11=  -1.*g_scalar_field[2][scalarcoord] + I*g_scalar_field[1][scalarcoord];
-   a12=  +1.*g_scalar_field[0][scalarcoord] - I*g_scalar_field[3][scalarcoord];
+   if (smearedcorrelator_BSM  == 1){
+     a11=  -1.*g_smeared_scalar_field[2][scalarcoord] + I*g_smeared_scalar_field[1][scalarcoord];
+     a12=  +1.*g_smeared_scalar_field[0][scalarcoord] - I*g_smeared_scalar_field[3][scalarcoord];
 
-   a21=  +1.*g_scalar_field[0][scalarcoord] + I*g_scalar_field[3][scalarcoord];
-   a22=  +1.*g_scalar_field[2][scalarcoord] + I*g_scalar_field[1][scalarcoord];
+     a21=  +1.*g_smeared_scalar_field[0][scalarcoord] + I*g_smeared_scalar_field[3][scalarcoord];
+     a22=  +1.*g_smeared_scalar_field[2][scalarcoord] + I*g_smeared_scalar_field[1][scalarcoord];
+
+   }
+   else{
+     a11=  -1.*g_scalar_field[2][scalarcoord] + I*g_scalar_field[1][scalarcoord];
+     a12=  +1.*g_scalar_field[0][scalarcoord] - I*g_scalar_field[3][scalarcoord];
+
+     a21=  +1.*g_scalar_field[0][scalarcoord] + I*g_scalar_field[3][scalarcoord];
+     a22=  +1.*g_scalar_field[2][scalarcoord] + I*g_scalar_field[1][scalarcoord];
+   }
   }
   else if (tauindex == 1){
-   a11=  +1.*g_scalar_field[1][scalarcoord] + I*g_scalar_field[2][scalarcoord];
-   a12=  -1.*g_scalar_field[3][scalarcoord] - I*g_scalar_field[0][scalarcoord];
+   if (smearedcorrelator_BSM  == 1){
+     a11=  +1.*g_smeared_scalar_field[1][scalarcoord] + I*g_smeared_scalar_field[2][scalarcoord];
+     a12=  -1.*g_smeared_scalar_field[3][scalarcoord] - I*g_smeared_scalar_field[0][scalarcoord];
 
-   a21=  -1.*g_scalar_field[3][scalarcoord] + I*g_scalar_field[0][scalarcoord];
-   a22=  -1.*g_scalar_field[1][scalarcoord] + I*g_scalar_field[2][scalarcoord];
+     a21=  -1.*g_smeared_scalar_field[3][scalarcoord] + I*g_smeared_scalar_field[0][scalarcoord];
+     a22=  -1.*g_smeared_scalar_field[1][scalarcoord] + I*g_smeared_scalar_field[2][scalarcoord];
+   }
+   else{
+     a11=  +1.*g_scalar_field[1][scalarcoord] + I*g_scalar_field[2][scalarcoord];
+     a12=  -1.*g_scalar_field[3][scalarcoord] - I*g_scalar_field[0][scalarcoord];
+
+     a21=  -1.*g_scalar_field[3][scalarcoord] + I*g_scalar_field[0][scalarcoord];
+     a22=  -1.*g_scalar_field[1][scalarcoord] + I*g_scalar_field[2][scalarcoord];
+   }
   }
   else if (tauindex == 2){
-   a11=  +1.*g_scalar_field[0][scalarcoord] + I*g_scalar_field[3][scalarcoord];
-   a12=  +1.*g_scalar_field[2][scalarcoord] + I*g_scalar_field[1][scalarcoord];
+   if (smearedcorrelator_BSM  == 1){
+     a11=  +1.*g_smeared_scalar_field[0][scalarcoord] + I*g_smeared_scalar_field[3][scalarcoord];
+     a12=  +1.*g_smeared_scalar_field[2][scalarcoord] + I*g_smeared_scalar_field[1][scalarcoord];
 
-   a21=  +1.*g_scalar_field[2][scalarcoord] - I*g_scalar_field[1][scalarcoord];
-   a22=  -1.*g_scalar_field[0][scalarcoord] + I*g_scalar_field[3][scalarcoord];
+     a21=  +1.*g_smeared_scalar_field[2][scalarcoord] - I*g_smeared_scalar_field[1][scalarcoord];
+     a22=  -1.*g_smeared_scalar_field[0][scalarcoord] + I*g_smeared_scalar_field[3][scalarcoord];
+   }
+   else{
+     a11=  +1.*g_scalar_field[0][scalarcoord] + I*g_scalar_field[3][scalarcoord];
+     a12=  +1.*g_scalar_field[2][scalarcoord] + I*g_scalar_field[1][scalarcoord];
+
+     a21=  +1.*g_scalar_field[2][scalarcoord] - I*g_scalar_field[1][scalarcoord];
+     a22=  -1.*g_scalar_field[0][scalarcoord] + I*g_scalar_field[3][scalarcoord];
+   }
   }
  }
  _spinor_null(tmpbi2.sp_up);
@@ -743,20 +894,28 @@ void density_density_1234_petros( bispinor **propfields )
        phimatrix[ix]=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
     for (ix=0;ix<VOLUME;++ix)
     {
-       phimatrix[0][ix]= 1.*g_scalar_field[0][ix] + I*g_scalar_field[3][ix];
-       phimatrix[1][ix]= 1.*g_scalar_field[2][ix] + I*g_scalar_field[1][ix];
-       phimatrix[2][ix]=-1.*g_scalar_field[2][ix] + I*g_scalar_field[1][ix];
-       phimatrix[3][ix]= 1.*g_scalar_field[0][ix] - I*g_scalar_field[3][ix];
+       if (smearedcorrelator_BSM == 1){
+         phimatrix[0][ix]= 1.*g_smeared_scalar_field[0][ix] + I*g_smeared_scalar_field[3][ix];
+         phimatrix[1][ix]= 1.*g_smeared_scalar_field[2][ix] + I*g_smeared_scalar_field[1][ix];
+         phimatrix[2][ix]=-1.*g_smeared_scalar_field[2][ix] + I*g_smeared_scalar_field[1][ix];
+         phimatrix[3][ix]= 1.*g_smeared_scalar_field[0][ix] - I*g_smeared_scalar_field[3][ix];
+       }
+       else{
+         phimatrix[0][ix]= 1.*g_scalar_field[0][ix] + I*g_scalar_field[3][ix];
+         phimatrix[1][ix]= 1.*g_scalar_field[2][ix] + I*g_scalar_field[1][ix];
+         phimatrix[2][ix]=-1.*g_scalar_field[2][ix] + I*g_scalar_field[1][ix];
+         phimatrix[3][ix]= 1.*g_scalar_field[0][ix] - I*g_scalar_field[3][ix];
+       }
     }
 
     for (ix=0;ix<4;++ix)
        phimatrixspatialnull[ix]=phimatrix[ix][0];
 
+#if defined MPI
     for (ix=0;ix<4;++ix)
        MPI_Gather(&phimatrixspatialnull[ix], 1, MPI_DOUBLE_COMPLEX, &phimatrixspatialnull[ix], 1, MPI_DOUBLE_COMPLEX, 0, g_cart_grid);
-
-//    printf("%e %e\n",creal(phimatrixspatialnull[0]),cimag(phimatrixspatialnull[0]));
-//    exit(1); 
+#endif
+    
     for (ix=0; ix<VOLUME; ++ix){
        trace_in_spinor_and_color(C0000,propfields,ix,0,0,0,0);
        trace_in_spinor_and_color(C0001,propfields,ix,0,0,0,1);
@@ -844,11 +1003,13 @@ void density_density_1234_petros( bispinor **propfields )
                                      + 1.*phimatrixspatialnull[1*2+1]*C1111[ix]*conj(phimatrix[1*2+1][ix]);
 
     }
+#if defined MPI
     for (ix=0; ix<T_global; ++ix){
        _Complex double tmp;
        MPI_Allreduce(&final_corr[ix], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
        final_corr[ix]= tmp;
     }
+#endif
     if (g_cart_id == 0){printf("Density Density correlator type a la Petros (1) results\n");}
       for (ix=0; ix<T_global; ++ix){
         if (g_cart_id == 0){
@@ -980,8 +1141,9 @@ void density_density_1234_s0s0( bispinor ** propfields, int type_1234 ){
             trace_in_space(spacetrace,colortrace,ix);
 
          } //End of trace space
-
+ 
 //Gather the results from all nodes to complete the trace in space
+
          for (i=0; i<8*T_global; ++i){
             _Complex double tmp;
             MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
@@ -1012,7 +1174,7 @@ void density_density_1234_s0s0( bispinor ** propfields, int type_1234 ){
    if (g_cart_id == 0){printf("Density Density correlator type (%s) results\n", type_1234 == TYPE_1 ? "1" : type_1234 == TYPE_2 ? "2" : type_1234 == TYPE_3 ? "3" : "4");}
    for (i=0; i<T_global; ++i){
       if (g_cart_id == 0){
-        printf("Typecorrelator %d %.3d %10.10e %10.10e\n", type, i, creal(flavortrace[i])/4.,cimag(flavortrace[i])/4.);
+        printf("DDS0S0 %d %.3d %10.10e %10.10e\n", type, i, creal(flavortrace[i])/4.,cimag(flavortrace[i])/4.);
       }
    }
    free(flavortrace);
@@ -1027,7 +1189,6 @@ void density_density_1234( bispinor ** propfields, int type_1234 ){
    int ix,i;
    int f1,c1,s1,tauindex;
    int spinorstart=0, spinorend=4;
-   su3 * restrict upm;
    bispinor running;
 
    _Complex double *colortrace;
@@ -1090,7 +1251,6 @@ void density_density_1234( bispinor ** propfields, int type_1234 ){
        TYPE  1 OR  2            (1-g5)/2*S(x  ,ytilde) fixed indices (c1, s1, f1)
        TYPE  3 OR  4            (1+g5)/2*S(x  ,ytilde) running indices bispinor
 */
-                  upm = &g_gauge_field[g_idn[ix][TUP]][TUP];
 
 //for the up quark
                   if ( (type_1234 == TYPE_1) || (type_1234 == TYPE_2) ){
@@ -1140,14 +1300,15 @@ void density_density_1234( bispinor ** propfields, int type_1234 ){
             } //End of trace space
 
 //Gather the results from all nodes to complete the trace in space
+#if defined MPI
             for (i=0; i<8*T_global; ++i){
                _Complex double tmp;
-               MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+               MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
                spacetrace[i]= tmp;
             }
+#endif
             // delta (spinor components of spacetrace, s1) for all time slices and flavor indices
             trace_in_spinor(spinortrace, spacetrace, s1);
-
          }//End of trace in spinor space
 /*   
        TYPE  1      tau_i*phi(ytilde)*       (1+gamma5)/2*S(ytilde, x)*phi^dagger(x)*tau_i*  (1-g5)/2*S(x  ,ytilde)
@@ -1169,10 +1330,11 @@ void density_density_1234( bispinor ** propfields, int type_1234 ){
          paulitrace[i]+=flavortrace[i];
    } //End of trace for Pauli matrices
 
+   type = type_1234 == TYPE_1 ? 1 : type_1234 == TYPE_2 ? 2 : type_1234 == TYPE_3 ? 3 : 4 ;
    if (g_cart_id == 0){printf("Density Density correlator type (%s) results\n", type_1234 == TYPE_1 ? "1" : type_1234 == TYPE_2 ? "2" : type_1234 == TYPE_3 ? "3" : "4");}
    for (i=0; i<T_global; ++i){
       if (g_cart_id == 0){
-        printf("Typecorrelator %d %.3d %10.10e %10.10e\n", type, i, creal(paulitrace[i])/4.,cimag(paulitrace[i])/4.);
+        printf("DD %d %.3d %10.10e %10.10e\n", type, i, creal(paulitrace[i])/4.,cimag(paulitrace[i])/4.);
       }
    }
    free(flavortrace);
@@ -1191,11 +1353,12 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
    int spinorstart=0, spinorend=4;
    su3 * restrict upm;
    bispinor running;
+#if defined MPI
    int count;
    MPI_Status  statuses[8];
    MPI_Request *request;
    request=( MPI_Request *) malloc(sizeof(MPI_Request)*8);
-
+#endif
    _Complex double *colortrace;
    _Complex double *spacetrace;
    _Complex double *spinortrace;
@@ -1209,7 +1372,7 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
    paulitrace= (_Complex double *)malloc(sizeof(_Complex double)*T_global);
 
    if ( type_ab == TYPE_A ) {
-     spinorstart=0; 
+     spinorstart=0;
      spinorend  =2;
    }
    else if ( type_ab == TYPE_B ){
@@ -1217,23 +1380,25 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
      spinorend  =4;
    }
    else{
-    fprintf(stdout, "Wrong argument for type_ab, it can only be TYPE_A or TYPE_B\n");                                                                      
-    exit(1);                                                                                                                                                                  
+    if (g_cart_id == 0){
+      fprintf(stdout, "Wrong argument for type_ab, it can only be TYPE_A or TYPE_B\n");exit(1);}                                                                                                                                                                  
    }
 
 
 //Doing the neccessary communication
+#if defined MPI
    for (s1=spinorstart; s1<spinorend; ++s1)
       for (c1=0; c1<3; ++c1)
          for (f1=0; f1<2; ++f1){
             count=0;
             generic_exchange_direction_nonblocking( propfields[12*s1 + 4*c1 + 2*f1 + 0], sizeof(bispinor), TDOWN, request, &count );
-            MPI_Waitall( count, request, statuses);
+            MPI_Waitall( count, request, statuses); 
             count=0; 
             generic_exchange_direction_nonblocking( propfields[12*s1 + 4*c1 + 2*f1 + 1], sizeof(bispinor), TDOWN, request, &count);
             MPI_Waitall( count, request, statuses);
          }
    free(request);
+#endif
    
 //Trace over the Pauli matrices
    for (i=0; i<T_global; ++i)
@@ -1332,11 +1497,13 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
             } //End of trace space
 
 //Gather the results from all nodes to complete the trace in space
+#if defined MPI
             for (i=0; i<8*T_global; ++i){
                _Complex double tmp;
-               MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+               MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
                spacetrace[i]= tmp;
             }
+#endif
             // delta (spinor components of spacetrace, s1) for all time slices and flavor components
             trace_in_spinor(spinortrace, spacetrace, s1);
 
@@ -1344,7 +1511,7 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
    
 /*   
        TYPE  IA tau_i*phi(ytilde)        *  (1+gamma5)/2  *   S(ytilde, x-0)*   tau_i*gamma0*U0(x-0)*       (1-g5)/2*   S(x  ,ytilde)
-       TYPE  IB phi^dagger(ytilde)*tau_i *  (1-gamma5)/2  *   S(ytilde, x-0)*   tau_i*gamma0*U0(x-0)*       (1-g5)/2*   S(x  ,ytilde)
+       TYPE  IB phi ^dagger(ytilde)*tau_i *  (1-gamma5)/2  *   S(ytilde, x-0)*   tau_i*gamma0*U0(x-0)*       (1-g5)/2*   S(x  ,ytilde)
 
        TYPE IIA tau_i*phi(ytilde)        *  (1+gamma5)/2  *   S(ytilde, x  )*   tau_i*gamma0*U0^dagger(x-0)*(1-g5)/2*   S(x-0,ytilde)
        TYPE IIB phi^dagger(ytilde)*tau_i *  (1-gamma5)/2  *   S(ytilde, x  )*   tau_i*gamma0*U0^dagger(x-0)*(1-g5)/2*   S(x-0,ytilde)
@@ -1367,14 +1534,14 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
    if (g_cart_id == 0){printf("NaiveDirac Current Density correlator type (%s %s) results\n", type_12 == TYPE_I ? "I" : "II",type_ab == TYPE_A ? "a" :"b");}
    for (i=0; i<T_global; ++i){
       if (g_cart_id == 0){
-        printf("%3d %10.10e %10.10e\n", i, creal(paulitrace[i]),cimag(paulitrace[i]));
+        printf("DCD %d %d %.3d %10.10e %10.10e\n",type_12, type_ab,  i, creal(paulitrace[i])/4.,cimag(paulitrace[i])/4.0);
       }
    }
    free(flavortrace);
    free(paulitrace);
    free(spacetrace);
    free(spinortrace);
-   free(colortrace);
+   free(colortrace); 
 
 }
 void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int type_ab ){
@@ -1384,10 +1551,12 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
    su3 * restrict upm;
    su3_vector tmpvec;
    bispinor running;
+#if defined MPI
    int count;
    MPI_Status  statuses[8];
    MPI_Request *request;
    request=( MPI_Request *) malloc(sizeof(MPI_Request)*8);
+#endif
    _Complex double *colortrace;
    _Complex double *spacetrace;
    _Complex double *spinortrace;
@@ -1409,18 +1578,18 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
       spinorend  =4;
    }
    else{
-      fprintf(stdout,"Wrong argument for type_1234, it can only be TYPE_1, TYPE_2,  TYPE_3 or TYPE_4 \n");                                                                      
-      exit(1);                                                                                                                                                                  
+      if (g_cart_id == 0){fprintf(stdout,"Wrong argument for type_1234, it can only be TYPE_1, TYPE_2,  TYPE_3 or TYPE_4 \n"); exit(1);}
    }
 
 
 // Doing the neccessary communication
+#if defined MPI
    for (s1=spinorstart; s1<spinorend; ++s1)
       for (c1=0; c1<3; ++c1)
          for (f1=0; f1<2; ++f1){
             count=0;
             generic_exchange_direction_nonblocking( propfields[12*s1 + 4*c1 + 2*f1 + 0], sizeof(bispinor), TUP   , request, &count );
-            MPI_Waitall( count, request, statuses);
+            MPI_Waitall( count, request, statuses); 
             count=0;
             generic_exchange_direction_nonblocking( propfields[12*s1 + 4*c1 + 2*f1 + 0], sizeof(bispinor), TDOWN , request, &count );
             MPI_Waitall( count, request, statuses);
@@ -1429,7 +1598,7 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
             MPI_Waitall( count, request, statuses);
          }
    free(request);
-
+#endif
 //Trace over the Pauli matrices
    for (i=0; i<T_global; ++i){
       paulitrace[i]=0.;
@@ -1518,11 +1687,13 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
             }  //End of trace in space
 
 //Gather the results from all nodes to complete the trace in space
+#if defined MPI
             for (i=0; i<8*T_global; ++i){
                _Complex double tmp;
-               MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+               MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
                spacetrace[i]= tmp;
             }
+#endif
             // delta (spinor components of spacetrace, s1) for all time slices and flavor indices 
             trace_in_spinor(spinortrace, spacetrace, s1);
 
@@ -1535,7 +1706,7 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
        TYPE III.2.a                 tau_i*phi(ytilde)*       (1+gamma5)/2* S(ytilde, x-0)*tau_i*phi(x)*               (1+gamma5)/2 *  S(x-0,ytilde)
        TYPE III.2.b                 phi^dagger(ytilde)*tau_i*(1-gamma5)/2* S(ytilde, x-0)*tau_i*phi(x)*               (1+gamma5)/2 *  S(x-0,ytilde)
 
-*/
+*/ 
          if ( type_ab == TYPE_A ){
            taui_scalarfield_flavoronly( spinortrace, tauindex, NO_DAGG );
          }
@@ -1555,7 +1726,7 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
    if (g_cart_id == 0){printf("Wilson term Dirac Current Density correlator typeIII results= %s %s\n", type_12 == TYPE_1 ? "1" : "2",type_ab == TYPE_A ? "a" :"b");}
    for (i=0; i<T_global; ++i){
       if (g_cart_id == 0){
-        printf("%3d %10.10e %10.10e\n", i, creal(paulitrace[i]), cimag(paulitrace[i]));
+        printf("WCDPR1 %d %d %.3d %10.10e %10.10e\n", type_12, type_ab, i, creal(paulitrace[i])/4., cimag(paulitrace[i])/4.);
       }
    }
    free(flavortrace);
@@ -1573,9 +1744,11 @@ void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int 
    su3 * restrict upm;
    bispinor running;
    su3_vector tmpvec;
+#if defined MPI
    int count;
    MPI_Status  statuses[8];
    MPI_Request *request;
+#endif
    _Complex double *colortrace;
    _Complex double *spacetrace;
    _Complex double *spinortrace;
@@ -1588,18 +1761,19 @@ void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int 
    flavortrace=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
    paulitrace= (_Complex double *)malloc(sizeof(_Complex double)*T_global);
 
+#if defined MPI
    request=( MPI_Request *) malloc(sizeof(MPI_Request)*8);
+#endif
    if ( type_ab == TYPE_A ) {
         spinorstart=0;
-        spinorend  =2;
+         spinorend  =2;
    }
    else if ( type_ab == TYPE_B ){
         spinorstart=2;
         spinorend  =4;
    }
    else{
-       fprintf(stdout,"Wrong argument for type_1234, it can only be TYPE_1, TYPE_2,  TYPE_3 or TYPE_4 \n");                                                                      
-       exit(1);                                                                                                                                                                  
+       if (g_cart_id == 0) {fprintf(stdout,"Wrong argument for type_1234, it can only be TYPE_1, TYPE_2,  TYPE_3 or TYPE_4 \n");exit(1);}
    }
 
 
@@ -1607,7 +1781,7 @@ void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int 
 /**********************************
 Creating U^dagger(x-0)*U^dagger(x-2*0)*S(x-2*0,ytilde) in three steps:
 1; Creating U^dagger(x)*S(x,ytilde)
-2; Creating U^dagger(x+0)Ü0^dagger(x)*S(x, ytilde)
+2;  Creating U^dagger(x+0)Ü0^dagger(x)*S(x, ytilde)
 3; Gathering two times in direction TDOWN
 ***********************************/
       tmpbisp2d= (bispinor **)malloc(sizeof(bispinor *)*24);
@@ -1653,6 +1827,7 @@ Creating U^dagger(x-0)*U^dagger(x-2*0)*S(x-2*0,ytilde) in three steps:
                _su3_inverse_multiply(tmpvec, (*upm), tmpbisp2d[12*f1+3*s1+c1][ix].sp_dn.s1);
                _vector_assign(  tmpbisp2d[12*f1+3*s1+c1][ix].sp_dn.s1, tmpvec);
             }
+#if defined MPI
       for (s1=spinorstart;s1<spinorend; ++s1)
         for (c1=0; c1<3; ++c1)
           for (f1=0; f1<2; ++f1){
@@ -1660,6 +1835,7 @@ Creating U^dagger(x-0)*U^dagger(x-2*0)*S(x-2*0,ytilde) in three steps:
             generic_exchange_direction_nonblocking( tmpbisp2d[12*f1+3*s1+c1], sizeof(bispinor), TDOWN, request, &count );
             MPI_Waitall( count, request, statuses);
           }
+#endif
       for (s1=spinorstart;s1<spinorend; ++s1)
         for (c1=0; c1<3; ++c1)
           for (f1=0; f1<2; ++f1){
@@ -1670,6 +1846,7 @@ Creating U^dagger(x-0)*U^dagger(x-2*0)*S(x-2*0,ytilde) in three steps:
                _spinor_assign( propsecneighbour[12*f1+3*s1+c1][ix].sp_dn, tmpbisp2d[12*f1+3*s1+c1][g_idn[ix][TUP]].sp_dn);
             }
           }
+#if defined MPI
       for (s1=spinorstart;s1<spinorend; ++s1)
        for (c1=0; c1<3; ++c1)
          for (f1=0; f1<2; ++f1){
@@ -1677,6 +1854,7 @@ Creating U^dagger(x-0)*U^dagger(x-2*0)*S(x-2*0,ytilde) in three steps:
            generic_exchange_direction_nonblocking( propsecneighbour[12*f1+3*s1+c1], sizeof(bispinor), TDOWN, request, &count );
            MPI_Waitall( count, request, statuses);
         }
+#endif
    }
    for (i=0; i<T_global; ++i)
       paulitrace[i]=0.;
@@ -1760,11 +1938,13 @@ Creating U^dagger(x-0)*U^dagger(x-2*0)*S(x-2*0,ytilde) in three steps:
             }  //End of trace in space
 
 //Gather the results from all nodes to complete the trace in space
+#if defined MPI
             for (i=0; i<8*T_global; ++i){
                _Complex double tmp;
-               MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+               MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
                spacetrace[i]= tmp;
             }
+#endif
             // delta (spinor components of spacetrace, s1) for all time slices and flavor indices
             trace_in_spinor(spinortrace, spacetrace, s1);
 
@@ -1789,14 +1969,14 @@ Creating U^dagger(x-0)*U^dagger(x-2*0)*S(x-2*0,ytilde) in three steps:
    if (g_cart_id == 0){printf("Wilson term Dirac Current Density correlator typeIV results= %s %s\n", type_12 == TYPE_1 ? "1" : "2",type_ab == TYPE_A ? "a" :"b");}
    for (i=0; i<T_global; ++i){
       if (g_cart_id == 0){
-        printf("%3d %10.10e %10.10e\n", i, creal(paulitrace[i]), cimag(paulitrace[i]));
+        printf("WCDPR2 %d %d %.3d %10.10e %10.10e\n", type_12, type_ab,i, creal(paulitrace[i])/4., cimag(paulitrace[i])/4.);
       }
    }
    free(flavortrace);
    free(paulitrace);
    free(spacetrace);
    free(spinortrace);
-   free(colortrace);
+   free(colortrace); 
 
    if (type_12 == TYPE_2){
      for(i=0;i<24;++i){
@@ -1806,7 +1986,9 @@ Creating U^dagger(x-0)*U^dagger(x-2*0)*S(x-2*0,ytilde) in three steps:
      free(tmpbisp2d);
      free(propsecneighbour);
    }
-   free(request); 
+#if defined MPI
+   free(request);
+#endif 
 }
 void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int type_ab ){
    int ix,i;
@@ -1815,11 +1997,12 @@ void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int 
    su3 * restrict upm;
    bispinor running;
    su3_vector tmpvec;
+#if defined MPI
    int count;
    MPI_Status  statuses[8];
    MPI_Request *request;
    request=( MPI_Request *) malloc(sizeof(MPI_Request)*8);
-
+#endif
    _Complex double *colortrace;
    _Complex double *spacetrace;
    _Complex double *spinortrace;
@@ -1844,7 +2027,7 @@ void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int 
      if (g_cart_id == 0) fprintf(stdout,"Wrong argument for type_1234, it can only be TYPE_1, TYPE_2,  TYPE_3 or TYPE_4 \n");                                                                      
      exit(1);                                                                                                                                                                  
    }
-
+#if defined MPI
 //Doing the neccesary communication
    for (s1=spinorstart; s1<spinorend; ++s1)
      for (c1=0; c1<3; ++c1)
@@ -1860,6 +2043,7 @@ void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int 
            MPI_Waitall( count, request, statuses);
        }
    free(request);
+#endif
 // Trace over the Pauli matrices
    for (tauindex=0; tauindex<3; ++tauindex){
 
@@ -1952,7 +2136,7 @@ void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int 
                     multiply_backward_propagator(&running, propfields, &running, ix, TDOWN);
                   }
 /*   
-       TYPE V.1.a                 tau_i*phi(ytilde)*       (1+gamma5)/2* S(ytilde, x-0)*tau_i*phi(x)*U0(x-0)*U0(x)* (1+gamma5)/2 *  S(x+0,ytilde)
+        TYPE V.1.a                 tau_i*phi(ytilde)*       (1+gamma5)/2* S(ytilde, x-0)*tau_i*phi(x)*U0(x-0)*U0(x)* (1+gamma5)/2 *  S(x+0,ytilde)
        TYPE V.1.b                 phi^dagger(ytilde)*tau_i*(1-gamma5)/2* S(ytilde, x-0)*tau_i*phi(x)*U0(x-0)*U0(x)* (1+gamma5)/2 *  S(x+0,ytilde)
 
        TYPE V.2.a                 tau_i*phi(ytilde)*       (1+gamma5)/2* S(ytilde, x-0)*tau_i*phi(x)*               (1+gamma5)/2 *  S(x-0,ytilde)
@@ -1965,13 +2149,14 @@ void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int 
                //sum over all lattice sites the result of the color trace
                trace_in_space( spacetrace, colortrace, ix);
             }  //End of trace in space
-
+#if defined MPI
 //Gather the results from all nodes to complete the trace in space
             for (i=0; i<8*T_global; ++i){
                _Complex double tmp;
                MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
                spacetrace[i]= tmp;
             }
+#endif
             // delta (spinor components of spacetrace, s1) for all time slices and flavor indices
             trace_in_spinor(spinortrace, spacetrace, s1);
 
@@ -1996,7 +2181,7 @@ void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int 
    if (g_cart_id == 0){printf("Wilson term Dirac Current Density correlator typeV results= %s %s\n", type_12 == TYPE_1 ? "1" : "2",type_ab == TYPE_A ? "a" :"b");}
    for (i=0; i<T_global; ++i){
       if (g_cart_id == 0){
-        printf("%3d %10.10e %10.10e\n", i, creal(paulitrace[i]), cimag(paulitrace[i]));
+        printf("WCDPL1 %d %d %.3d %10.10e %10.10e\n", type_12, type_ab, i, creal(paulitrace[i])/4., cimag(paulitrace[i])/4.);
       }
    }
    free(flavortrace);
@@ -2014,9 +2199,11 @@ void wilsonterm_current_density_612ab( bispinor ** propfields, int type_12, int 
    bispinor **tmpbisp2d;
    su3 * restrict upm;
    su3_vector tmpvec;
+#if defined MPI
    int count;
    MPI_Status  statuses[8];
    MPI_Request *request;
+#endif
    _Complex double *colortrace;
    _Complex double *spacetrace;
    _Complex double *spinortrace;
@@ -2029,8 +2216,9 @@ void wilsonterm_current_density_612ab( bispinor ** propfields, int type_12, int 
    flavortrace=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
    paulitrace= (_Complex double *)malloc(sizeof(_Complex double)*T_global);
 
-
+#if defined MPI
    request=( MPI_Request *) malloc(sizeof(MPI_Request)*8);
+#endif
    if ( type_ab == TYPE_A ) {
         spinorstart=0;
         spinorend  =2;
@@ -2057,6 +2245,7 @@ void wilsonterm_current_density_612ab( bispinor ** propfields, int type_12, int 
      }
    } 
 //Doing the neccesary communication
+#if defined MPI
    for (s1=spinorstart; s1<spinorend; ++s1)
      for (c1=0; c1<3; ++c1)
        for (f1=0; f1<2; ++f1){
@@ -2067,6 +2256,7 @@ void wilsonterm_current_density_612ab( bispinor ** propfields, int type_12, int 
            generic_exchange_direction_nonblocking( propfields[12*s1 + 4*c1 + 2*f1 + 1], sizeof(bispinor), TDOWN , request, &count );
            MPI_Waitall( count, request, statuses);
    }
+#endif
 /*************************
 Creating U0(x-2*0)U0(x-0)*S(x, ytilde) in two steps:
 1; Doing the product U0(x-0)*U0(x)*S( x+0, ytilde)
@@ -2098,6 +2288,7 @@ Creating U0(x-2*0)U0(x-0)*S(x, ytilde) in two steps:
                _su3_multiply(tmpvec, (*upm), starting2d[12*f1+3*s1+c1][ix].sp_dn.s3);
                _vector_assign(  starting2d[12*f1+3*s1+c1][ix].sp_dn.s3, tmpvec);
             }
+#if defined MPI
       for (s1=spinorstart;s1<spinorend; ++s1)
         for (c1=0; c1<3; ++c1)
           for (f1=0; f1<2; ++f1){
@@ -2105,6 +2296,7 @@ Creating U0(x-2*0)U0(x-0)*S(x, ytilde) in two steps:
             generic_exchange_direction_nonblocking( starting2d[12*f1+3*s1+c1], sizeof(bispinor), TDOWN, request, &count );
             MPI_Waitall( count, request, statuses);
       }
+#endif
    }
 // Trace over the Pauli matrices
    for (tauindex=0; tauindex<3; ++tauindex){
@@ -2180,11 +2372,13 @@ Multiplication with Stilde(x-2*0,ytilde)P(x) in three steps:
 
 
             if ( type_12 == TYPE_2 ) {
+#if defined MPI
               for (c1=0; c1<3; ++c1){
                  count=0;
                  generic_exchange_direction_nonblocking( running2d[12*f1+3*s1+c1], sizeof(bispinor), TUP, request, &count );
                  MPI_Waitall( count, request, statuses);
               }
+#endif
             }
             for (ix = 0; ix< VOLUME; ++ix){
                for (c1=0; c1<3; ++c1){
@@ -2197,11 +2391,13 @@ Multiplication with Stilde(x-2*0,ytilde)P(x) in three steps:
                }
             }
             if ( type_12 == TYPE_2 ) {
+#if defined MPI
                for (c1=0; c1<3; ++c1){
                   count=0;
                   generic_exchange_direction_nonblocking( tmpbisp2d[12*f1+3*s1+c1], sizeof(bispinor), TDOWN, request, &count );
                   MPI_Waitall( count, request, statuses);
                }
+#endif
                for (ix = 0; ix< VOLUME; ++ix){
                   for (c1=0; c1<3; ++c1){
                      if (type_12 == TYPE_2){
@@ -2228,11 +2424,13 @@ Multiplication with Stilde(x-2*0,ytilde)P(x) in three steps:
 
 
 //Gather the results from all nodes to complete the trace in space
+#if defined MPI
             for (i=0; i<T_global; ++i){
                _Complex double tmp;
-               MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+               MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
                spacetrace[i]= tmp;
             }
+#endif
             // delta (spinor components of spacetrace, s1) for all time slices and flavor indices
             trace_in_spinor(spinortrace, spacetrace, s1);
 
@@ -2265,15 +2463,17 @@ Multiplication with Stilde(x-2*0,ytilde)P(x) in three steps:
    if (g_cart_id == 0){printf("Wilson term Dirac Current Density correlator typeVI results= %s %s\n", type_12 == TYPE_1 ? "1" : "2",type_ab == TYPE_A ? "a" :"b");}
    for (i=0; i<T_global; ++i){
       if (g_cart_id == 0){
-        printf("%3d %10.10e %10.10e\n", i, creal(paulitrace[i]), cimag(paulitrace[i]));
+        printf("WCDPL2 %d %d %.3d %10.10e %10.10e\n", type_12, type_ab, i, creal(paulitrace[i])/4., cimag(paulitrace[i])/4.);
       }
    }
    free(flavortrace);
    free(paulitrace);
    free(spacetrace);
    free(spinortrace);
-   free(colortrace);
+   free(colortrace); 
+#if defined MPI
    free(request);
+#endif
 }
 int main(int argc, char *argv[]){
   FILE *parameterfile = NULL;
@@ -2293,7 +2493,6 @@ int main(int argc, char *argv[]){
   MPI_Request *request;
   int ix;
   request=( MPI_Request *) malloc(sizeof(MPI_Request)*8);
-
   MPI_Init(&argc, &argv);
 
   MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
@@ -2441,7 +2640,6 @@ int main(int argc, char *argv[]){
   }
 
   init_operators();
-  init_D_psi_BSM2f();
 
 
   for (j = 0; j < Nmeas; j++)
@@ -2485,6 +2683,9 @@ int main(int argc, char *argv[]){
           fprintf(stdout, "#\n"); /*Indicate starting of the operator part*/
       }
       for (op_id =0; op_id < no_operators; op_id++){
+          if (operator_list[op_id].type== BSM2f){
+              init_D_psi_BSM2f();
+          }
           boundary( operator_list[op_id].kappa);
           g_kappa = operator_list[op_id].kappa;
           if (g_cart_id ==0) {fprintf(stdout, "#kappa value=%e\n", g_kappa);}
@@ -2496,7 +2697,7 @@ int main(int argc, char *argv[]){
 
           for(int i_pergauge = 0; i_pergauge < operator_list[op_id].npergauge; ++i_pergauge){
              /* set scalar field counter to InitialScalarCounter */
-             int iscalar = nscalar+j*Nscalarstep*operator_list[op_id].npergauge+i_pergauge*Nscalarstep;
+             int iscalar = nscalar+j*operator_list[op_id].nscalarstep*operator_list[op_id].npergauge+i_pergauge*operator_list[op_id].nscalarstep;
              operator_list[op_id].n = iscalar;
           // read scalar field
              if( strcmp(scalar_input_filename, "create_random_scalarfield") == 0 )
@@ -2523,32 +2724,20 @@ int main(int argc, char *argv[]){
                 read_end=gettime();
 
                 if (g_cart_id == 0) {
-                   printf("# Finished reading scalar field in %.4e seconds.\n",read_end-read_begin);
+                   printf("# Finished reading scalar field in %.4e seconds.\n",read_end-read_begin); 
                    fflush(stdout);
                 }
 
              }//End of reading scalar field
 
       //     unit_scalar_field(g_scalar_field);
-/*
-             smear_scalar_fields_correlator(g_scalar_field, g_scalar_field);
-
-             for( int s=0; s<numbScalarFields; s++ ){
-                count=0;
-                generic_exchange_direction_nonblocking( g_smeared_scalar_field[s], sizeof(scalar), TDOWN, request, &count );
-                MPI_Waitall( count, request, statuses);
-                count=0;
-                generic_exchange_direction_nonblocking( g_smeared_scalar_field[s], sizeof(scalar), TUP  , request, &count );
-                MPI_Waitall( count, request, statuses);
-             }
-*/
+#if defined MPI
              for( int s=0; s<4; s++ )
                 generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
-
+#endif
              for( isample = 0; isample < no_samples; isample++)
              {
-#define PROPAGATORS_ONTHE_FLY 1
-#if defined PROPAGATORS_ONTHE_FLY
+               if (propagatorsonthefly_BSM == 1){
 
                  if ((g_cart_id == 0 ) && ( (index_start != 0) || (index_end!= 11) ))
                  {
@@ -2577,7 +2766,8 @@ int main(int argc, char *argv[]){
                     operator_list[op_id].inverter_save(op_id, index_start, 1);
 
                  }//end of loop for spinor and color source degrees of freedom
-#else
+               }
+               else{
                  for(src_idx = 0; src_idx < 12; src_idx++ )
                  {
                     snprintf(prop_fname,200,"bsm2prop.%.4d.%.2d.%02d.%.8d.inverted",nstore, isample, src_idx, iscalar);
@@ -2591,7 +2781,7 @@ int main(int argc, char *argv[]){
                        pos+=1;
 
 //read the propagator from source d to sink u
-                       read_spinor(g_spinor_field[0], g_spinor_field[1], prop_fname, pos);
+                        read_spinor(g_spinor_field[0], g_spinor_field[1], prop_fname, pos);
                        convert_eo_to_lexic(temp_field[1], g_spinor_field[0], g_spinor_field[1]);
                        pos+=1;
 
@@ -2601,27 +2791,70 @@ int main(int argc, char *argv[]){
                     }
 
                  }//end of loop for spinor and color source degrees of freedom
-#endif
-//    density_density_tmp(g_bispinor_field );
+               }
 
-                 smear_scalar_fields_correlator(g_scalar_field, g_smeared_scalar_field);
+               if (smearedcorrelator_BSM == 1){
+                 smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field);
 
-                 for( int s=0; s<4; s++ )
-                    generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
+                 for ( int s=0; s<4; s++ )
+                    generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
+               }
 
+               if (g_cart_id == 0) {
+                 printf("Following measurements will be done\n");
+                 if (densitydensity_BSM == 1) printf("#Density Density correlation function\n");
+                 if (diraccurrentdensity_BSM == 1) printf("#Dirac current density correlation function\n");
+                 if (wilsoncurrentdensitypr1_BSM == 1) printf("#Wilson  current density PR1 correlation function\n");
+                 if (wilsoncurrentdensitypr2_BSM == 1) printf("#Wilson  current density PR2 correlation function\n");
+                 if (wilsoncurrentdensitypl1_BSM == 1) printf("#Wilson  current density PL1 correlation function\n");
+                 if (wilsoncurrentdensitypl2_BSM == 1) printf("#Wilson  current density PL2 correlation function\n");
+               }
 
+               if (densitydensity_BSM == 1){
                  density_density_1234(g_bispinor_field, TYPE_1);
                  density_density_1234(g_bispinor_field, TYPE_2);
                  density_density_1234(g_bispinor_field, TYPE_3);
                  density_density_1234(g_bispinor_field, TYPE_4);
+               } 
 
+                if (diraccurrentdensity_BSM == 1){
+                 naivedirac_current_density_12ab( g_bispinor_field, TYPE_I , TYPE_A );
+                 naivedirac_current_density_12ab( g_bispinor_field, TYPE_I , TYPE_B );
+                 naivedirac_current_density_12ab( g_bispinor_field, TYPE_II, TYPE_A );
+                 naivedirac_current_density_12ab( g_bispinor_field, TYPE_II, TYPE_B );
+               }
+               if (wilsoncurrentdensitypr1_BSM == 1){
+                 wilsonterm_current_density_312ab( g_bispinor_field, TYPE_1, TYPE_A );
+                 wilsonterm_current_density_312ab( g_bispinor_field, TYPE_1, TYPE_B );
+                 wilsonterm_current_density_312ab( g_bispinor_field, TYPE_2, TYPE_A );
+                 wilsonterm_current_density_312ab( g_bispinor_field, TYPE_2, TYPE_B );
+               }
+               if (wilsoncurrentdensitypr2_BSM == 1){
+                 wilsonterm_current_density_412ab( g_bispinor_field, TYPE_1, TYPE_A );
+                 wilsonterm_current_density_412ab( g_bispinor_field, TYPE_1, TYPE_B );
+                 wilsonterm_current_density_412ab( g_bispinor_field, TYPE_2, TYPE_A );
+                 wilsonterm_current_density_412ab( g_bispinor_field, TYPE_2, TYPE_B );
+               }
+               if (wilsoncurrentdensitypl1_BSM == 1){
+                 wilsonterm_current_density_512ab( g_bispinor_field, TYPE_1, TYPE_A );
+                 wilsonterm_current_density_512ab( g_bispinor_field, TYPE_1, TYPE_B );
+                 wilsonterm_current_density_512ab( g_bispinor_field, TYPE_2, TYPE_A );
+                 wilsonterm_current_density_512ab( g_bispinor_field, TYPE_2, TYPE_B );
+               }
+               if (wilsoncurrentdensitypl2_BSM == 1){
+                 wilsonterm_current_density_612ab( g_bispinor_field, TYPE_1, TYPE_A );
+                 wilsonterm_current_density_612ab( g_bispinor_field, TYPE_1, TYPE_B );
+                 wilsonterm_current_density_612ab( g_bispinor_field, TYPE_2, TYPE_A );
+                 wilsonterm_current_density_612ab( g_bispinor_field, TYPE_2, TYPE_B );
+               }
 //               density_density_1234_petros(g_bispinor_field);
 
              } //End of loop over samples
 
-             iscalar+= Nscalarstep*Nmeas;
           } //End loop over scalar fields
-
+          if (operator_list[op_id].type == BSM2f ){
+             free_D_psi_BSM2f();
+          }
 
       }//End loop over operators
 
@@ -2633,7 +2866,6 @@ int main(int argc, char *argv[]){
   free_gauge_field();
   free_geometry_indices();
   free_bispinor_field();
-  free_D_psi_BSM2f();
   free_scalar_field();
   free_spinor_field();
 

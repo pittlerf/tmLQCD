@@ -110,7 +110,6 @@ inline void rmQuotes(char *str){
   int Ntherm;
   int Nmeas;
   int Nsave;
-  int Nscalarstep;
   int gmres_m_parameter, gmresdr_nr_ev;
   int write_cp_flag;
   int cp_interval;
@@ -199,7 +198,6 @@ inline void rmQuotes(char *str){
 %x SEED
 %x RLXDLEVEL
 %x NSAVE
-%x NSCALARSTEP
 %x RLXDINPUTFILE
 %x GAUGEINPUTFILE
 %x SCALARINPUTFILE
@@ -351,7 +349,6 @@ inline void rmQuotes(char *str){
 ^ThermalisationSweeps{EQL}         BEGIN(THERMSWEEPS);
 ^Measurements{EQL}                 BEGIN(NMEAS);
 ^NSave{EQL}                        BEGIN(NSAVE);
-^Nscalarsteo{EQL}                  BEGIN(NSCALARSTEP);
 ^GaugeFieldInFile{EQL}             BEGIN(GAUGEINPUTFILE);
 ^ScalarFieldInFile{EQL}            BEGIN(SCALARINPUTFILE);
 ^RlxdStateInFile{EQL}              BEGIN(RLXDINPUTFILE);
@@ -714,6 +711,51 @@ inline void rmQuotes(char *str){
     sscanf(yytext, " %[a-zA-Z0] = %lf", name, &c);
     m0_BSM = c;
     if(myverbose != 0) printf("  BSM parameter m0 set to %f\n", m0_BSM);
+  }
+  {SPC}*propagatorsonthefly{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    propagatorsonthefly_BSM = a;
+    if(myverbose != 0) printf("  BSM parameter propagatorsonthefly_BSM  is set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*smearingcorrelator{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    smearedcorrelator_BSM = a;
+    if(myverbose != 0) printf("  BSM parameter smearedcorrelator_BSM  is set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*densitydensity{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    densitydensity_BSM = a;
+    if(myverbose != 0) printf("  BSM parameter densitydensity_BSM  is set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*diraccurrentdensity{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    diraccurrentdensity_BSM = a;
+    if(myverbose != 0) printf("  BSM parameter diraccurrentdensity_BSM is  set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*wilsoncurrentdensityprfirstline{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    wilsoncurrentdensitypr1_BSM = a;
+    if(myverbose != 0) printf("  BSM parameter wilsoncurrentdensitypr1_BSM is  set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*wilsoncurrentdensityprsecondline{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    wilsoncurrentdensitypr2_BSM = a;
+    if(myverbose != 0) printf("  BSM parameter wilsoncurrentdensitypr2_BSM is  set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*wilsoncurrentdensityplfirstline{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    wilsoncurrentdensitypl1_BSM = a;
+    if(myverbose != 0) printf("  BSM parameter wilsoncurrentdensitypl1_BSM is  set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*wilsoncurrentdensityplsecondline{EQL}{ZT} {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    wilsoncurrentdensitypl2_BSM = a;
+    if(myverbose != 0) printf("  BSM parameter wilsoncurrentdensitypl2_BSM is  set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*nscalarstep{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    optr->nscalarstep = a;
+    if(myverbose) printf("  nscalarstep set to %d line %d operator %d\n", a, line_of_file, current_operator);
   }
   {SPC}*npergauge{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
@@ -1742,10 +1784,6 @@ inline void rmQuotes(char *str){
   Nsave=atoi(yytext);
   if(myverbose!=0) printf("Nsave= %s \n",yytext);
 }
-<NSCALARSTEP>{DIGIT}+ {
-  Nscalarstep=atoi(yytext);
-  if(myverbose!=0) printf("Nscalarstep= %s \n",yytext);
-}
 <GMRESM>{DIGIT}+ {
   gmres_m_parameter = atoi(yytext);
   if(myverbose!=0) printf("Use Krylov Space of size %d in GMRES \n", gmres_m_parameter);
@@ -2212,7 +2250,6 @@ int read_input(char * conf_file){
   Ntherm = _default_Ntherm;
   Nmeas = _default_Nmeas;
   Nsave = _default_Nsave;
-  Nscalarstep = _default_Nscalarstep;
   write_cp_flag = _default_write_cp_flag;
   cp_interval = _default_cp_interval;
   nstore = _default_nstore;
@@ -2230,6 +2267,14 @@ int read_input(char * conf_file){
   rho_BSM = _default_rho_BSM;
   eta_BSM = _default_eta_BSM;
   m0_BSM  = _default_m0_BSM;
+  propagatorsonthefly_BSM = _default_propagatorsonthefly_BSM;
+  smearedcorrelator_BSM = _default_smearedcorrelator_BSM;
+  densitydensity_BSM = _default_densitydensity_BSM;
+  diraccurrentdensity_BSM = _default_diraccurrentdensity_BSM;
+  wilsoncurrentdensitypr1_BSM = _default_wilsoncurrentdensitypr1_BSM;
+  wilsoncurrentdensitypr2_BSM = _default_wilsoncurrentdensitypr2_BSM;
+  wilsoncurrentdensitypl1_BSM = _default_wilsoncurrentdensitypl1_BSM;
+  wilsoncurrentdensitypl2_BSM = _default_wilsoncurrentdensitypl2_BSM;
   g_rgi_C1 = _default_g_rgi_C1;
   read_source_flag= _default_read_source_flag;
   if(SourceInfo.basename == NULL) SourceInfo.basename = (char*)malloc(100*sizeof(char));

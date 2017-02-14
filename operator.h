@@ -100,6 +100,7 @@ typedef struct {
 
   /* for the BSM operator, support for multiple scalar fields per sample/index */
   int npergauge;
+  int nscalarstep;
   int n;
 
 

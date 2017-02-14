@@ -65,6 +65,15 @@
 
 // for Frezzotti-Rossi model Dirac operator
 EXTERN double eta_BSM, rho_BSM, m0_BSM;
+EXTERN int propagatorsonthefly_BSM;
+EXTERN int smearedcorrelator_BSM;
+EXTERN int densitydensity_BSM;
+EXTERN int diraccurrentdensity_BSM;
+EXTERN int wilsoncurrentdensitypr1_BSM;
+EXTERN int wilsoncurrentdensitypr2_BSM;
+EXTERN int wilsoncurrentdensitypl1_BSM;
+EXTERN int wilsoncurrentdensitypl2_BSM;
+
 #define TUP 0
 #define XUP 1
 #define YUP 2
@@ -74,7 +83,6 @@ EXTERN double eta_BSM, rho_BSM, m0_BSM;
 #define XDOWN 6
 #define TDOWN 7
 #define NODIR 8
-EXTERN scalar ** g_smearedscalar;
 
 EXTERN int DUM_DERI, DUM_SOLVER, DUM_MATRIX;
 EXTERN int NO_OF_SPINORFIELDS;
@@ -202,6 +210,7 @@ EXTERN su3adj ** ddummy;
 
 /* scalar field (BSM toy model) */
 EXTERN scalar ** g_scalar_field;
+EXTERN scalar ** g_smeared_scalar_field;
 
 EXTERN int count00,count01,count10,count11,count20,count21;
 EXTERN double g_kappa, g_c_sw, g_ka_csw_8, g_beta;

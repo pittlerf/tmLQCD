@@ -52,7 +52,6 @@ extern "C"
   extern int cp_interval;
   extern int nstore;
   extern int nscalar;
-  extern int Nscalarstep;
   extern int crylov_space_dim;
   extern char rlxd_input_filename[500];
   extern char gauge_input_filename[500];

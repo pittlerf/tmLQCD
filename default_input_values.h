@@ -61,7 +61,6 @@
 #define _default_Ntherm 0
 #define _default_Nmeas 1
 #define _default_Nsave 9
-#define _default_Nscalarstep 9
 #define _default_write_cp_flag 1
 #define _default_cp_interval 5
 #define _default_nstore 0
@@ -81,6 +80,14 @@
 #define _default_rho_BSM 1.0
 #define _default_eta_BSM 1.0
 #define _default_m0_BSM  0.0
+#define _default_smearedcorrelator_BSM 0
+#define _default_propagatorsonthefly_BSM 0
+#define _default_densitydensity_BSM 0
+#define _default_diraccurrentdensity_BSM 0
+#define _default_wilsoncurrentdensitypr1_BSM 0
+#define _default_wilsoncurrentdensitypr2_BSM 0
+#define _default_wilsoncurrentdensitypl1_BSM 0
+#define _default_wilsoncurrentdensitypl2_BSM 0
 #define _default_max_solver_iterations 5000
 #define _default_solver_precision 1.e-15
 #define _default_g_rgi_C1 0.
