@@ -256,9 +256,14 @@ void taui_scalarfield_flavoronly( _Complex double *dest, int tauindex, int dagge
    _Complex double a11=0.0, a12=0.0, a21=0.0, a22=0.0;
    int i;
   
-   source_copy=(_Complex double *)malloc(sizeof(_Complex double)*2*T_global);
+   source_copy=(double *)malloc(sizeof(double)*4*T_global);
+
+   if (source_copy == NULL) {
+      if (g_cart_id == 0) {printf("memory allocation failed\n"); exit(1);}
+   }
    for (i=0; i<2*T_global; ++i)
      source_copy[i]=dest[i];
+   
    if (dagger == DAGGER){
      if (tauindex == 0){
        if (smearedcorrelator_BSM == 1){
@@ -1594,7 +1599,7 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
             generic_exchange_direction_nonblocking( propfields[12*s1 + 4*c1 + 2*f1 + 0], sizeof(bispinor), TDOWN , request, &count );
             MPI_Waitall( count, request, statuses);
             count=0;
-            generic_exchange_direction_nonblocking( propfields[12*s1 + 4*c1 + 2*f1 + 1], sizeof(bispinor), TDOWN , request, &count);
+            generic_exchange_direction_nonblocking( propfields[12*s1 + 4*c1 + 2*f1 + 1], sizeof(bispinor), TDOWN , request, &count );
             MPI_Waitall( count, request, statuses);
          }
    free(request);
@@ -1611,7 +1616,7 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
       for (f1=0; f1<2; ++f1){
 
 //Trace over spinor indices
-         for (i=0; i<8*T_global; ++i){
+         for (i=0; i<2*T_global; ++i){
             spinortrace[i]=0.;
          }
 
@@ -1646,6 +1651,7 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
                     _su3_multiply(running.sp_dn.s0, (*upm), propfields[12*s1 + 4*c1 + 2*f1][g_iup[ix][TUP]].sp_dn.s0);
                     _su3_multiply(running.sp_dn.s1, (*upm), propfields[12*s1 + 4*c1 + 2*f1][g_iup[ix][TUP]].sp_dn.s1);
 
+
                     upm = &g_gauge_field[g_idn[ix][TUP]][TUP];
 
 //for the up quark
@@ -1661,6 +1667,7 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
                     _vector_assign(  running.sp_dn.s0, tmpvec);
                     _su3_multiply(tmpvec, (*upm), running.sp_dn.s1);
                     _vector_assign(  running.sp_dn.s1, tmpvec);
+
                   }
                   else if ( type_12 == TYPE_2){
                     _vector_assign( running.sp_up.s0, propfields[12*s1 + 4*c1 + 2*f1][g_idn[ix][TUP]].sp_up.s0 );
@@ -1674,11 +1681,13 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
 */
                   taui_scalarfield_spinor( &running, &running, GAMMA_UP, tauindex, ix, NODIR, NO_DAGG);
 
+
 /*   
        TYPE III.1.a OR  III.1.b     S(ytilde, x-0)*tau_i*phi(x)*U0(x-0)*U0(x)* (1+gamma5)/2 *  S(x+0,ytilde)
        TYPE III.2.a OR  III.2.b     S(ytilde, x-0)*tau_i*phi(x)*               (1+gamma5)/2 *  S(x-0,ytilde)
 */
-                  multiply_backward_propagator(&running, propfields, &running, ix,-1);
+                  multiply_backward_propagator(&running, propfields, &running, ix, TDOWN);
+
                   //delta( color component of bispinor running, c1) for all spinor and flavor indices                  
                   trace_in_color(colortrace, &running, c1 );
                } //End of trace color
@@ -1694,10 +1703,13 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
                spacetrace[i]= tmp;
             }
 #endif
+
             // delta (spinor components of spacetrace, s1) for all time slices and flavor indices 
             trace_in_spinor(spinortrace, spacetrace, s1);
 
          } //End of trace in spinor space
+         
+
 
 /*   
        TYPE III.1.a                 tau_i*phi(ytilde)*       (1+gamma5)/2* S(ytilde, x-0)*tau_i*phi(x)*U0(x-0)*U0(x)* (1+gamma5)/2 *  S(x+0,ytilde)
@@ -1869,7 +1881,7 @@ Creating U^dagger(x-0)*U^dagger(x-2*0)*S(x-2*0,ytilde) in three steps:
       for (f1=0; f1<2; ++f1){
 
 //Trace over spinor indices
-         for (i=0; i<8*T_global; ++i){
+         for (i=0; i<2*T_global; ++i){
             spinortrace[i]=0.;
          }
 
@@ -2054,7 +2066,7 @@ void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int 
       for (f1=0; f1<2; ++f1){
 
 //Trace over spinor indices
-         for (i=0; i<8*T_global; ++i){
+         for (i=0; i<2*T_global; ++i){
             spinortrace[i]=0.;
          }
 
@@ -2308,7 +2320,7 @@ Creating U0(x-2*0)U0(x-0)*S(x, ytilde) in two steps:
       for (f1=0; f1<2; ++f1){
 
 //Trace over spinor indices
-         for (i=0; i<8*T_global; ++i){
+         for (i=0; i<2*T_global; ++i){
             spinortrace[i]=0.;
          }
 
