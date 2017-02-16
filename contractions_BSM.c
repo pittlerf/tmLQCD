@@ -868,6 +868,452 @@ void trace_in_spinor_and_color( _Complex double *c, bispinor **prop, int ix, int
        }
 }
 
+void trace_in_spinor_and_color_fordiraccurrent1a( _Complex double *c, bispinor **prop, int ix, int f3, int f4, int f6, int f1){
+     int alpha1;
+     int c1;
+     c[ix]=0.;
+     bispinor running;
+     su3 * restrict upm;
+     for (alpha1=0; alpha1<2;++alpha1)
+       for (c1=0; c1<3; ++c1){
+          if ( (f6 == 0) && (f4==0) ){
+              upm = &g_gauge_field[g_idn[ix][TUP]][TUP];
+
+              _vector_null( running.sp_up.s0 );
+              _vector_null( running.sp_up.s1 );
+              _vector_null( running.sp_up.s2 );
+              _vector_null( running.sp_up.s3 );
+
+
+              _su3_multiply( running.sp_up.s2, (*upm), prop[12*alpha1+4*c1+2*f1][ix].sp_up.s2 );
+              _su3_multiply( running.sp_up.s3, (*upm), prop[12*alpha1+4*c1+2*f1][ix].sp_up.s3 );
+
+              _vector_add_assign(running.sp_up.s0, running.sp_up.s2);
+              _vector_add_assign(running.sp_up.s1, running.sp_up.s3);
+              _vector_null(running.sp_up.s2);
+              _vector_null(running.sp_up.s3);
+
+              c[ix]+= running.sp_up.s0.c0*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s0.c0)
+                     +running.sp_up.s0.c1*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s0.c1)
+                     +running.sp_up.s0.c2*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s0.c2)
+                     +running.sp_up.s1.c0*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s1.c0)
+                     +running.sp_up.s1.c1*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s1.c1)
+                     +running.sp_up.s1.c2*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s1.c2);
+          }
+          if ( (f6 == 1) && (f4==0) ){
+              upm = &g_gauge_field[g_idn[ix][TUP]][TUP];
+
+              _vector_null( running.sp_dn.s0 );
+              _vector_null( running.sp_dn.s1 );
+              _vector_null( running.sp_dn.s2 );
+              _vector_null( running.sp_dn.s3 );
+
+
+              _su3_multiply( running.sp_dn.s2, (*upm), prop[12*alpha1+4*c1+2*f1][ix].sp_dn.s2 );
+              _su3_multiply( running.sp_dn.s3, (*upm), prop[12*alpha1+4*c1+2*f1][ix].sp_dn.s3 );
+
+              _vector_add_assign(running.sp_dn.s0, running.sp_dn.s2);
+              _vector_add_assign(running.sp_dn.s1, running.sp_dn.s3);
+              _vector_null(running.sp_dn.s2);
+              _vector_null(running.sp_dn.s3);
+
+              c[ix]+= running.sp_dn.s0.c0*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s0.c0)
+                     +running.sp_dn.s0.c1*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s0.c1)
+                     +running.sp_dn.s0.c2*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s0.c2)
+                     +running.sp_dn.s1.c0*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s1.c0)
+                     +running.sp_dn.s1.c1*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s1.c1)
+                     +running.sp_dn.s1.c2*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s1.c2);
+          }
+          if ( (f6 == 0) && (f4==1) ){
+              upm = &g_gauge_field[g_idn[ix][TUP]][TUP];
+
+              _vector_null( running.sp_up.s0 );
+              _vector_null( running.sp_up.s1 );
+              _vector_null( running.sp_up.s2 );
+              _vector_null( running.sp_up.s3 );
+
+
+              _su3_multiply( running.sp_up.s2, (*upm), prop[12*alpha1+4*c1+2*f1][ix].sp_up.s2 );
+              _su3_multiply( running.sp_up.s3, (*upm), prop[12*alpha1+4*c1+2*f1][ix].sp_up.s3 );
+
+              _vector_add_assign(running.sp_up.s0, running.sp_up.s2);
+              _vector_add_assign(running.sp_up.s1, running.sp_up.s3);
+              _vector_null(running.sp_up.s2);
+              _vector_null(running.sp_up.s3);
+
+              c[ix]+= running.sp_up.s0.c0*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s0.c0)
+                     +running.sp_up.s0.c1*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s0.c1)
+                     +running.sp_up.s0.c2*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s0.c2)
+                     +running.sp_up.s1.c0*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s1.c0)
+                     +running.sp_up.s1.c1*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s1.c1)
+                     +running.sp_up.s1.c2*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s1.c2);
+          }
+          if ( (f6 == 1) && (f4==1) ){
+              upm = &g_gauge_field[g_idn[ix][TUP]][TUP];
+
+              _vector_null( running.sp_dn.s0 );
+              _vector_null( running.sp_dn.s1 );
+              _vector_null( running.sp_dn.s2 );
+              _vector_null( running.sp_dn.s3 );
+
+
+              _su3_multiply( running.sp_dn.s2, (*upm), prop[12*alpha1+4*c1+2*f1][ix].sp_dn.s2 );
+              _su3_multiply( running.sp_dn.s3, (*upm), prop[12*alpha1+4*c1+2*f1][ix].sp_dn.s3 );
+
+              _vector_add_assign(running.sp_dn.s0, running.sp_dn.s2);
+              _vector_add_assign(running.sp_dn.s1, running.sp_dn.s3);
+              _vector_null(running.sp_dn.s2);
+              _vector_null(running.sp_dn.s3);
+
+              c[ix]+= running.sp_dn.s0.c0*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s0.c0)
+                     +running.sp_dn.s0.c1*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s0.c1)
+                     +running.sp_dn.s0.c2*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s0.c2)
+                     +running.sp_dn.s1.c0*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s1.c0)
+                     +running.sp_dn.s1.c1*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s1.c1)
+                     +running.sp_dn.s1.c2*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s1.c2);
+          }
+       }
+}
+
+
+
+void trace_in_spinor_and_color_forthreea( _Complex double *c, bispinor **prop, int ix, int f3, int f4, int f6, int f1){
+     int alpha1;
+     int c1;
+     c[ix]=0.;
+     bispinor running;
+     su3 * restrict upm;
+     bispinor tmp;
+     for (alpha1=0; alpha1<2;++alpha1)
+       for (c1=0; c1<3; ++c1){
+          if ( (f6 == 0) && (f4==0) ){
+              upm = &g_gauge_field[ix][TUP];
+
+              _vector_null( tmp.sp_up.s2 );
+              _vector_null( tmp.sp_up.s3 );
+              _vector_null( tmp.sp_up.s0 );
+              _vector_null( tmp.sp_up.s1 );
+
+              _vector_null( running.sp_up.s0 );
+              _vector_null( running.sp_up.s1 );
+              _vector_null( running.sp_up.s2 );
+              _vector_null( running.sp_up.s3 );
+
+
+
+              _su3_multiply( tmp.sp_up.s0, (*upm), prop[12*alpha1+4*c1+2*f1][g_iup[ix][TUP]].sp_up.s0 );
+              _su3_multiply( tmp.sp_up.s1, (*upm), prop[12*alpha1+4*c1+2*f1][g_iup[ix][TUP]].sp_up.s1 );
+
+              upm = &g_gauge_field[g_idn[ix][TUP]][TUP];
+
+              _su3_multiply( running.sp_up.s0, (*upm), tmp.sp_up.s0 );
+              _su3_multiply( running.sp_up.s1, (*upm), tmp.sp_up.s1 );
+
+
+              c[ix]+= running.sp_up.s0.c0*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s0.c0)
+                     +running.sp_up.s0.c1*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s0.c1)
+                     +running.sp_up.s0.c2*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s0.c2)
+                     +running.sp_up.s1.c0*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s1.c0)
+                     +running.sp_up.s1.c1*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s1.c1)
+                     +running.sp_up.s1.c2*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s1.c2);
+          }
+          if ( (f6 == 1) && (f4==0) ){
+              upm = &g_gauge_field[ix][TUP];
+
+              _vector_null( tmp.sp_dn.s2 );
+              _vector_null( tmp.sp_dn.s3 );
+              _vector_null( tmp.sp_dn.s0 );
+              _vector_null( tmp.sp_dn.s1 );
+
+              _vector_null( running.sp_dn.s0 );
+              _vector_null( running.sp_dn.s1 );
+              _vector_null( running.sp_dn.s2 );
+              _vector_null( running.sp_dn.s3 );
+
+
+              _su3_multiply( tmp.sp_dn.s0, (*upm), prop[12*alpha1+4*c1+2*f1][g_iup[ix][TUP]].sp_dn.s0 );
+              _su3_multiply( tmp.sp_dn.s1, (*upm), prop[12*alpha1+4*c1+2*f1][g_iup[ix][TUP]].sp_dn.s1 );
+
+              upm = &g_gauge_field[g_idn[ix][TUP]][TUP];
+
+              _su3_multiply( running.sp_dn.s0, (*upm), tmp.sp_dn.s0 );
+              _su3_multiply( running.sp_dn.s1, (*upm), tmp.sp_dn.s1 );
+
+
+              c[ix]+= running.sp_dn.s0.c0*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s0.c0)
+                     +running.sp_dn.s0.c1*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s0.c1)
+                     +running.sp_dn.s0.c2*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s0.c2)
+                     +running.sp_dn.s1.c0*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s1.c0)
+                     +running.sp_dn.s1.c1*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s1.c1)
+                     +running.sp_dn.s1.c2*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s1.c2);
+
+          }
+          if ( (f6 == 0) && (f4==1) ){
+              upm = &g_gauge_field[ix][TUP];
+
+              _vector_null( tmp.sp_up.s2 );
+              _vector_null( tmp.sp_up.s3 );
+              _vector_null( tmp.sp_up.s0 );
+              _vector_null( tmp.sp_up.s1 );
+
+              _vector_null( running.sp_up.s0 );
+              _vector_null( running.sp_up.s1 );
+              _vector_null( running.sp_up.s2 );
+              _vector_null( running.sp_up.s3 );
+
+              _su3_multiply( tmp.sp_up.s0, (*upm), prop[12*alpha1+4*c1+2*f1][g_iup[ix][TUP]].sp_up.s0 );
+              _su3_multiply( tmp.sp_up.s1, (*upm), prop[12*alpha1+4*c1+2*f1][g_iup[ix][TUP]].sp_up.s1 );
+
+              upm = &g_gauge_field[g_idn[ix][TUP]][TUP];
+
+              _su3_multiply( running.sp_up.s0, (*upm), tmp.sp_up.s0 );
+              _su3_multiply( running.sp_up.s1, (*upm), tmp.sp_up.s1 );
+
+
+              c[ix]+= running.sp_up.s0.c0*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s0.c0)
+                     +running.sp_up.s0.c1*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s0.c1)
+                     +running.sp_up.s0.c2*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s0.c2)
+                     +running.sp_up.s1.c0*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s1.c0)
+                     +running.sp_up.s1.c1*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s1.c1)
+                     +running.sp_up.s1.c2*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s1.c2);
+          }
+          if ( (f6 == 1) && (f4==1) ){
+              upm = &g_gauge_field[ix][TUP];
+
+              _vector_null( tmp.sp_dn.s2 );
+              _vector_null( tmp.sp_dn.s3 );
+              _vector_null( tmp.sp_dn.s0 );
+              _vector_null( tmp.sp_dn.s1 );
+
+              _vector_null( running.sp_dn.s0 );
+              _vector_null( running.sp_dn.s1 );
+              _vector_null( running.sp_dn.s2 );
+              _vector_null( running.sp_dn.s3 );
+
+
+              _su3_multiply( tmp.sp_dn.s0, (*upm), prop[12*alpha1+4*c1+2*f1][g_iup[ix][TUP]].sp_dn.s0 );
+              _su3_multiply( tmp.sp_dn.s1, (*upm), prop[12*alpha1+4*c1+2*f1][g_iup[ix][TUP]].sp_dn.s1 );
+
+              upm = &g_gauge_field[g_idn[ix][TUP]][TUP];
+
+              _su3_multiply( running.sp_dn.s0, (*upm), tmp.sp_dn.s0 );
+              _su3_multiply( running.sp_dn.s1, (*upm), tmp.sp_dn.s1 );
+
+
+              c[ix]+= running.sp_dn.s0.c0*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s0.c0)
+                     +running.sp_dn.s0.c1*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s0.c1)
+                     +running.sp_dn.s0.c2*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s0.c2)
+                     +running.sp_dn.s1.c0*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s1.c0)
+                     +running.sp_dn.s1.c1*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s1.c1)
+                     +running.sp_dn.s1.c2*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s1.c2);
+
+          }
+       }
+}
+
+void wilsoncurrent_density_3_petros( bispinor **propfields )
+{
+
+    _Complex double **phimatrix=(_Complex double **)malloc(sizeof(_Complex double *)*4);
+
+    _Complex double *C0000=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C0001=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C0010=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C0011=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C0100=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C0101=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C0110=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C0111=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1000=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1001=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1010=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1011=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1100=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1101=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1110=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1111=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+
+    _Complex double *final_corr=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
+
+    _Complex double *phimatrixspatialnull=(_Complex double *)malloc(sizeof(_Complex double)*4);
+
+    int ix;
+
+// Doing the neccessary communication
+#if defined MPI
+   int s1,c1,f1;
+   int count;
+   MPI_Status  statuses[8];
+   MPI_Request *request;
+   request=( MPI_Request *) malloc(sizeof(MPI_Request)*8);
+   for (s1=0; s1<2; ++s1)
+      for (c1=0; c1<3; ++c1)
+         for (f1=0; f1<2; ++f1){
+            count=0;
+            generic_exchange_direction_nonblocking( propfields[12*s1 + 4*c1 + 2*f1 + 0], sizeof(bispinor), TUP   , request, &count );
+            MPI_Waitall( count, request, statuses);
+            count=0;
+            generic_exchange_direction_nonblocking( propfields[12*s1 + 4*c1 + 2*f1 + 0], sizeof(bispinor), TDOWN , request, &count );
+            MPI_Waitall( count, request, statuses);
+            count=0;
+            generic_exchange_direction_nonblocking( propfields[12*s1 + 4*c1 + 2*f1 + 1], sizeof(bispinor), TDOWN , request, &count );
+            MPI_Waitall( count, request, statuses);
+         }
+   free(request);
+#endif
+
+    for (ix=0;ix<4;++ix)
+       phimatrix[ix]=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    for (ix=0;ix<VOLUME;++ix)
+    {
+       if (smearedcorrelator_BSM == 1){
+         phimatrix[0][ix]= 1.*g_smeared_scalar_field[0][ix] + I*g_smeared_scalar_field[3][ix];
+         phimatrix[1][ix]= 1.*g_smeared_scalar_field[2][ix] + I*g_smeared_scalar_field[1][ix];
+         phimatrix[2][ix]=-1.*g_smeared_scalar_field[2][ix] + I*g_smeared_scalar_field[1][ix];
+         phimatrix[3][ix]= 1.*g_smeared_scalar_field[0][ix] - I*g_smeared_scalar_field[3][ix];
+       }
+       else{
+         phimatrix[0][ix]= 1.*g_scalar_field[0][ix] + I*g_scalar_field[3][ix];
+         phimatrix[1][ix]= 1.*g_scalar_field[2][ix] + I*g_scalar_field[1][ix];
+         phimatrix[2][ix]=-1.*g_scalar_field[2][ix] + I*g_scalar_field[1][ix];
+         phimatrix[3][ix]= 1.*g_scalar_field[0][ix] - I*g_scalar_field[3][ix];
+       }
+    }
+
+    for (ix=0;ix<4;++ix)
+       phimatrixspatialnull[ix]=phimatrix[ix][0];
+
+#if defined MPI
+    for (ix=0;ix<4;++ix)
+       MPI_Bcast(&phimatrixspatialnull[ix], 1, MPI_DOUBLE_COMPLEX, 0, g_cart_grid);
+#endif
+
+    for (ix=0; ix<VOLUME; ++ix){
+       trace_in_spinor_and_color_forthreea(C0000,propfields,ix,0,0,0,0);
+       trace_in_spinor_and_color_forthreea(C0001,propfields,ix,0,0,0,1);
+       trace_in_spinor_and_color_forthreea(C0010,propfields,ix,0,0,1,0);
+       trace_in_spinor_and_color_forthreea(C0011,propfields,ix,0,0,1,1);
+       trace_in_spinor_and_color_forthreea(C0100,propfields,ix,0,1,0,0);
+       trace_in_spinor_and_color_forthreea(C0101,propfields,ix,0,1,0,1);
+       trace_in_spinor_and_color_forthreea(C0110,propfields,ix,0,1,1,0);
+       trace_in_spinor_and_color_forthreea(C0111,propfields,ix,0,1,1,1);
+       trace_in_spinor_and_color_forthreea(C1000,propfields,ix,1,0,0,0);
+       trace_in_spinor_and_color_forthreea(C1001,propfields,ix,1,0,0,1);
+       trace_in_spinor_and_color_forthreea(C1010,propfields,ix,1,0,1,0);
+       trace_in_spinor_and_color_forthreea(C1011,propfields,ix,1,0,1,1);
+       trace_in_spinor_and_color_forthreea(C1100,propfields,ix,1,1,0,0);
+       trace_in_spinor_and_color_forthreea(C1101,propfields,ix,1,1,0,1);
+       trace_in_spinor_and_color_forthreea(C1110,propfields,ix,1,1,1,0);
+       trace_in_spinor_and_color_forthreea(C1111,propfields,ix,1,1,1,1);
+
+    }
+    for (ix=0; ix<T_global; ++ix)
+       final_corr[ix]=0.; 
+    for (ix=0; ix<VOLUME; ++ix){
+
+//tau_1
+       final_corr[g_coord[ix][TUP]]+=  1.*phimatrixspatialnull[1*2+0]*C0000[ix]*phimatrix[1*2+0][ix]
+                                     + 1.*phimatrixspatialnull[1*2+0]*C0010[ix]*phimatrix[1*2+1][ix]
+                                     + 1.*phimatrixspatialnull[1*2+0]*C0100[ix]*phimatrix[0*2+0][ix]
+                                     + 1.*phimatrixspatialnull[1*2+0]*C0110[ix]*phimatrix[0*2+1][ix]
+
+                                     + 1.*phimatrixspatialnull[1*2+1]*C1000[ix]*phimatrix[1*2+0][ix]
+                                     + 1.*phimatrixspatialnull[1*2+1]*C1010[ix]*phimatrix[1*2+1][ix]
+                                     + 1.*phimatrixspatialnull[1*2+1]*C1100[ix]*phimatrix[0*2+0][ix]
+                                     + 1.*phimatrixspatialnull[1*2+1]*C1110[ix]*phimatrix[0*2+1][ix]
+
+                                     + 1.*phimatrixspatialnull[0*2+0]*C0001[ix]*phimatrix[1*2+0][ix]
+                                     + 1.*phimatrixspatialnull[0*2+0]*C0011[ix]*phimatrix[1*2+1][ix]
+                                     + 1.*phimatrixspatialnull[0*2+0]*C0101[ix]*phimatrix[0*2+0][ix]
+                                     + 1.*phimatrixspatialnull[0*2+0]*C0111[ix]*phimatrix[0*2+1][ix]
+
+                                     + 1.*phimatrixspatialnull[0*2+1]*C1001[ix]*phimatrix[1*2+0][ix]
+                                     + 1.*phimatrixspatialnull[0*2+1]*C1011[ix]*phimatrix[1*2+1][ix]
+                                     + 1.*phimatrixspatialnull[0*2+1]*C1101[ix]*phimatrix[0*2+0][ix]
+                                     + 1.*phimatrixspatialnull[0*2+1]*C1111[ix]*phimatrix[0*2+1][ix];
+
+//tau2
+       final_corr[g_coord[ix][TUP]]+= -1.*phimatrixspatialnull[1*2+0]*C0000[ix]*phimatrix[1*2+0][ix]
+                                     +-1.*phimatrixspatialnull[1*2+0]*C0010[ix]*phimatrix[1*2+1][ix]
+                                     + 1.*phimatrixspatialnull[1*2+0]*C0100[ix]*phimatrix[0*2+0][ix]
+                                     + 1.*phimatrixspatialnull[1*2+0]*C0110[ix]*phimatrix[0*2+1][ix]
+
+                                     +-1.*phimatrixspatialnull[1*2+1]*C1000[ix]*phimatrix[1*2+0][ix]
+                                     +-1.*phimatrixspatialnull[1*2+1]*C1010[ix]*phimatrix[1*2+1][ix]
+                                     + 1.*phimatrixspatialnull[1*2+1]*C1100[ix]*phimatrix[0*2+0][ix]
+                                     + 1.*phimatrixspatialnull[1*2+1]*C1110[ix]*phimatrix[0*2+1][ix]
+
+                                     + 1.*phimatrixspatialnull[0*2+0]*C0001[ix]*phimatrix[1*2+0][ix]
+                                     + 1.*phimatrixspatialnull[0*2+0]*C0011[ix]*phimatrix[1*2+1][ix]
+                                     +-1.*phimatrixspatialnull[0*2+0]*C0101[ix]*phimatrix[0*2+0][ix]
+                                     +-1.*phimatrixspatialnull[0*2+0]*C0111[ix]*phimatrix[0*2+1][ix]
+
+                                     + 1.*phimatrixspatialnull[0*2+1]*C1001[ix]*phimatrix[1*2+0][ix]
+                                     + 1.*phimatrixspatialnull[0*2+1]*C1011[ix]*phimatrix[1*2+1][ix]
+                                     +-1.*phimatrixspatialnull[0*2+1]*C1101[ix]*phimatrix[0*2+0][ix]
+                                     +-1.*phimatrixspatialnull[0*2+1]*C1111[ix]*phimatrix[0*2+1][ix];
+//tau3
+       final_corr[g_coord[ix][TUP]]+=  1.*phimatrixspatialnull[0*2+0]*C0000[ix]*phimatrix[0*2+0][ix]
+                                     + 1.*phimatrixspatialnull[0*2+0]*C0010[ix]*phimatrix[0*2+1][ix]
+                                     +-1.*phimatrixspatialnull[0*2+0]*C0100[ix]*phimatrix[1*2+0][ix]
+                                     +-1.*phimatrixspatialnull[0*2+0]*C0110[ix]*phimatrix[1*2+1][ix]
+
+                                     + 1.*phimatrixspatialnull[0*2+1]*C1000[ix]*phimatrix[0*2+0][ix]
+                                     + 1.*phimatrixspatialnull[0*2+1]*C1010[ix]*phimatrix[0*2+1][ix]
+                                     +-1.*phimatrixspatialnull[0*2+1]*C1100[ix]*phimatrix[1*2+0][ix]
+                                     +-1.*phimatrixspatialnull[0*2+1]*C1110[ix]*phimatrix[1*2+1][ix]
+
+                                     +-1.*phimatrixspatialnull[1*2+0]*C0001[ix]*phimatrix[0*2+0][ix]
+                                     +-1.*phimatrixspatialnull[1*2+0]*C0011[ix]*phimatrix[0*2+1][ix]
+                                     + 1.*phimatrixspatialnull[1*2+0]*C0101[ix]*phimatrix[1*2+0][ix]
+                                     + 1.*phimatrixspatialnull[1*2+0]*C0111[ix]*phimatrix[1*2+1][ix]
+
+                                     +-1.*phimatrixspatialnull[1*2+1]*C1001[ix]*phimatrix[0*2+0][ix]
+                                     +-1.*phimatrixspatialnull[1*2+1]*C1011[ix]*phimatrix[0*2+1][ix]
+                                     + 1.*phimatrixspatialnull[1*2+1]*C1101[ix]*phimatrix[1*2+0][ix]
+                                     + 1.*phimatrixspatialnull[1*2+1]*C1111[ix]*phimatrix[1*2+1][ix];
+
+    }
+#if defined MPI
+    for (ix=0; ix<T_global; ++ix){
+       _Complex double tmp;
+       MPI_Allreduce(&final_corr[ix], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+       final_corr[ix]= tmp;
+    }
+#endif 
+    if (g_cart_id == 0){printf("Wilson current  Density correlator type a la Petros (1) results\n");}
+      for (ix=0; ix<T_global; ++ix){
+        if (g_cart_id == 0){
+        printf("WCDPR1 0 0 %.3d %10.10e %10.10e\n", ix, creal(final_corr[ix])/4.,cimag(final_corr[ix])/4.);
+      }
+    }
+
+
+    free(C0000);
+    free(C0001);
+    free(C0010);
+    free(C0011);
+    free(C0100);
+    free(C0101);
+    free(C0110);
+    free(C0111);
+    free(C1000);
+    free(C1001);
+    free(C1010);
+    free(C1011);
+    free(C1100);
+    free(C1101);
+    free(C1110);
+    free(C1111);
+
+    for (ix=0;ix<4;++ix)
+       free(phimatrix[ix]);
+    free(phimatrix);
+    free(final_corr);
+
+}
+
+
 void density_density_1234_petros( bispinor **propfields )
 {
 
@@ -895,6 +1341,8 @@ void density_density_1234_petros( bispinor **propfields )
     _Complex double *phimatrixspatialnull=(_Complex double *)malloc(sizeof(_Complex double)*4);
 
     int ix;
+
+
     for (ix=0;ix<4;++ix)
        phimatrix[ix]=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
     for (ix=0;ix<VOLUME;++ix)
@@ -917,8 +1365,9 @@ void density_density_1234_petros( bispinor **propfields )
        phimatrixspatialnull[ix]=phimatrix[ix][0];
 
 #if defined MPI
-    for (ix=0;ix<4;++ix)
-       MPI_Gather(&phimatrixspatialnull[ix], 1, MPI_DOUBLE_COMPLEX, &phimatrixspatialnull[ix], 1, MPI_DOUBLE_COMPLEX, 0, g_cart_grid);
+    for (ix=0;ix<4;++ix){
+       MPI_Bcast(&phimatrixspatialnull[ix], 1, MPI_DOUBLE_COMPLEX, 0, g_cart_grid);
+    }
 #endif
     
     for (ix=0; ix<VOLUME; ++ix){
@@ -1018,7 +1467,7 @@ void density_density_1234_petros( bispinor **propfields )
     if (g_cart_id == 0){printf("Density Density correlator type a la Petros (1) results\n");}
       for (ix=0; ix<T_global; ++ix){
         if (g_cart_id == 0){
-        printf("%3d %10.10e %10.10e\n", ix, creal(final_corr[ix])/4.,cimag(final_corr[ix])/4.);
+        printf("DD 1 %.3d %10.10e %10.10e\n", ix, creal(final_corr[ix])/4.,cimag(final_corr[ix])/4.);
       }
     }
 
@@ -1046,6 +1495,159 @@ void density_density_1234_petros( bispinor **propfields )
     free(final_corr);
 
 }
+
+
+
+void diraccurrent1a_petros( bispinor **propfields )
+{
+
+    _Complex double **phimatrix=(_Complex double **)malloc(sizeof(_Complex double *)*4);
+
+    _Complex double *C0000=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C0001=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C0010=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C0011=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C0100=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C0101=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C0110=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C0111=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1000=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1001=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1010=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1011=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1100=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1101=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1110=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    _Complex double *C1111=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+
+    _Complex double *final_corr=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
+
+    _Complex double *phimatrixspatialnull=(_Complex double *)malloc(sizeof(_Complex double)*4);
+
+    int ix;
+
+
+    for (ix=0;ix<4;++ix)
+       phimatrix[ix]=(_Complex double *)malloc(sizeof(_Complex double)*VOLUME);
+    for (ix=0;ix<VOLUME;++ix)
+    {
+       if (smearedcorrelator_BSM == 1){
+         phimatrix[0][ix]= 1.*g_smeared_scalar_field[0][ix] + I*g_smeared_scalar_field[3][ix];
+         phimatrix[1][ix]= 1.*g_smeared_scalar_field[2][ix] + I*g_smeared_scalar_field[1][ix];
+         phimatrix[2][ix]=-1.*g_smeared_scalar_field[2][ix] + I*g_smeared_scalar_field[1][ix];
+         phimatrix[3][ix]= 1.*g_smeared_scalar_field[0][ix] - I*g_smeared_scalar_field[3][ix];
+       }
+       else{
+         phimatrix[0][ix]= 1.*g_scalar_field[0][ix] + I*g_scalar_field[3][ix];
+         phimatrix[1][ix]= 1.*g_scalar_field[2][ix] + I*g_scalar_field[1][ix];
+         phimatrix[2][ix]=-1.*g_scalar_field[2][ix] + I*g_scalar_field[1][ix];
+         phimatrix[3][ix]= 1.*g_scalar_field[0][ix] - I*g_scalar_field[3][ix];
+       }
+    }
+
+    for (ix=0;ix<4;++ix)
+       phimatrixspatialnull[ix]=phimatrix[ix][0];
+
+#if defined MPI
+    for (ix=0;ix<4;++ix){
+       MPI_Bcast(&phimatrixspatialnull[ix], 1, MPI_DOUBLE_COMPLEX, 0, g_cart_grid);
+    }
+#endif
+
+    for (ix=0; ix<VOLUME; ++ix){
+       trace_in_spinor_and_color_fordiraccurrent1a(C0000,propfields,ix,0,0,0,0);
+       trace_in_spinor_and_color_fordiraccurrent1a(C0001,propfields,ix,0,0,0,1);
+       trace_in_spinor_and_color_fordiraccurrent1a(C0010,propfields,ix,0,0,1,0);
+       trace_in_spinor_and_color_fordiraccurrent1a(C0011,propfields,ix,0,0,1,1);
+       trace_in_spinor_and_color_fordiraccurrent1a(C0100,propfields,ix,0,1,0,0);
+       trace_in_spinor_and_color_fordiraccurrent1a(C0101,propfields,ix,0,1,0,1);
+       trace_in_spinor_and_color_fordiraccurrent1a(C0110,propfields,ix,0,1,1,0);
+       trace_in_spinor_and_color_fordiraccurrent1a(C0111,propfields,ix,0,1,1,1);
+       trace_in_spinor_and_color_fordiraccurrent1a(C1000,propfields,ix,1,0,0,0);
+       trace_in_spinor_and_color_fordiraccurrent1a(C1001,propfields,ix,1,0,0,1);
+       trace_in_spinor_and_color_fordiraccurrent1a(C1010,propfields,ix,1,0,1,0);
+       trace_in_spinor_and_color_fordiraccurrent1a(C1011,propfields,ix,1,0,1,1);
+       trace_in_spinor_and_color_fordiraccurrent1a(C1100,propfields,ix,1,1,0,0);
+       trace_in_spinor_and_color_fordiraccurrent1a(C1101,propfields,ix,1,1,0,1);
+       trace_in_spinor_and_color_fordiraccurrent1a(C1110,propfields,ix,1,1,1,0);
+       trace_in_spinor_and_color_fordiraccurrent1a(C1111,propfields,ix,1,1,1,1);
+    }
+    for (ix=0; ix<T_global; ++ix)
+       final_corr[ix]=0.; 
+    for (ix=0; ix<VOLUME; ++ix){
+
+//tau_1
+       final_corr[g_coord[ix][TUP]]+=  1.*phimatrixspatialnull[1*2+0]*C0010[ix]
+                                     + 1.*phimatrixspatialnull[1*2+0]*C0100[ix]
+                                     + 1.*phimatrixspatialnull[1*2+1]*C1010[ix]
+                                     + 1.*phimatrixspatialnull[1*2+1]*C1100[ix]
+
+                                     + 1.*phimatrixspatialnull[0*2+0]*C0011[ix]
+                                     + 1.*phimatrixspatialnull[0*2+0]*C0101[ix]
+                                     + 1.*phimatrixspatialnull[0*2+1]*C1011[ix]
+                                     + 1.*phimatrixspatialnull[0*2+1]*C1101[ix];
+
+//tau_2
+       final_corr[g_coord[ix][TUP]]+= -1.*phimatrixspatialnull[1*2+0]*C0010[ix]
+                                     + 1.*phimatrixspatialnull[1*2+0]*C0100[ix]
+                                     +-1.*phimatrixspatialnull[1*2+1]*C1010[ix]
+                                     + 1.*phimatrixspatialnull[1*2+1]*C1100[ix]
+
+                                     + 1.*phimatrixspatialnull[0*2+0]*C0011[ix]
+                                     +-1.*phimatrixspatialnull[0*2+0]*C0101[ix]
+                                     + 1.*phimatrixspatialnull[0*2+1]*C1011[ix]
+                                     +-1.*phimatrixspatialnull[0*2+1]*C1101[ix];
+//tau_3
+       final_corr[g_coord[ix][TUP]]+=  1.*phimatrixspatialnull[0*2+0]*C0000[ix]
+                                     +-1.*phimatrixspatialnull[0*2+0]*C0110[ix]
+                                     + 1.*phimatrixspatialnull[0*2+1]*C1000[ix]
+                                     +-1.*phimatrixspatialnull[0*2+1]*C1110[ix]
+
+                                     +-1.*phimatrixspatialnull[1*2+0]*C0001[ix]
+                                     + 1.*phimatrixspatialnull[1*2+0]*C0111[ix]
+                                     +-1.*phimatrixspatialnull[1*2+1]*C1001[ix]
+                                     + 1.*phimatrixspatialnull[1*2+1]*C1111[ix];
+
+    }
+#if defined MPI
+    for (ix=0; ix<T_global; ++ix){
+       _Complex double tmp;
+       MPI_Allreduce(&final_corr[ix], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
+       final_corr[ix]= tmp;
+    }
+#endif 
+    if (g_cart_id == 0){printf("Dirac Current Density correlator type a la Petros (1) results\n");}
+      for (ix=0; ix<T_global; ++ix){
+        if (g_cart_id == 0){
+        printf("DCD 0 0  %.3d %10.10e %10.10e\n", ix, creal(final_corr[ix])/4.,cimag(final_corr[ix])/4.);
+      }
+    }
+
+
+    free(C0000);
+    free(C0001);
+    free(C0010);
+    free(C0011);
+    free(C0100);
+    free(C0101);
+    free(C0110);
+    free(C0111);
+    free(C1000);
+    free(C1001);
+    free(C1010);
+    free(C1011);
+    free(C1100);
+    free(C1101);
+    free(C1110);
+    free(C1111);
+
+    for (ix=0;ix<4;++ix)
+       free(phimatrix[ix]);
+    free(phimatrix);
+    free(final_corr);
+
+}
+
 
 void density_density_1234_s0s0( bispinor ** propfields, int type_1234 ){
    int ix,i;
@@ -2824,6 +3426,7 @@ int main(int argc, char *argv[]){
 
                if (densitydensity_BSM == 1){
                  density_density_1234(g_bispinor_field, TYPE_1);
+//                 density_density_1234_petros(g_bispinor_field);
                  density_density_1234(g_bispinor_field, TYPE_2);
                  density_density_1234(g_bispinor_field, TYPE_3);
                  density_density_1234(g_bispinor_field, TYPE_4);
@@ -2831,12 +3434,14 @@ int main(int argc, char *argv[]){
 
                 if (diraccurrentdensity_BSM == 1){
                  naivedirac_current_density_12ab( g_bispinor_field, TYPE_I , TYPE_A );
+//                 diraccurrent1a_petros( g_bispinor_field );
                  naivedirac_current_density_12ab( g_bispinor_field, TYPE_I , TYPE_B );
                  naivedirac_current_density_12ab( g_bispinor_field, TYPE_II, TYPE_A );
                  naivedirac_current_density_12ab( g_bispinor_field, TYPE_II, TYPE_B );
                }
                if (wilsoncurrentdensitypr1_BSM == 1){
                  wilsonterm_current_density_312ab( g_bispinor_field, TYPE_1, TYPE_A );
+//                 wilsoncurrent_density_3_petros( g_bispinor_field );
                  wilsonterm_current_density_312ab( g_bispinor_field, TYPE_1, TYPE_B );
                  wilsonterm_current_density_312ab( g_bispinor_field, TYPE_2, TYPE_A );
                  wilsonterm_current_density_312ab( g_bispinor_field, TYPE_2, TYPE_B );
