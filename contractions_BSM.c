@@ -888,6 +888,10 @@ void trace_in_spinor_and_color_fordiraccurrent1a( _Complex double *c, bispinor *
               _su3_multiply( running.sp_up.s2, (*upm), prop[12*alpha1+4*c1+2*f1][ix].sp_up.s2 );
               _su3_multiply( running.sp_up.s3, (*upm), prop[12*alpha1+4*c1+2*f1][ix].sp_up.s3 );
 
+              _complex_times_vector(running.sp_up.s2,phase_0,running.sp_up.s2);
+              _complex_times_vector(running.sp_up.s3,phase_0,running.sp_up.s3);
+ 
+
               _vector_add_assign(running.sp_up.s0, running.sp_up.s2);
               _vector_add_assign(running.sp_up.s1, running.sp_up.s3);
               _vector_null(running.sp_up.s2);
@@ -911,6 +915,10 @@ void trace_in_spinor_and_color_fordiraccurrent1a( _Complex double *c, bispinor *
 
               _su3_multiply( running.sp_dn.s2, (*upm), prop[12*alpha1+4*c1+2*f1][ix].sp_dn.s2 );
               _su3_multiply( running.sp_dn.s3, (*upm), prop[12*alpha1+4*c1+2*f1][ix].sp_dn.s3 );
+
+
+              _complex_times_vector(running.sp_dn.s2,phase_0,running.sp_dn.s2);
+              _complex_times_vector(running.sp_dn.s3,phase_0,running.sp_dn.s3);
 
               _vector_add_assign(running.sp_dn.s0, running.sp_dn.s2);
               _vector_add_assign(running.sp_dn.s1, running.sp_dn.s3);
@@ -936,6 +944,9 @@ void trace_in_spinor_and_color_fordiraccurrent1a( _Complex double *c, bispinor *
               _su3_multiply( running.sp_up.s2, (*upm), prop[12*alpha1+4*c1+2*f1][ix].sp_up.s2 );
               _su3_multiply( running.sp_up.s3, (*upm), prop[12*alpha1+4*c1+2*f1][ix].sp_up.s3 );
 
+              _complex_times_vector(running.sp_up.s2,phase_0,running.sp_up.s2);
+              _complex_times_vector(running.sp_up.s3,phase_0,running.sp_up.s3);
+
               _vector_add_assign(running.sp_up.s0, running.sp_up.s2);
               _vector_add_assign(running.sp_up.s1, running.sp_up.s3);
               _vector_null(running.sp_up.s2);
@@ -959,6 +970,10 @@ void trace_in_spinor_and_color_fordiraccurrent1a( _Complex double *c, bispinor *
 
               _su3_multiply( running.sp_dn.s2, (*upm), prop[12*alpha1+4*c1+2*f1][ix].sp_dn.s2 );
               _su3_multiply( running.sp_dn.s3, (*upm), prop[12*alpha1+4*c1+2*f1][ix].sp_dn.s3 );
+
+              _complex_times_vector(running.sp_dn.s2,phase_0,running.sp_dn.s2);
+              _complex_times_vector(running.sp_dn.s3,phase_0,running.sp_dn.s3);
+
 
               _vector_add_assign(running.sp_dn.s0, running.sp_dn.s2);
               _vector_add_assign(running.sp_dn.s1, running.sp_dn.s3);
@@ -1009,6 +1024,10 @@ void trace_in_spinor_and_color_forthreea( _Complex double *c, bispinor **prop, i
               _su3_multiply( running.sp_up.s0, (*upm), tmp.sp_up.s0 );
               _su3_multiply( running.sp_up.s1, (*upm), tmp.sp_up.s1 );
 
+              _complex_times_vector(running.sp_up.s0,phase_00,running.sp_up.s0);
+              _complex_times_vector(running.sp_up.s1,phase_00,running.sp_up.s1);
+
+
 
               c[ix]+= running.sp_up.s0.c0*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s0.c0)
                      +running.sp_up.s0.c1*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s0.c1)
@@ -1038,6 +1057,10 @@ void trace_in_spinor_and_color_forthreea( _Complex double *c, bispinor **prop, i
 
               _su3_multiply( running.sp_dn.s0, (*upm), tmp.sp_dn.s0 );
               _su3_multiply( running.sp_dn.s1, (*upm), tmp.sp_dn.s1 );
+
+
+              _complex_times_vector(running.sp_dn.s0,phase_00,running.sp_dn.s0);
+              _complex_times_vector(running.sp_dn.s1,phase_00,running.sp_dn.s1);
 
 
               c[ix]+= running.sp_dn.s0.c0*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_up.s0.c0)
@@ -1070,6 +1093,10 @@ void trace_in_spinor_and_color_forthreea( _Complex double *c, bispinor **prop, i
               _su3_multiply( running.sp_up.s1, (*upm), tmp.sp_up.s1 );
 
 
+              _complex_times_vector(running.sp_up.s0,phase_00,running.sp_up.s0);
+              _complex_times_vector(running.sp_up.s1,phase_00,running.sp_up.s1);
+
+
               c[ix]+= running.sp_up.s0.c0*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s0.c0)
                      +running.sp_up.s0.c1*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s0.c1)
                      +running.sp_up.s0.c2*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s0.c2)
@@ -1100,6 +1127,9 @@ void trace_in_spinor_and_color_forthreea( _Complex double *c, bispinor **prop, i
               _su3_multiply( running.sp_dn.s1, (*upm), tmp.sp_dn.s1 );
 
 
+              _complex_times_vector(running.sp_dn.s0,phase_00,running.sp_dn.s0);
+              _complex_times_vector(running.sp_dn.s1,phase_00,running.sp_dn.s1);
+               
               c[ix]+= running.sp_dn.s0.c0*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s0.c0)
                      +running.sp_dn.s0.c1*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s0.c1)
                      +running.sp_dn.s0.c2*conj(prop[12*alpha1+4*c1+2*f3+1][g_idn[ix][TUP]].sp_dn.s0.c2)
@@ -2046,23 +2076,42 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
                   if  ( type_12 == TYPE_I ){
                     _su3_multiply( running.sp_up.s2, (*upm), propfields[12*s1+4*c1+2*f1][ix].sp_up.s2 ); 
                     _su3_multiply( running.sp_up.s3, (*upm), propfields[12*s1+4*c1+2*f1][ix].sp_up.s3 ); 
+
+
+                    _complex_times_vector(running.sp_up.s2,phase_0,running.sp_up.s2);
+                    _complex_times_vector(running.sp_up.s3,phase_0,running.sp_up.s3);
                   }
                   else if ( type_12 == TYPE_II ){
                     _su3_inverse_multiply( running.sp_up.s2, (*upm), propfields[12*s1+4*c1+2*f1][g_idn[ix][TUP]].sp_up.s2 ); 
                     _su3_inverse_multiply( running.sp_up.s3, (*upm), propfields[12*s1+4*c1+2*f1][g_idn[ix][TUP]].sp_up.s3 ); 
+
+                    _complexcjg_times_vector(running.sp_up.s2,phase_0,running.sp_up.s2);
+                    _complexcjg_times_vector(running.sp_up.s3,phase_0,running.sp_up.s3);
+
                   }
 
-//for the up quark
+
+//for the dn quark
                   _vector_null( running.sp_dn.s0 ); 
                   _vector_null( running.sp_dn.s1 ); 
                   if  ( type_12 == TYPE_I ){
                     _su3_multiply( running.sp_dn.s2, (*upm), propfields[12*s1+4*c1+2*f1][ix].sp_dn.s2 ); 
-                    _su3_multiply( running.sp_dn.s3, (*upm), propfields[12*s1+4*c1+2*f1][ix].sp_dn.s3 ); 
+                    _su3_multiply( running.sp_dn.s3, (*upm), propfields[12*s1+4*c1+2*f1][ix].sp_dn.s3 );
+
+                    _complex_times_vector(running.sp_dn.s2,phase_0,running.sp_dn.s2);
+                    _complex_times_vector(running.sp_dn.s3,phase_0,running.sp_dn.s3);
+ 
                   }
                   else if ( type_12 == TYPE_II ){
                     _su3_inverse_multiply( running.sp_dn.s2, (*upm), propfields[12*s1+4*c1+2*f1][g_idn[ix][TUP]].sp_dn.s2 );
                     _su3_inverse_multiply( running.sp_dn.s3, (*upm), propfields[12*s1+4*c1+2*f1][g_idn[ix][TUP]].sp_dn.s3 );
+
+                    _complexcjg_times_vector(running.sp_dn.s2,phase_0,running.sp_dn.s2);
+                    _complexcjg_times_vector(running.sp_dn.s3,phase_0,running.sp_dn.s3);
+
                   }
+
+
 
 /*   
        TYPE  IA OR  IB     gamma0*U0(x-0)*       (1-g5)/2*S(x  ,ytilde)
@@ -2245,6 +2294,7 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
 
                   if ( type_12 == TYPE_1){
                     upm = &g_gauge_field[ix][TUP];
+
 //for the up quark
                     _su3_multiply(running.sp_up.s0, (*upm), propfields[12*s1 + 4*c1 + 2*f1][g_iup[ix][TUP]].sp_up.s0);
                     _su3_multiply(running.sp_up.s1, (*upm), propfields[12*s1 + 4*c1 + 2*f1][g_iup[ix][TUP]].sp_up.s1);
@@ -2263,12 +2313,23 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
                     _su3_multiply(tmpvec, (*upm), running.sp_up.s1);
                     _vector_assign(  running.sp_up.s1, tmpvec);
 
+                    _complex_times_vector(running.sp_up.s0,phase_00,running.sp_up.s0);
+                    _complex_times_vector(running.sp_up.s1,phase_00,running.sp_up.s1);
+
+
+
+
 //for the down quark
 
                     _su3_multiply(tmpvec, (*upm), running.sp_dn.s0);
                     _vector_assign(  running.sp_dn.s0, tmpvec);
                     _su3_multiply(tmpvec, (*upm), running.sp_dn.s1);
                     _vector_assign(  running.sp_dn.s1, tmpvec);
+
+                    _complex_times_vector(running.sp_dn.s0,phase_00,running.sp_dn.s0);
+                    _complex_times_vector(running.sp_dn.s1,phase_00,running.sp_dn.s1);
+
+
 
                   }
                   else if ( type_12 == TYPE_2){
@@ -2434,12 +2495,22 @@ Creating U^dagger(x-0)*U^dagger(x-2*0)*S(x-2*0,ytilde) in three steps:
                _su3_inverse_multiply(tmpvec, (*upm), tmpbisp2d[12*f1+3*s1+c1][ix].sp_up.s1);
                _vector_assign(  tmpbisp2d[12*f1+3*s1+c1][ix].sp_up.s1, tmpvec);
 
+               _complexcjg_times_vector(tmpbisp2d[12*f1+3*s1+c1][ix].sp_up.s0,phase_00,tmpbisp2d[12*f1+3*s1+c1][ix].sp_up.s0);
+               _complexcjg_times_vector(tmpbisp2d[12*f1+3*s1+c1][ix].sp_up.s1,phase_00,tmpbisp2d[12*f1+3*s1+c1][ix].sp_up.s1);
+
+
+
                _vector_null( tmpvec );
                _su3_inverse_multiply(tmpvec, (*upm), tmpbisp2d[12*f1+3*s1+c1][ix].sp_dn.s0);
                _vector_assign(  tmpbisp2d[12*f1+3*s1+c1][ix].sp_dn.s0, tmpvec);
                _vector_null( tmpvec );
                _su3_inverse_multiply(tmpvec, (*upm), tmpbisp2d[12*f1+3*s1+c1][ix].sp_dn.s1);
                _vector_assign(  tmpbisp2d[12*f1+3*s1+c1][ix].sp_dn.s1, tmpvec);
+
+               _complexcjg_times_vector(tmpbisp2d[12*f1+3*s1+c1][ix].sp_dn.s0,phase_00,tmpbisp2d[12*f1+3*s1+c1][ix].sp_dn.s0);
+               _complexcjg_times_vector(tmpbisp2d[12*f1+3*s1+c1][ix].sp_dn.s1,phase_00,tmpbisp2d[12*f1+3*s1+c1][ix].sp_dn.s1);
+
+
             }
 #if defined MPI
       for (s1=spinorstart;s1<spinorend; ++s1)
@@ -2714,6 +2785,10 @@ void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int 
                     _su3_inverse_multiply(tmpvec, (*upm), running.sp_up.s1);
                     _vector_assign(  running.sp_up.s1, tmpvec);
 
+                    _complexcjg_times_vector(running.sp_up.s0,phase_00,running.sp_up.s0);
+                    _complexcjg_times_vector(running.sp_up.s1,phase_00,running.sp_up.s1);
+
+
 //for the down quark
 
                     _vector_null( tmpvec );
@@ -2723,6 +2798,11 @@ void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int 
                     _vector_null( tmpvec );
                     _su3_inverse_multiply(tmpvec, (*upm), running.sp_dn.s1);
                     _vector_assign(  running.sp_dn.s1, tmpvec);
+
+
+                    _complexcjg_times_vector(running.sp_dn.s0,phase_00,running.sp_dn.s0);
+                    _complexcjg_times_vector(running.sp_dn.s1,phase_00,running.sp_dn.s1);
+
                   }
                   else if ( type_12 == TYPE_2){
                     _vector_assign( running.sp_up.s0, propfields[12*s1 + 4*c1 + 2*f1][g_idn[ix][TUP]].sp_up.s2 );
@@ -2897,10 +2977,19 @@ Creating U0(x-2*0)U0(x-0)*S(x, ytilde) in two steps:
                _su3_multiply(tmpvec, (*upm), starting2d[12*f1+3*s1+c1][ix].sp_up.s3);
                _vector_assign(  starting2d[12*f1+3*s1+c1][ix].sp_up.s3, tmpvec);
 
+               _complexcjg_times_vector(starting2d[12*f1+3*s1+c1][ix].sp_up.s2,phase_00,starting2d[12*f1+3*s1+c1][ix].sp_up.s2);
+               _complexcjg_times_vector(starting2d[12*f1+3*s1+c1][ix].sp_up.s3,phase_00,starting2d[12*f1+3*s1+c1][ix].sp_up.s3);
+
+
+
                _su3_multiply(tmpvec, (*upm), starting2d[12*f1+3*s1+c1][ix].sp_dn.s2);
                _vector_assign(  starting2d[12*f1+3*s1+c1][ix].sp_dn.s2, tmpvec);
                _su3_multiply(tmpvec, (*upm), starting2d[12*f1+3*s1+c1][ix].sp_dn.s3);
                _vector_assign(  starting2d[12*f1+3*s1+c1][ix].sp_dn.s3, tmpvec);
+
+               _complexcjg_times_vector(starting2d[12*f1+3*s1+c1][ix].sp_dn.s2,phase_00,starting2d[12*f1+3*s1+c1][ix].sp_dn.s2);
+               _complexcjg_times_vector(starting2d[12*f1+3*s1+c1][ix].sp_dn.s3,phase_00,starting2d[12*f1+3*s1+c1][ix].sp_dn.s3);
+
             }
 #if defined MPI
       for (s1=spinorstart;s1<spinorend; ++s1)
@@ -3344,7 +3433,7 @@ int main(int argc, char *argv[]){
 
              }//End of reading scalar field
 
-      //     unit_scalar_field(g_scalar_field);
+//             unit_scalar_field(g_scalar_field);
 #if defined MPI
              for( int s=0; s<4; s++ )
                 generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
