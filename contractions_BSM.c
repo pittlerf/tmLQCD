@@ -1781,12 +1781,13 @@ void density_density_1234_s0s0( bispinor ** propfields, int type_1234 ){
  
 //Gather the results from all nodes to complete the trace in space
 
+#if defined MPI
          for (i=0; i<8*T_global; ++i){
             _Complex double tmp;
             MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
             spacetrace[i]= tmp;
          }
-
+#endif
          trace_in_spinor(spinortrace, spacetrace, s1);
       }
 
@@ -3192,14 +3193,16 @@ int main(int argc, char *argv[]){
   int src_idx, pos;
 //  int count;
   int status_geo;
+  int ix;
+#if defined MPI
   MPI_Status  statuses[8];
   MPI_Request *request;
-  int ix;
   request=( MPI_Request *) malloc(sizeof(MPI_Request)*8);
+
   MPI_Init(&argc, &argv);
 
   MPI_Comm_rank(MPI_COMM_WORLD, &g_proc_id);
-
+#endif
   process_args(argc, argv, &input_filename,&filename);
   set_default_filenames(&input_filename, &filename);
 
@@ -3568,14 +3571,17 @@ int main(int argc, char *argv[]){
   }//End of loop over gauges
 
   finalize_solver(temp_field,2);
+#if defined MPI
   free(request);
+#endif
   free_gauge_field();
   free_geometry_indices();
   free_bispinor_field();
   free_scalar_field();
   free_spinor_field();
-
+#if defined MPI
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
+#endif
 
 }

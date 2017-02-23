@@ -47,7 +47,9 @@
 #include "operator/D_psi_BSM2f.h"
 #include "solver/dirac_operator_eigenvectors.h"
 #include "buffers/utils.h"
+#if defined MPI
 #include "buffers/utils_nonblocking.h"
+#endif
 #include "linalg_eo.h"
 #include "fatal_error.h"
 
@@ -354,7 +356,7 @@ void D_psi_BSM2f(bispinor * const P, bispinor * const Q){
   scalar phim[4][4];                   // phi_i(x-mu) = phim[mu][i]
   bispinor ALIGN stmp2;
 
-
+#if defined MPI
   MPI_Status  statuses[8];
   MPI_Request *request;
   request=( MPI_Request *) malloc(sizeof(MPI_Request)*8);
@@ -365,7 +367,7 @@ void D_psi_BSM2f(bispinor * const P, bispinor * const Q){
   generic_exchange_direction_nonblocking(Q, sizeof(bispinor), XUP, request, &count);
   generic_exchange_direction_nonblocking(Q, sizeof(bispinor), YUP, request, &count);
   generic_exchange_direction_nonblocking(Q, sizeof(bispinor), ZUP, request, &count);
-
+#endif
 //  computing backward
   for (ix=0;ix<VOLUME;ix++)
   {
@@ -399,7 +401,7 @@ void D_psi_BSM2f(bispinor * const P, bispinor * const Q){
     upm = &g_gauge_field[ix][ZUP];
     padd(rr4, s, upm, HOP_DN, 0.5*phase_3);
   }
-  
+ #if defined MPI 
   MPI_Waitall( count, request, statuses);
 
 //gathering backward
@@ -409,7 +411,7 @@ void D_psi_BSM2f(bispinor * const P, bispinor * const Q){
   generic_exchange_direction_nonblocking(vm3, sizeof(bispinor), XDOWN, request, &count);
   generic_exchange_direction_nonblocking(vm2, sizeof(bispinor), YDOWN, request, &count);
   generic_exchange_direction_nonblocking(vm1, sizeof(bispinor), ZDOWN, request, &count);
-
+#endif
 //computing forward
   for (ix=0;ix<VOLUME;ix++)
   {
@@ -446,9 +448,9 @@ void D_psi_BSM2f(bispinor * const P, bispinor * const Q){
     padd(rr3, spm,  upm, HOP_UP, 0.5*phase_3);
 
   }
-
+#if defined MPI
   MPI_Waitall( count, request, statuses);
-
+#endif
 // join
   for (ix=0; ix<VOLUME; ++ix){
 
@@ -492,12 +494,13 @@ void D_psi_BSM2f(bispinor * const P, bispinor * const Q){
 
 
 //start gathering forward
+#if defined MPI
   count=0;
   generic_exchange_direction_nonblocking(vp1, sizeof(bispinor), TUP, request, &count);
   generic_exchange_direction_nonblocking(vp2, sizeof(bispinor), XUP, request, &count);
   generic_exchange_direction_nonblocking(vp3, sizeof(bispinor), YUP, request, &count);
   generic_exchange_direction_nonblocking(vp4, sizeof(bispinor), ZUP, request, &count);
-
+#endif
 
 //start computing backward
   for (ix=0;ix<VOLUME;ix++)
@@ -552,6 +555,7 @@ void D_psi_BSM2f(bispinor * const P, bispinor * const Q){
     Fadd( rrs3, &stmp2, phi, -0.125*rho_BSM, +1. );
 
   }
+#if defined MPI
   MPI_Waitall( count, request, statuses);
 
 //gathering backward
@@ -560,7 +564,7 @@ void D_psi_BSM2f(bispinor * const P, bispinor * const Q){
   generic_exchange_direction_nonblocking(v2m2, sizeof(bispinor), XDOWN, request, &count);
   generic_exchange_direction_nonblocking(v2m3, sizeof(bispinor), YDOWN, request, &count);
   generic_exchange_direction_nonblocking(v2m4, sizeof(bispinor), ZDOWN, request, &count);
-
+#endif
 //computing forward
   for (ix=0;ix<VOLUME;ix++)
   {
@@ -605,8 +609,9 @@ void D_psi_BSM2f(bispinor * const P, bispinor * const Q){
     Fadd( rr, &stmp2, phip[ZUP], -0.125*rho_BSM, +1. );
   }
 
+#if defined MPI
   MPI_Waitall( count, request, statuses);
-
+#endif
 //join
 
  for (ix=0; ix<VOLUME; ++ix){
@@ -653,7 +658,9 @@ void D_psi_BSM2f(bispinor * const P, bispinor * const Q){
 
 
   } // end volume loop
+#if defined MPI
   free(request);
+#endif
 
 }
 
@@ -693,6 +700,7 @@ void D_psi_dagger_BSM2f(bispinor * const P, bispinor * const Q){
   scalar phim[4][4];                   // phi_i(x-mu) = phim[mu][i]
   bispinor ALIGN stmp2;
 
+#if defined MPI
   MPI_Status  statuses[8];
   MPI_Request *request;
   request=( MPI_Request *) malloc(sizeof(MPI_Request)*8);
@@ -704,6 +712,7 @@ void D_psi_dagger_BSM2f(bispinor * const P, bispinor * const Q){
   generic_exchange_direction_nonblocking(Q, sizeof(bispinor), YUP, request, &count);
   generic_exchange_direction_nonblocking(Q, sizeof(bispinor), ZUP, request, &count);
 
+#endif
 //  computing backward
   for (ix=0;ix<VOLUME;ix++)
   {
@@ -737,7 +746,7 @@ void D_psi_dagger_BSM2f(bispinor * const P, bispinor * const Q){
     upm = &g_gauge_field[ix][ZUP];
     padd(rr4, s, upm, HOP_DN, 0.5*phase_3);
   }
-
+#if defined MPI
   MPI_Waitall( count, request, statuses);
 
 //gathering backward
@@ -747,7 +756,7 @@ void D_psi_dagger_BSM2f(bispinor * const P, bispinor * const Q){
   generic_exchange_direction_nonblocking(vm3, sizeof(bispinor), XDOWN, request, &count);
   generic_exchange_direction_nonblocking(vm2, sizeof(bispinor), YDOWN, request, &count);
   generic_exchange_direction_nonblocking(vm1, sizeof(bispinor), ZDOWN, request, &count);
-
+#endif
 //computing forward
   for (ix=0;ix<VOLUME;ix++)
   {
@@ -784,9 +793,9 @@ void D_psi_dagger_BSM2f(bispinor * const P, bispinor * const Q){
     padd(rr3, spm,  upm, HOP_UP, 0.5*phase_3);
 
   }
-
+#if defined MPI
   MPI_Waitall( count, request, statuses);
-
+#endif
 // join
   for (ix=0; ix<VOLUME; ++ix){
 
@@ -834,12 +843,13 @@ void D_psi_dagger_BSM2f(bispinor * const P, bispinor * const Q){
 
 
 //start gathering forward
+#if defined MPI
   count=0;
   generic_exchange_direction_nonblocking(vp1, sizeof(bispinor), TUP, request, &count);
   generic_exchange_direction_nonblocking(vp2, sizeof(bispinor), XUP, request, &count);
   generic_exchange_direction_nonblocking(vp3, sizeof(bispinor), YUP, request, &count);
   generic_exchange_direction_nonblocking(vp4, sizeof(bispinor), ZUP, request, &count);
-
+#endif
 //start computing backward
   for (ix=0;ix<VOLUME;ix++)
   {
@@ -893,6 +903,7 @@ void D_psi_dagger_BSM2f(bispinor * const P, bispinor * const Q){
     Fadd( rrs3, &stmp2, phi, -0.125*rho_BSM, -1. );
 
   }
+#if defined MPI
   MPI_Waitall( count, request, statuses);
 
 //gathering backward
@@ -902,7 +913,7 @@ void D_psi_dagger_BSM2f(bispinor * const P, bispinor * const Q){
   generic_exchange_direction_nonblocking(v2m2, sizeof(bispinor), XDOWN, request, &count);
   generic_exchange_direction_nonblocking(v2m3, sizeof(bispinor), YDOWN, request, &count);
   generic_exchange_direction_nonblocking(v2m4, sizeof(bispinor), ZDOWN, request, &count);
-
+#endif
 //computing forward
   for (ix=0;ix<VOLUME;ix++)
   {
@@ -947,8 +958,9 @@ void D_psi_dagger_BSM2f(bispinor * const P, bispinor * const Q){
     Fadd( rr, &stmp2, phip[ZUP], -0.125*rho_BSM, -1. );
   }
 
+#if defined MPI
   MPI_Waitall( count, request, statuses);
-
+#endif
 
 //join
 
@@ -994,9 +1006,12 @@ void D_psi_dagger_BSM2f(bispinor * const P, bispinor * const Q){
        Fadd(rr, s, phim[mu], 0.125*rho_BSM, -1. );
     }
 
-
   } // end volume loop
+//  for (ix=0; ix<VOLUME; ++ix){  
+//  }
+#if defined MPI
   free(request);
+#endif
 }
 /* Q2_psi_BSM2f acts on bispinor fields */
 void Q2_psi_BSM2f(bispinor * const P, bispinor * const Q){

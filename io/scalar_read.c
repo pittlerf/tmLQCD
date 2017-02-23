@@ -21,7 +21,9 @@
 #include <errno.h>
 #include "global.h"
 #include "scalar.h"
+#if defined MPI
 #include "buffers/utils_nonblocking.h"
+#endif
 
 extern int scalar_precision_read_flag;
 // TODO consider that input scalar field could be in single prec.
@@ -285,7 +287,9 @@ void smear_scalar_fields( scalar ** smearedfield, scalar ** const sf ) {
 
    free(hyperc);
    free(nearen);
+#if defined MPI
    free(request);
+#endif
 }
 void smear_scalar_fields_correlator( scalar **smearedfield, scalar ** const sf ) {
 

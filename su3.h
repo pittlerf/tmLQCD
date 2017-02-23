@@ -276,7 +276,7 @@ _sse_store(r);
   (r).c1 -= I * (s).c1;				\
   (r).c2 -= I * (s).c2;
 
-#define complex_times_vector(r,c,s)		\
+#define _complex_times_vector(r,c,s)		\
   (r).c0 = (c) * (s).c0;			\
   (r).c1 = (c) * (s).c1;			\
   (r).c2 = (c) * (s).c2;
