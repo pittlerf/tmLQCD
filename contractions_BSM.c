@@ -3445,7 +3445,7 @@ int main(int argc, char *argv[]){
              {
                if (propagatorsonthefly_BSM == 1){
 
-                 if ((g_cart_id == 0 ) && ( (index_start != 0) || (index_end!= 11) ))
+                 if ((g_cart_id == 0 ) && ( (index_start != 0) || (index_end!= 12) ))
                  {
                     fprintf(stderr, "Contraction can be computed only with full set of point propagators\n");
                     exit(1);
