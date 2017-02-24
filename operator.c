@@ -127,6 +127,7 @@ int add_operator(const int type) {
 
   optr->inverter = &op_invert;
   optr->write_prop = &op_write_prop;
+  optr->inverter_save = &op_invert_save;
 
   /* Overlap needs special treatment */
   if(optr->type == OVERLAP) {
@@ -581,7 +582,7 @@ void op_invert_save(const int op_id, const int index_start, const int write_prop
   atime = gettime();
   if( optr->type == BSM || optr->type == BSM2b || optr->type == BSM2m || optr->type == BSM2f ) {
     for(i = 0; i < SourceInfo.no_flavours; i++) {
-
+     
       convert_eo_to_lexic(g_spinor_field[DUM_DERI], optr->sr0, optr->sr1);
       convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], optr->sr2, optr->sr3);
 

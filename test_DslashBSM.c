@@ -170,6 +170,7 @@ int main(int argc,char *argv[])
 		printf("parameter rho_BSM set to %f\n", rho_BSM);
 		printf("parameter eta_BSM set to %f\n", eta_BSM);
 		printf("parameter  m0_BSM set to %f\n",  m0_BSM);
+		printf("parameter mu0_BSM set to %f\n", mu0_BSM);
 	}
 
 #ifdef OMP

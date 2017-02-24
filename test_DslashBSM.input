@@ -1,6 +1,17 @@
-L=24
-T=48
+L=16
+T=32
 ompnumthreads=4
+
 GaugeFieldInFile = create_random_gaugefield
 ScalarFieldInFile = create_random_scalarfield
 
+BeginOperator BSM2b
+  rho = 1.
+  m0 = 0.0000
+  mu0 =  0.0005
+  eta = 0.5
+  solver = cg
+  solverprecision = 1e-10
+  maxsolveriterations = 15000
+  npergauge = 1
+EndOperator

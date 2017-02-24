@@ -27,7 +27,7 @@
 * otherwise a simple application of Dslash on a spinor will be tested.
 *
 *******************************************************************************/
-#define TEST_INVERSION 0
+#define TEST_INVERSION 1
 
 
 #ifdef HAVE_CONFIG_H
@@ -380,10 +380,12 @@ if( strcmp(scalar_input_filename, "create_random_scalarfield") == 0 ) {
 		printf("\n# square norm of the source: ||w||^2 = %e\n\n", squarenorm);
 		fflush(stdout);
 	}
-
+//initialize BSM2f operator
+ init_D_psi_BSM2f();
 ////  eigmax();
   double t_F;
 	/* inversion needs to be done first because it uses loads of the g_bispinor_fields internally */
+
 #if TEST_INVERSION
   if(g_proc_id==1)
     printf("Testing inversion\n");
