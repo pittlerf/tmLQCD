@@ -312,7 +312,7 @@ int main(int argc,char *argv[])
 	}
 
 	// read scalar field
-if( strcmp(scalar_input_filename, "create_random_scalarfield") == 0 ) {
+	if( strcmp(scalar_input_filename, "create_random_scalarfield") == 0 ) {
 		for( int s=0; s<numbScalarFields; s++ )
 			ranlxd(g_scalar_field[s], VOLUME);
 	}

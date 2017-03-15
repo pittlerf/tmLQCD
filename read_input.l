@@ -712,10 +712,15 @@ inline void rmQuotes(char *str){
     m0_BSM = c;
     if(myverbose != 0) printf("  BSM parameter m0 set to %f\n", m0_BSM);
   }
-  {SPC}*mu0{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z0] = %lf", name, &c);
-    mu0_BSM = c;
-    if(myverbose != 0) printf("  BSM parameter mu0 set to %f\n", mu0_BSM);
+  {SPC}*mu01{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z01] = %lf", name, &c);
+    mu01_BSM = c;
+    if(myverbose != 0) printf("  BSM parameter mu01 set to %f\n", mu01_BSM);
+  }
+  {SPC}*mu03{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z0123] = %lf", name, &c);
+    mu03_BSM = c;
+    if(myverbose != 0) printf("  BSM parameter mu03 set to %f\n", mu03_BSM);
   }
   {SPC}*propagatorsonthefly{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
@@ -2272,7 +2277,8 @@ int read_input(char * conf_file){
   rho_BSM = _default_rho_BSM;
   eta_BSM = _default_eta_BSM;
   m0_BSM  = _default_m0_BSM;
-  mu0_BSM  = _default_mu0_BSM;
+  mu03_BSM  = _default_mu03_BSM;
+  mu01_BSM  = _default_mu01_BSM;
   propagatorsonthefly_BSM = _default_propagatorsonthefly_BSM;
   smearedcorrelator_BSM = _default_smearedcorrelator_BSM;
   densitydensity_BSM = _default_densitydensity_BSM;
