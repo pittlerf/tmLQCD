@@ -684,12 +684,7 @@ _sse_store_up(r);
     + (v).c20 * (w).c02			\
     + (v).c21 * (w).c12			\
     + (v).c22 * (w).c22;
-
-#define _complex_times_vector(x, c, y)	\
-   x.c0 = (c) * (y).c0;			\
-   x.c1 = (c) * (y).c1;			\
-   x.c2 = (c) * (y).c2;
-    
+ 
 #define _vector_tensor_vector(t,u,v)	\
   (t).c00 = (u).c0 * conj((v).c0);	\
   (t).c01 = (u).c0 * conj((v).c1);	\
