@@ -170,6 +170,8 @@ int main(int argc,char *argv[])
 		printf("parameter rho_BSM set to %f\n", rho_BSM);
 		printf("parameter eta_BSM set to %f\n", eta_BSM);
 		printf("parameter  m0_BSM set to %f\n",  m0_BSM);
+		printf("parameter mu03_BSM set to %f\n", mu03_BSM);
+		printf("parameter mu01_BSM set to %f\n", mu01_BSM);
 	}
 
 #ifdef OMP
@@ -322,6 +324,14 @@ int main(int argc,char *argv[])
 	if( strcmp(scalar_input_filename, "create_random_scalarfield") == 0 ) {
 		for( int s=0; s<numbScalarFields; s++ )
 			ranlxd(g_scalar_field[s], VOLUME);
+	}
+	else if( strcmp(scalar_input_filename, "create_trivial_scalarfield") == 0 ) {
+		for(int s=0;s<VOLUME;s++){
+			g_scalar_field[0][s]=1.0;
+			g_scalar_field[1][s]=0;
+			g_scalar_field[2][s]=0;
+			g_scalar_field[3][s]=0;
+		}
 	}
 	else {
 		sprintf(scalar_filename, "%s.%d", scalar_input_filename, nscalar);

@@ -64,7 +64,7 @@
 #endif
 
 // for Frezzotti-Rossi model Dirac operator
-EXTERN double eta_BSM, rho_BSM, m0_BSM;
+EXTERN double eta_BSM, rho_BSM, m0_BSM, mu03_BSM, mu01_BSM;
 EXTERN int propagatorsonthefly_BSM;
 EXTERN int smearedcorrelator_BSM;
 EXTERN int densitydensity_BSM;

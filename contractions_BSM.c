@@ -3215,9 +3215,11 @@ int main(int argc, char *argv[]){
 
   if(g_proc_id==0)
   {
-      fprintf(stdout, "#parameter rho_BSM set to %f\n", rho_BSM);
-      fprintf(stdout, "#parameter eta_BSM set to %f\n", eta_BSM);
-      fprintf(stdout, "#parameter  m0_BSM set to %f\n",  m0_BSM);
+      fprintf(stdout, "#parameter  rho_BSM set to %f\n",  rho_BSM);
+      fprintf(stdout, "#parameter  eta_BSM set to %f\n",  eta_BSM);
+      fprintf(stdout, "#parameter   m0_BSM set to %f\n",   m0_BSM);
+      fprintf(stdout, "#parameter mu03_BSM set to %f\n", mu03_BSM);
+      fprintf(stdout, "#parameter mu01_BSM set to %f\n", mu01_BSM);
   }
 
 #ifdef OMP
@@ -3467,9 +3469,9 @@ int main(int argc, char *argv[]){
                     if( (operator_list[op_id].solver == INCREIGCG) && (operator_list[op_id].solver_params.eigcg_rand_guess_opt) )
                     { //randomize the initial guess
                         gaussian_volume_source( operator_list[op_id].prop0, operator_list[op_id].prop1,isample,ix,0); //need to check this
-                    }
-
-                    operator_list[op_id].inverter_save(op_id, index_start, 1);
+                    } 
+		    
+		    operator_list[op_id].inverter_save(op_id, index_start, 1);
 
                  }//end of loop for spinor and color source degrees of freedom
                }
