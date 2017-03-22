@@ -68,6 +68,8 @@ EXTERN double eta_BSM, rho_BSM, m0_BSM;
 EXTERN int propagatorsonthefly_BSM;
 EXTERN int smearedcorrelator_BSM;
 EXTERN int densitydensity_BSM;
+EXTERN int densitydensity_s0s0_p0p0;
+EXTERN int densitydensity_sxsx_pxpx;
 EXTERN int diraccurrentdensity_BSM;
 EXTERN int wilsoncurrentdensitypr1_BSM;
 EXTERN int wilsoncurrentdensitypr2_BSM;
@@ -78,6 +80,7 @@ EXTERN int wilsoncurrentdensitypl2_BSM;
 #define XUP 1
 #define YUP 2
 #define ZUP 3
+
 #define ZDOWN 4
 #define YDOWN 5
 #define XDOWN 6

@@ -2928,6 +2928,172 @@ void density_density_1234( bispinor ** propfields, int type_1234 ){
    free(colortrace);
 
 }
+void density_density_1234_sxsx( bispinor ** propfields, int type_1234 ){
+   int ix,i;
+   int f1,c1,s1,tauindex;
+   int spinorstart=0, spinorend=4;
+   bispinor running;
+
+   _Complex double *colortrace;
+   _Complex double *spacetrace;
+   _Complex double *spinortrace;
+   _Complex double *flavortrace;
+   _Complex double *paulitrace;
+   int type;
+
+   colortrace=(_Complex double *)malloc(sizeof(_Complex double) *8);
+   spacetrace=(_Complex double *)malloc(sizeof(_Complex double) *8*T_global);
+   spinortrace=(_Complex double *)malloc(sizeof(_Complex double)*2*T_global);
+   flavortrace=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
+   paulitrace= (_Complex double *)malloc(sizeof(_Complex double)*T_global);
+
+   if ( ( type_1234 == TYPE_1 )|| ( type_1234 == TYPE_3 ) ) {
+     spinorstart=0;
+     spinorend  =2;
+   }
+   else if ( ( type_1234 == TYPE_2) || (type_1234 == TYPE_4) ){
+     spinorstart=2;
+     spinorend  =4;
+   }
+   else{
+     if (g_cart_id ==0) fprintf(stdout, "Wrong arument for type_1234, it can only be TYPE_1, TYPE_2, TYPE_3, TYPE_4\n");
+     exit(1);
+  }
+
+//Trace over the Pauli matrices
+   for (i=0; i<T_global; ++i)
+      paulitrace[i]=0.;
+
+   for (tauindex=0; tauindex<3; ++tauindex){
+
+//Trace over up and down flavors
+      for (i=0; i<T_global; ++i)
+         flavortrace[i]=0.;
+
+      for (f1=0; f1<2; ++f1){
+
+//Trace over the spinor indices you have to trace only over those two spinor 
+//component that appear in the final spinor
+         for (i=0; i<2*T_global; ++i)
+            spinortrace[i]=0.;
+
+         for (s1= spinorstart; s1<spinorend; ++s1){
+
+//Trace over the spatial indices
+            for (i=0; i<8*T_global; ++i)
+               spacetrace[i]=0.;
+
+            for (ix = 0; ix< VOLUME; ++ix){
+
+//Trace over the color indices for each sites
+
+               for (i=0; i<8; ++i)
+                  colortrace[i]=0.;
+               for (c1=0; c1<3; ++c1){
+/*   
+       TYPE  1 OR  2            (1-g5)/2*S(x  ,ytilde) fixed indices (c1, s1, f1)
+       TYPE  3 OR  4            (1+g5)/2*S(x  ,ytilde) running indices bispinor
+*/
+
+//for the up quark
+                  if ( (type_1234 == TYPE_1) || (type_1234 == TYPE_2) ){
+                    _vector_null( running.sp_up.s0 );
+                    _vector_null( running.sp_up.s1 );
+                    _vector_assign( running.sp_up.s2, propfields[12*s1+4*c1+2*f1][ix].sp_up.s2 );
+                    _vector_assign( running.sp_up.s3, propfields[12*s1+4*c1+2*f1][ix].sp_up.s3 );
+                    _vector_null( running.sp_dn.s0 );
+                    _vector_null( running.sp_dn.s1 );
+                    _vector_assign( running.sp_dn.s2, propfields[12*s1+4*c1+2*f1][ix].sp_dn.s2 );
+                    _vector_assign( running.sp_dn.s3, propfields[12*s1+4*c1+2*f1][ix].sp_dn.s3 );
+                  }
+                  else if ((type_1234 == TYPE_3) || ( type_1234 == TYPE_4)){
+                    _vector_null( running.sp_up.s2 );
+                    _vector_null( running.sp_up.s3 );
+                    _vector_assign( running.sp_up.s0, propfields[12*s1+4*c1+2*f1][ix].sp_up.s0 );
+                    _vector_assign( running.sp_up.s1, propfields[12*s1+4*c1+2*f1][ix].sp_up.s1 );
+                    _vector_null( running.sp_dn.s2 );
+                    _vector_null( running.sp_dn.s3 );
+                    _vector_assign( running.sp_dn.s0, propfields[12*s1+4*c1+2*f1][ix].sp_dn.s0 );
+                    _vector_assign( running.sp_dn.s1, propfields[12*s1+4*c1+2*f1][ix].sp_dn.s1 );
+                  }
+
+/*   
+       TYPE  1 OR  2     phi^dagger(x)*tau_i*  (1-g5)/2*S(x  ,ytilde)
+       TYPE  3 OR  4     tau_i*phi(x)          (1+g5)/2*S(x  ,ytilde)
+*/
+                  if ( (type_1234 == TYPE_1) || (type_1234 == TYPE_2)){
+                    taui_scalarfield_spinor( &running, &running, GAMMA_DN, tauindex, ix, NODIR, DAGGER );
+                  }
+                  else if ( (type_1234 == TYPE_3) || (type_1234 == TYPE_4) ){
+                    taui_scalarfield_spinor( &running, &running, GAMMA_UP, tauindex, ix, NODIR, NO_DAGG);
+                  }
+/*   
+       TYPE  1 OR  2     S(ytilde, x)*phi^dagger(x)*tau_i*  (1-g5)/2*S(x  ,ytilde)
+       TYPE  3 OR  4     S(ytilde, x)*tau_i*phi(x)          (1+g5)/2*S(x  ,ytilde)
+*/
+                  multiply_backward_propagator(&running, propfields, &running, ix, NODIR );
+
+                  //delta( color component of bispinor running, c1) for all spinor and flavor indices
+                  trace_in_color(colortrace,&running,c1);
+
+               }  //End of trace color
+               //sum over all lattice sites the result of the color trace
+               trace_in_space(spacetrace,colortrace,ix);
+
+            } //End of trace space
+
+//Gather the results from all nodes to complete the trace in space
+#if defined MPI
+            for (i=0; i<8*T_global; ++i){
+               _Complex double tmp;
+               MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
+               spacetrace[i]= tmp;
+            }
+#endif
+            // delta (spinor components of spacetrace, s1) for all time slices and flavor indices
+            trace_in_spinor(spinortrace, spacetrace, s1);
+         }//End of trace in spinor space
+/*   
+       TYPE  1      tau_i*phi(ytilde)*       (1+gamma5)/2*S(ytilde, x)*phi^dagger(x)*tau_i*  (1-g5)/2*S(x  ,ytilde)
+       TYPE  2      phi(ytilde)^dagger*tau_i*(1-gamma5)/2*S(ytilde, x)*phi^dagger(x)*tau_i*  (1-g5)/2*S(x  ,ytilde)
+       TYPE  3      tau_i*phi(ytilde)*       (1+gamma5)/2*S(ytilde, x)*tau_i*phi(x)          (1+g5)/2*S(x  ,ytilde)
+       TYPE  4      phi(ytilde)^dagger*tau_i*(1-gamma5)/2*S(ytilde, x)*tau_i*phi(x)          (1+g5)/2*S(x  ,ytilde)
+*/
+         if ( (type_1234 == TYPE_1) || (type_1234 == TYPE_3) ){
+           taui_scalarfield_flavoronly( spinortrace, tauindex, NO_DAGG );
+         }
+         else if ( (type_1234 == TYPE_4) || ( type_1234 == TYPE_2) ){
+           taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER  );
+         }
+         //delta(flavor component in spinortrace, f1) for all time slices
+         trace_in_flavor( flavortrace, spinortrace, f1 );
+      } //End of trace in flavor space
+      type = type_1234 == TYPE_1 ? 1 : type_1234 == TYPE_2 ? 2 : type_1234 == TYPE_3 ? 3 : 4 ;
+      if (g_cart_id == 0){printf("Density Density correlator type (%s) results\n", type_1234 == TYPE_1 ? "1" : type_1234 == TYPE_2 ? "2" : type_1234 == TYPE_3 ? "3" : "4");}
+        for (i=0; i<T_global; ++i){
+          if (g_cart_id == 0){
+            printf("DDS%dS%d %d %.3d %10.10e %10.10e\n", tauindex+1, tauindex+1, type, i, creal(flavorrace[i])/4.,cimag(flavortrace[i])/4.);
+          }
+        }
+      //sum for all Pauli matrices
+      for (i=0;i<T_global; ++i)
+         paulitrace[i]+=flavortrace[i];
+   } //End of trace for Pauli matrices
+
+   type = type_1234 == TYPE_1 ? 1 : type_1234 == TYPE_2 ? 2 : type_1234 == TYPE_3 ? 3 : 4 ;
+   if (g_cart_id == 0){printf("Density Density correlator type (%s) results\n", type_1234 == TYPE_1 ? "1" : type_1234 == TYPE_2 ? "2" : type_1234 == TYPE_3 ? "3" : "4");}
+   for (i=0; i<T_global; ++i){
+      if (g_cart_id == 0){
+        printf("DD %d %.3d %10.10e %10.10e\n", type, i, creal(paulitrace[i])/4.,cimag(paulitrace[i])/4.);
+      }
+   }
+   free(flavortrace);
+   free(paulitrace);
+   free(spacetrace);
+   free(spinortrace);
+   free(colortrace);
+}
+
 
 
 
@@ -4430,6 +4596,8 @@ int main(int argc, char *argv[]){
                if (g_cart_id == 0) {
                  printf("Following measurements will be done\n");
                  if (densitydensity_BSM == 1) printf("#Density Density correlation function\n");
+                 if (densitydensity_s0s0_p0p0 == 1) printf("Density Density s0s0-p0p0 using trivial scalar field\n");
+                 if (densitydensity_sxsx_pxpx == 1) printf("Density Density sxsx-pxpx using trivial scalar field\n");
                  if (diraccurrentdensity_BSM == 1) printf("#Dirac current density correlation function\n");
                  if (wilsoncurrentdensitypr1_BSM == 1) printf("#Wilson  current density PR1 correlation function\n");
                  if (wilsoncurrentdensitypr2_BSM == 1) printf("#Wilson  current density PR2 correlation function\n");
@@ -4443,9 +4611,72 @@ int main(int argc, char *argv[]){
                  density_density_1234(g_bispinor_field, TYPE_2);
                  density_density_1234(g_bispinor_field, TYPE_3);
                  density_density_1234(g_bispinor_field, TYPE_4);
+               }
+               if (densitydensity_s0s0_p0p0 == 1){
+                 unit_scalar_field(g_scalar_field);
+                 for( int s=0; s<4; s++ )
+                   generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
+                 if (smearedcorrelator_BSM == 1){
+                   smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field);
+                   for ( int s=0; s<4; s++ )
+                    generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
+                 }
+                 density_density_1234_s0s0(g_bispinor_field, TYPE_1);
+                 density_density_1234_s0s0(g_bispinor_field, TYPE_2);
+                 density_density_1234_s0s0(g_bispinor_field, TYPE_3);
+                 density_density_1234_s0s0(g_bispinor_field, TYPE_4);
+                 double read_end, read_begin=gettime();
+                 if( (i = read_scalar_field_parallel(scalar_filename,g_scalar_field)) !=0 )
+                 {
+                    fprintf(stderr, "Error %d while reading scalar field from %s\n Aborting...\n", i, scalar_filename);
+                    exit(-2);
+                 }
+                 read_end=gettime();
+                 if (g_cart_id == 0) {
+                   printf("# Finished reading scalar field in %.4e seconds.\n",read_end-read_begin);
+                   fflush(stdout);
+                 }
+                 for( int s=0; s<4; s++ )
+                   generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
+                 if (smearedcorrelator_BSM == 1){
+                   smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field);
+                   for ( int s=0; s<4; s++ )
+                    generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
+                 }
                } 
-
-                if (diraccurrentdensity_BSM == 1){
+               if (density_density_sxsx_pxpx ==1){
+                 unit_scalar_field(g_scalar_field);
+                 for( int s=0; s<4; s++ )
+                   generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
+                 if (smearedcorrelator_BSM == 1){
+                   smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field);
+                   for ( int s=0; s<4; s++ )
+                    generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
+                 }
+                 density_density_1234_sxsx(g_bispinor_field, TYPE_1);
+                 density_density_1234_sxsx(g_bispinor_field, TYPE_2);
+                 density_density_1234_sxsx(g_bispinor_field, TYPE_3);
+                 density_density_1234_sxsx(g_bispinor_field, TYPE_4);
+                 double read_end, read_begin=gettime();
+                 if( (i = read_scalar_field_parallel(scalar_filename,g_scalar_field)) !=0 )
+                 {
+                    fprintf(stderr, "Error %d while reading scalar field from %s\n Aborting...\n", i, scalar_filename);
+                    exit(-2);
+                 }
+                 read_end=gettime();
+                 if (g_cart_id == 0) {
+                   printf("# Finished reading scalar field in %.4e seconds.\n",read_end-read_begin);
+                   fflush(stdout);
+                 }
+                 for( int s=0; s<4; s++ )
+                   generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
+                 if (smearedcorrelator_BSM == 1){
+                   smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field);
+                   for ( int s=0; s<4; s++ )
+                    generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
+                 }
+               }
+               if (diraccurrentdensity_BSM == 1){
                  naivedirac_current_density_12ab( g_bispinor_field, TYPE_I , TYPE_A );
 //                 diraccurrent1a_petros( g_bispinor_field );
                  naivedirac_current_density_12ab( g_bispinor_field, TYPE_I , TYPE_B );
@@ -4472,10 +4703,10 @@ int main(int argc, char *argv[]){
                  wilsonterm_current_density_512ab( g_bispinor_field, TYPE_2, TYPE_B );
                }
                if (wilsoncurrentdensitypl2_BSM == 1){
-                 wilsoncurrent61a_petros( g_bispinor_field );
+               //wilsoncurrent61a_petros( g_bispinor_field );
                  wilsonterm_current_density_612ab( g_bispinor_field, TYPE_1, TYPE_A );
                  wilsonterm_current_density_612ab( g_bispinor_field, TYPE_1, TYPE_B );
-                 wilsoncurrent62a_petros( g_bispinor_field );
+               //wilsoncurrent62a_petros( g_bispinor_field );
                  wilsonterm_current_density_612ab( g_bispinor_field, TYPE_2, TYPE_A );
                  wilsonterm_current_density_612ab( g_bispinor_field, TYPE_2, TYPE_B );
                }

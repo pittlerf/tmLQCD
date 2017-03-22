@@ -1,6 +1,4 @@
-/***********************************************************************
- *
- * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach,
+/* Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach,
  * 2014 Mario Schroeck
  *
  * This file is part of tmLQCD.

@@ -83,6 +83,8 @@
 #define _default_smearedcorrelator_BSM 0
 #define _default_propagatorsonthefly_BSM 0
 #define _default_densitydensity_BSM 0
+#define _default_densitydensity_s0s0_BSM 0
+#define _default_densitydensity_sxsx_BSM 0
 #define _default_diraccurrentdensity_BSM 0
 #define _default_wilsoncurrentdensitypr1_BSM 0
 #define _default_wilsoncurrentdensitypr2_BSM 0

@@ -727,6 +727,16 @@ inline void rmQuotes(char *str){
     densitydensity_BSM = a;
     if(myverbose != 0) printf("  BSM parameter densitydensity_BSM  is set to %d line %d operator %d\n", a, line_of_file, current_operator);
   }
+  {SPC}*densitydensitys0s0{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    densitydensity_s0s0_BSM = a;
+    if(myverbose != 0) printf("  BSM parameter densitydensity_s0s0_BSM  is set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
+  {SPC}*densitydensitysxsx{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    densitydensity_sxsx_BSM = a;
+    if(myverbose != 0) printf("  BSM parameter densitydensity_sxsx_BSM  is set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
   {SPC}*diraccurrentdensity{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     diraccurrentdensity_BSM = a;
@@ -2270,6 +2280,8 @@ int read_input(char * conf_file){
   propagatorsonthefly_BSM = _default_propagatorsonthefly_BSM;
   smearedcorrelator_BSM = _default_smearedcorrelator_BSM;
   densitydensity_BSM = _default_densitydensity_BSM;
+  densitydensity_s0s0_BSM = _default_densitydensity_s0s0_BSM;
+  densitydensity_sxsx_BSM = _default_densitydensity_sxsx_BSM;
   diraccurrentdensity_BSM = _default_diraccurrentdensity_BSM;
   wilsoncurrentdensitypr1_BSM = _default_wilsoncurrentdensitypr1_BSM;
   wilsoncurrentdensitypr2_BSM = _default_wilsoncurrentdensitypr2_BSM;
