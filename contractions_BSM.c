@@ -3072,7 +3072,7 @@ void density_density_1234_sxsx( bispinor ** propfields, int type_1234 ){
       if (g_cart_id == 0){printf("Density Density correlator type (%s) results\n", type_1234 == TYPE_1 ? "1" : type_1234 == TYPE_2 ? "2" : type_1234 == TYPE_3 ? "3" : "4");}
         for (i=0; i<T_global; ++i){
           if (g_cart_id == 0){
-            printf("DDS%dS%d %d %.3d %10.10e %10.10e\n", tauindex+1, tauindex+1, type, i, creal(flavorrace[i])/4.,cimag(flavortrace[i])/4.);
+            printf("DDS%dS%d %d %.3d %10.10e %10.10e\n", tauindex+1, tauindex+1, type, i, creal(flavortrace[i])/4.,cimag(flavortrace[i])/4.);
           }
         }
       //sum for all Pauli matrices
@@ -4598,8 +4598,8 @@ int main(int argc, char *argv[]){
                if (g_cart_id == 0) {
                  printf("Following measurements will be done\n");
                  if (densitydensity_BSM == 1) printf("#Density Density correlation function\n");
-                 if (densitydensity_s0s0_p0p0 == 1) printf("Density Density s0s0-p0p0 using trivial scalar field\n");
-                 if (densitydensity_sxsx_pxpx == 1) printf("Density Density sxsx-pxpx using trivial scalar field\n");
+                 if (densitydensity_s0s0_BSM == 1) printf("Density Density s0s0-p0p0 using trivial scalar field\n");
+                 if (densitydensity_sxsx_BSM == 1) printf("Density Density sxsx-pxpx using trivial scalar field\n");
                  if (diraccurrentdensity_BSM == 1) printf("#Dirac current density correlation function\n");
                  if (wilsoncurrentdensitypr1_BSM == 1) printf("#Wilson  current density PR1 correlation function\n");
                  if (wilsoncurrentdensitypr2_BSM == 1) printf("#Wilson  current density PR2 correlation function\n");
@@ -4614,7 +4614,7 @@ int main(int argc, char *argv[]){
                  density_density_1234(g_bispinor_field, TYPE_3);
                  density_density_1234(g_bispinor_field, TYPE_4);
                }
-               if (densitydensity_s0s0_p0p0 == 1){
+               if (densitydensity_s0s0_BSM == 1){
                  unit_scalar_field(g_scalar_field);
                  for( int s=0; s<4; s++ )
                    generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
@@ -4646,7 +4646,7 @@ int main(int argc, char *argv[]){
                     generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
                  }
                } 
-               if (density_density_sxsx_pxpx ==1){
+               if (densitydensity_sxsx_BSM ==1){
                  unit_scalar_field(g_scalar_field);
                  for( int s=0; s<4; s++ )
                    generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
