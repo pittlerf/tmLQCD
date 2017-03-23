@@ -1,6 +1,6 @@
 /***********************************************************************
  *
- * Copyright (C) 2009 Carsten Urbach
+ * Copyright (C) 2017 Ferenc Pittler
  *
  * This file is part of tmLQCD.
  *

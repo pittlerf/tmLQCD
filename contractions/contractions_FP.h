@@ -1,8 +1,7 @@
 /***********************************************************************
  *
- * Copyright (C) 2015 Mario Schroeck
- *               2016 Bartosz Kostrzewa
- *
+ * Copyright (C) 2015 Ferenc Pittler
+ *         
  * This file is part of tmLQCD.
  *
  * tmLQCD is free software: you can redistribute it and/or modify
