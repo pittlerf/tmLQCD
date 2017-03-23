@@ -722,55 +722,81 @@ inline void rmQuotes(char *str){
     mu03_BSM = c;
     if(myverbose != 0) printf("  BSM parameter mu03 set to %f\n", mu03_BSM);
   }
-  {SPC}*propagatorsonthefly{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    propagatorsonthefly_BSM = a;
-    if(myverbose != 0) printf("  BSM parameter propagatorsonthefly_BSM  is set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  {SPC}*propagatorsonthefly{EQL}yes {
+    propagatorsonthefly_BSM = 1;
+    if(myverbose != 0) printf("  BSM propagators are also computed for using them in the contractions  line %d operator %d\n", a, line_of_file, current_operator);
   }
-  {SPC}*smearingcorrelator{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    smearedcorrelator_BSM = a;
-    if(myverbose != 0) printf("  BSM parameter smearedcorrelator_BSM  is set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  {SPC}*propagatorsonthefly{EQL}no {
+    propagatorsonthefly_BSM = 0;
+    if(myverbose != 0) printf("  BSM propagators are read from the disk (default)  line %d operator %d\n", line_of_file, current_operator);
   }
-  {SPC}*densitydensity{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    densitydensity_BSM = a;
-    if(myverbose != 0) printf("  BSM parameter densitydensity_BSM  is set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  {SPC}*smearingcorrelator{EQL}yes {
+    smearedcorrelator_BSM = 1;
+    if(myverbose != 0) printf("  In the BSM correlators smeared scalar fields are used (over the whole timeslice) line %d operator %d\n", line_of_file, current_operator);
   }
-  {SPC}*densitydensitys0s0{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    densitydensity_s0s0_BSM = a;
-    if(myverbose != 0) printf("  BSM parameter densitydensity_s0s0_BSM  is set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  {SPC}*smearingcorrelator{EQL}no {
+    smearedcorrelator_BSM = 0;
+    if(myverbose != 0) printf("  In the BSM smearing of the scalars in the correlators is switched off!! (this is the default) line %d operator %d\n", line_of_file, current_operator);
   }
-  {SPC}*densitydensitysxsx{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    densitydensity_sxsx_BSM = a;
-    if(myverbose != 0) printf("  BSM parameter densitydensity_sxsx_BSM  is set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  {SPC}*densitydensity{EQL}yes {
+    if(myverbose) printf("  BSM density denstiy correlators are computed with nontrivial scalar line %d operator %d\n", line_of_file, current_operator);
+    densitydensity_BSM = 1;
   }
-  {SPC}*diraccurrentdensity{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    diraccurrentdensity_BSM = a;
-    if(myverbose != 0) printf("  BSM parameter diraccurrentdensity_BSM is  set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  {SPC}*densitydensitys0s0{EQL}yes {
+    densitydensity_s0s0_BSM = 1;
+    if(myverbose != 0) printf("  BSM density density s0s0,p0p0 are computed with trivial scalar fields line %d operator %d\n", line_of_file, current_operator);
   }
-  {SPC}*wilsoncurrentdensityprfirstline{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    wilsoncurrentdensitypr1_BSM = a;
-    if(myverbose != 0) printf("  BSM parameter wilsoncurrentdensitypr1_BSM is  set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  {SPC}*densitydensitys0s0{EQL}no {
+    densitydensity_s0s0_BSM = 0;
+    if(myverbose != 0) printf("  BSM density density s0s0,p0p0 are not computed with trivial scalar fields (this is the default) line %d operator %d\n", line_of_file, current_operator);
   }
-  {SPC}*wilsoncurrentdensityprsecondline{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    wilsoncurrentdensitypr2_BSM = a;
-    if(myverbose != 0) printf("  BSM parameter wilsoncurrentdensitypr2_BSM is  set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  {SPC}*densitydensitysxsx{EQL}yes {
+    densitydensity_sxsx_BSM = 1;
+    if(myverbose != 0) printf("  BSM density density ss and pp correlators with trivial scalar field are computed  line %d operator %d\n", line_of_file, current_operator);
   }
-  {SPC}*wilsoncurrentdensityplfirstline{EQL}{DIGIT}+ {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    wilsoncurrentdensitypl1_BSM = a;
-    if(myverbose != 0) printf("  BSM parameter wilsoncurrentdensitypl1_BSM is  set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  {SPC}*densitydensitysxsx{EQL}no {
+    densitydensity_sxsx_BSM = 0;
+    if(myverbose != 0) printf("  BSM density density ss and pp correlators with trivial scalar field are not computed (this is the default) line %d operator %d\n", line_of_file, current_operator);
   }
-  {SPC}*wilsoncurrentdensityplsecondline{EQL}{ZT} {
-    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
-    wilsoncurrentdensitypl2_BSM = a;
-    if(myverbose != 0) printf("  BSM parameter wilsoncurrentdensitypl2_BSM is  set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  {SPC}*diraccurrentdensity{EQL}yes {
+    diraccurrentdensity_BSM = 1;
+    if(myverbose != 0) printf("  BSM naive (dirac) current  density correlators are computed line %d operator %d\n", line_of_file, current_operator);
+  }
+  {SPC}*diraccurrentdensity{EQL}no  {
+    diraccurrentdensity_BSM = 0;
+    if(myverbose != 0) printf("  BSM naive (dirac) current  density correlators are not computed (this is the default) line %d operator %d\n", line_of_file, current_operator);
+  }
+  {SPC}*wilsoncurrentdensityprfirstline{EQL}yes {
+    wilsoncurrentdensitypr1_BSM = 1;
+    if(myverbose != 0) printf("  BSM wilson (pr first line) current times density correlators are computed line %d operator %d\n", line_of_file, current_operator);
+  }
+  {SPC}*wilsoncurrentdensityprfirstline{EQL}no {
+    wilsoncurrentdensitypr1_BSM = 0;
+    if(myverbose != 0) printf("  BSM wilson (pr first line) current times density correlators are not computed (this is the default) line %d operator %d\n", line_of_file, current_operator);
+  }
+  {SPC}*wilsoncurrentdensityprsecondline{EQL}yes {
+    wilsoncurrentdensitypr2_BSM = 1;
+    if(myverbose != 0) printf("  BSM wilson (pr second line) current times density correlators are computed line %d operator %d\n", line_of_file, current_operator);
+  }
+  {SPC}*wilsoncurrentdensityprsecondline{EQL}no {
+    wilsoncurrentdensitypr2_BSM = 0;
+    if(myverbose != 0) printf("  BSM wilson (pr second line) current times density correlators are not computed (this is the default) line %d operator %d\n", line_of_file, current_operator);
+  }
+  {SPC}*wilsoncurrentdensityplfirstline{EQL}yes {
+    wilsoncurrentdensitypl1_BSM = 1;
+    if(myverbose != 0) printf("  BSM wilson (pl first line) current times density correlators are computed line %d operator %d\n", line_of_file, current_operator);
+  }
+  {SPC}*wilsoncurrentdensityplfirstline{EQL}no {
+    wilsoncurrentdensitypl1_BSM = 0;
+    if(myverbose != 0) printf("  BSM wilson (pl first line) current times density correlators are not computed (this is the default) line %d operator %d\n", line_of_file, current_operator);
+  }
+  {SPC}*wilsoncurrentdensityplsecondline{EQL}yes {
+    wilsoncurrentdensitypl2_BSM = 1;
+    if(myverbose != 0) printf("  BSM wilson (pl second line) current times density correlators are computed line %d operator %d\n", line_of_file, current_operator);
+  }
+  {SPC}*wilsoncurrentdensityplsecondline{EQL}no {
+    wilsoncurrentdensitypl2_BSM = 0;
+    if(myverbose != 0) printf("  BSM wilson (pl second line) current times density correlators are not computed (this is the default) line %d operator %d\n", line_of_file, current_operator);
   }
   {SPC}*nscalarstep{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
