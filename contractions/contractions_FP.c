@@ -202,7 +202,7 @@ static void taui_scalarfield_flavoronly( _Complex double *dest, int tauindex, in
    _Complex double a11=0.0, a12=0.0, a21=0.0, a22=0.0;
    int i;
   
-   source_copy=(double *)malloc(sizeof(double)*4*T_global);
+   source_copy=(_Complex double *)malloc(sizeof(_Complex double)*2*T_global);
 
    if (source_copy == NULL) {
       if (g_cart_id == 0) {printf("memory allocation failed\n"); exit(1);}
@@ -1023,6 +1023,13 @@ void density_density_1234( bispinor ** propfields, int type_1234 ){
          //delta(flavor component in spinortrace, f1) for all time slices
          trace_in_flavor( flavortrace, spinortrace, f1 );
       } //End of trace in flavor space
+      type = type_1234 == TYPE_1 ? 1 : type_1234 == TYPE_2 ? 2 : type_1234 == TYPE_3 ? 3 : 4 ;
+      if (g_cart_id == 0){printf("Density Density correlator type (%s) for tau matrix %d results\n", type_1234 == TYPE_1 ? "1" : type_1234 == TYPE_2 ? "2" : type_1234 == TYPE_3 ? "3" : "4",tauindex);}
+      for (i=0; i<T_global; ++i){
+        if (g_cart_id == 0){
+         printf("DDTAU%dTAU%d %d %.3d %10.10e %10.10e\n", tauindex,tauindex,type, i, creal(flavortrace[i])/4.,cimag(flavortrace[i])/4.);
+        }
+      }
       //sum for all Pauli matrices
       for (i=0;i<T_global; ++i)
          paulitrace[i]+=flavortrace[i];
@@ -1410,6 +1417,12 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
          trace_in_flavor( flavortrace, spinortrace, f1 );
       } //End of trace in flavor space
       //sum for all Pauli matrices
+      if (g_cart_id == 0){printf("NaiveDirac Current Density correlator type (%s %s) for tau matrixes %d results\n", type_12 == TYPE_I ? "I" : "II",type_ab == TYPE_A ? "a" :"b", tauindex);}
+      for (i=0; i<T_global; ++i){
+        if (g_cart_id == 0){
+          printf("DCDTAU%dTAU%d %d %d %.3d %10.10e %10.10e\n",tauindex, tauindex,type_12, type_ab,  i, creal(flavortrace[i])/4.,cimag(flavortrace[i])/4.0);
+        }
+      }
       for (i=0;i<T_global; ++i)
          paulitrace[i]+=flavortrace[i];
    } //End of trace for Pauli matrices
