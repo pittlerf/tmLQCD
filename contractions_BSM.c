@@ -279,11 +279,11 @@ int main(int argc, char *argv[]){
   /* define the geometry */
 
   geometry();
-
+  g_kappa=-1;
   if ((g_cart_id == 0) && (g_kappa != -1))
   {
       fprintf(stdout, "#error anti-periodic boundary condition is implemented via g_kappa %e\n",g_kappa);
-  //    exit(1);
+      exit(1);
   }
   boundary(g_kappa);
 
@@ -438,7 +438,7 @@ int main(int argc, char *argv[]){
                         gaussian_volume_source( operator_list[op_id].prop0, operator_list[op_id].prop1,isample,ix,0); //need to check this
                     } 
 		    
-		    operator_list[op_id].inverter_save(op_id, index_start, 1);
+		    operator_list[op_id].inverter_save(op_id, ix, 1);
 
                  }//end of loop for spinor and color source degrees of freedom
                }
@@ -456,7 +456,7 @@ int main(int argc, char *argv[]){
                        pos+=1;
 
 //read the propagator from source d to sink u
-                        read_spinor(g_spinor_field[0], g_spinor_field[1], prop_fname, pos);
+                       read_spinor(g_spinor_field[0], g_spinor_field[1], prop_fname, pos);
                        convert_eo_to_lexic(temp_field[1], g_spinor_field[0], g_spinor_field[1]);
                        pos+=1;
 
@@ -469,13 +469,11 @@ int main(int argc, char *argv[]){
                }
 
                if (smearedcorrelator_BSM == 1){
-                 smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field);
-                 if (g_cart_id == 0) printf("Smeared : %e\t Non smeared %e\n", g_smeared_scalar_field[0][0],g_scalar_field[0][0]);
-
+                smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field);
+                if (g_cart_id == 0) printf("Smeared : %e\t Non smeared %e\n", g_smeared_scalar_field[0][0],g_scalar_field[0][0]);
                  for ( int s=0; s<4; s++ )
-                    generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
+                   generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
                }
-
                if (g_cart_id == 0) {
                  printf("Following measurements will be done\n");
                  if (densitydensity_BSM == 1) printf("#Density Density correlation function\n");

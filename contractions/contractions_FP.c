@@ -1650,14 +1650,14 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
    free(spinortrace);
    free(colortrace);
 }
+
 void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int type_ab ){
    int ix,i;
    int f1,c1,s1,tauindex;
    int spinorstart=0, spinorend=4;
-   bispinor **propsecneighbour=NULL;
-   bispinor **tmpbisp2d=NULL;
-   su3 * restrict upm;
+   bispinor **starting2d;
    bispinor running;
+   su3 * restrict upm;
    su3_vector tmpvec;
 #if defined MPI
    int count;
@@ -1670,278 +1670,231 @@ void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int 
    _Complex double *flavortrace;
    _Complex double *paulitrace;
 
-   colortrace= (_Complex double *)malloc(sizeof(_Complex double) *8);
-   spacetrace= (_Complex double *)malloc(sizeof(_Complex double) *8*T_global);
+   colortrace= (_Complex double *)malloc(sizeof(_Complex double)*8);
+   spacetrace= (_Complex double *)malloc(sizeof(_Complex double)*8*T_global);
    spinortrace=(_Complex double *)malloc(sizeof(_Complex double)*2*T_global);
    flavortrace=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
    paulitrace= (_Complex double *)malloc(sizeof(_Complex double)*T_global);
+
+   if ( (colortrace == NULL) || (spacetrace == NULL) || (spinortrace == NULL) || (flavortrace == NULL) || (paulitrace == NULL) )
+   {
+     printf("Error in mem allocation\n");
+     exit(1);
+   }
+
 
 #if defined MPI
    request=( MPI_Request *) malloc(sizeof(MPI_Request)*8);
 #endif
    if ( type_ab == TYPE_A ) {
         spinorstart=0;
-         spinorend  =2;
+        spinorend  =2;
    }
    else if ( type_ab == TYPE_B ){
         spinorstart=2;
         spinorend  =4;
    }
    else{
-       if (g_cart_id == 0) {fprintf(stdout,"Wrong argument for type_1234, it can only be TYPE_1, TYPE_2,  TYPE_3 or TYPE_4 \n");exit(1);}
+       if (g_cart_id == 0) fprintf(stdout,"Wrong argument for type_1234, it can only be TYPE_1, TYPE_2,  TYPE_3 or TYPE_4 \n");
+       exit(1);
    }
 
-
-   if (type_12 == TYPE_2){
-/**********************************
-Creating U^dagger(x-0)*U^dagger(x-2*0)*S(x-2*0,ytilde) in three steps:
-1; Creating U^dagger(x)*S(x,ytilde)
-2;  Creating U^dagger(x+0)Ü0^dagger(x)*S(x, ytilde)
-3; Gathering two times in direction TDOWN
-***********************************/
-//      if (g_cart_id == 0) printf("Hier beginnt etwas\n");
-      tmpbisp2d= (bispinor **)malloc(sizeof(bispinor *)*24);
-      if (tmpbisp2d == NULL) {
-         if (g_cart_id == 0) printf("Error in allocating first\n");
-         exit(1);
-      }
-      propsecneighbour=(bispinor **)malloc(sizeof(bispinor *)*24);
-      if (propsecneighbour == NULL) {
-         if (g_cart_id == 0) printf("Error in allocating second\n");
-         exit(1);
-      }
-      for (i=0; i<24; ++i){
-        propsecneighbour[i]=(bispinor *)malloc(sizeof(bispinor)*VOLUMEPLUSRAND);
-        if (propsecneighbour[i] == NULL){
-          printf("Error in mem alloc propsecneighbour\n");
-          exit(1);
-        }
-        tmpbisp2d[i]=(bispinor *)malloc(sizeof(bispinor)*VOLUMEPLUSRAND); 
-        if (tmpbisp2d[i] == NULL){
-          printf("Error in mem alloc tmpbisp2d\n");
-          exit(1);
-        }
-      }
-//      if (g_cart_id == 0) printf("Allocation is done\n");
-      for (i=0; i<24; ++i)
-        for (ix=0; ix<VOLUME; ++ix){
-//          if (g_cart_id == 0) printf("nulla i %d ix %d\n",i,ix);
-          _bispinor_null(tmpbisp2d[i][ix]);
-        }
-//      if (g_cart_id == 0) printf("Null is done\n");
-
-      for (ix = 0; ix< VOLUME; ++ix)
-        for (s1=spinorstart;s1<spinorend; ++s1)
-          for (c1=0; c1<3; ++c1)
-            for (f1=0; f1<2; ++f1){
-              //if (g_cart_id == 0 ) printf("ix= %d\n", ix);
-              upm = &g_gauge_field[ix][TUP];
-
-              _vector_null(tmpbisp2d[12*f1 + 3*s1 + c1][ix].sp_up.s2);
-              _vector_null(tmpbisp2d[12*f1 + 3*s1 + c1][ix].sp_up.s3);
-              _su3_inverse_multiply(tmpbisp2d[12*f1+3*s1+c1][ix].sp_up.s0, (*upm), propfields[12*s1 + 4*c1 + 2*f1][ix].sp_up.s0);
-              _su3_inverse_multiply(tmpbisp2d[12*f1+3*s1+c1][ix].sp_up.s1, (*upm), propfields[12*s1 + 4*c1 + 2*f1][ix].sp_up.s1);
-
-              _vector_null(tmpbisp2d[12*f1 + 3*s1 + c1][ix].sp_dn.s2);
-              _vector_null(tmpbisp2d[12*f1 + 3*s1 + c1][ix].sp_dn.s3);
-              _su3_inverse_multiply(tmpbisp2d[12*f1+3*s1+c1][ix].sp_dn.s0, (*upm), propfields[12*s1 + 4*c1 + 2*f1][ix].sp_dn.s0);
-              _su3_inverse_multiply(tmpbisp2d[12*f1+3*s1+c1][ix].sp_dn.s1, (*upm), propfields[12*s1 + 4*c1 + 2*f1][ix].sp_dn.s1);
-
-               upm = &g_gauge_field[g_iup[ix][TUP]][TUP];
-/*               if ( g_cart_id == 0){
-                 if (ix == 10 ){
-                   printf("guage field neig %e\n", creal((*upm).c00));
-                 }
-               }*/
-               
-               _vector_null( tmpvec );
-               _su3_inverse_multiply(tmpvec, (*upm), tmpbisp2d[12*f1+3*s1+c1][ix].sp_up.s0);
-               _vector_assign(  tmpbisp2d[12*f1+3*s1+c1][ix].sp_up.s0, tmpvec);
-               _vector_null( tmpvec );
-               _su3_inverse_multiply(tmpvec, (*upm), tmpbisp2d[12*f1+3*s1+c1][ix].sp_up.s1);
-               _vector_assign(  tmpbisp2d[12*f1+3*s1+c1][ix].sp_up.s1, tmpvec);
-
-               _complexcjg_times_vector(tmpbisp2d[12*f1+3*s1+c1][ix].sp_up.s0,phase_00,tmpbisp2d[12*f1+3*s1+c1][ix].sp_up.s0);
-               _complexcjg_times_vector(tmpbisp2d[12*f1+3*s1+c1][ix].sp_up.s1,phase_00,tmpbisp2d[12*f1+3*s1+c1][ix].sp_up.s1);
-
-
-
-               _vector_null( tmpvec );
-               _su3_inverse_multiply(tmpvec, (*upm), tmpbisp2d[12*f1+3*s1+c1][ix].sp_dn.s0);
-               _vector_assign(  tmpbisp2d[12*f1+3*s1+c1][ix].sp_dn.s0, tmpvec);
-               _vector_null( tmpvec );
-               _su3_inverse_multiply(tmpvec, (*upm), tmpbisp2d[12*f1+3*s1+c1][ix].sp_dn.s1);
-               _vector_assign(  tmpbisp2d[12*f1+3*s1+c1][ix].sp_dn.s1, tmpvec);
-
-               _complexcjg_times_vector(tmpbisp2d[12*f1+3*s1+c1][ix].sp_dn.s0,phase_00,tmpbisp2d[12*f1+3*s1+c1][ix].sp_dn.s0);
-               _complexcjg_times_vector(tmpbisp2d[12*f1+3*s1+c1][ix].sp_dn.s1,phase_00,tmpbisp2d[12*f1+3*s1+c1][ix].sp_dn.s1);
-
-
-            }
-      
-#if defined MPI
-      for (s1=spinorstart;s1<spinorend; ++s1)
-        for (c1=0; c1<3; ++c1)
-          for (f1=0; f1<2; ++f1){
-            count=0;
-            generic_exchange_direction_nonblocking( tmpbisp2d[12*f1+3*s1+c1], sizeof(bispinor), TDOWN, request, &count );
-            MPI_Waitall( count, request, statuses);
-          }
-#endif
-      for (s1=spinorstart;s1<spinorend; ++s1)
-        for (c1=0; c1<3; ++c1)
-          for (f1=0; f1<2; ++f1){
-            for (ix=0; ix<VOLUMEPLUSRAND; ++ix)
-               _bispinor_null(propsecneighbour[12*f1+3*s1+c1][ix]);
-            for (ix=0; ix<VOLUME; ++ix){
-               _spinor_assign( propsecneighbour[12*f1+3*s1+c1][ix].sp_up, tmpbisp2d[12*f1+3*s1+c1][g_idn[ix][TUP]].sp_up);
-               _spinor_assign( propsecneighbour[12*f1+3*s1+c1][ix].sp_dn, tmpbisp2d[12*f1+3*s1+c1][g_idn[ix][TUP]].sp_dn);
-            }
-          }
-#if defined MPI
-      for (s1=spinorstart;s1<spinorend; ++s1)
-       for (c1=0; c1<3; ++c1)
-         for (f1=0; f1<2; ++f1){
-           count=0;
-           generic_exchange_direction_nonblocking( propsecneighbour[12*f1+3*s1+c1], sizeof(bispinor), TDOWN, request, &count );
-           MPI_Waitall( count, request, statuses);
-        }
-#endif
-   }
-   for (i=0; i<T_global; ++i)
-      paulitrace[i]=0.;
-
-// Trace over the Pauli matrices
-   for (tauindex=0; tauindex<3; ++tauindex){
-
-//Trace over flavour degrees of freedom
-      for (i=0; i<T_global; ++i)
+   if (type_12 == TYPE_1){
+     for (i=0; i<T_global; ++i)
+       paulitrace[i]=0.;
+     for (tauindex=0; tauindex<3; ++tauindex){
+       for (i=0; i<T_global; ++i)
          flavortrace[i]=0.;
+       for (f1=0; f1<2; ++f1){
+         for (i=0; i<2*T_global; ++i)
+           spinortrace[i]=0.;
+         for (s1= spinorstart; s1<spinorend; ++s1){
+           for (i=0; i<8*T_global; ++i)
+             spacetrace[i]=0.;
+           for (ix = 0; ix< VOLUME; ++ix){
+             for (i=0; i<8; ++i)
+               colortrace[i]=0.;
+             for (c1=0; c1<3; ++c1){
+               _vector_null( running.sp_up.s2 );
+               _vector_null( running.sp_up.s3 );
+               _vector_assign( running.sp_up.s0, propfields[12*s1+4*c1+2*f1][ix].sp_up.s0 );
+               _vector_assign( running.sp_up.s1, propfields[12*s1+4*c1+2*f1][ix].sp_up.s1 );
+               _vector_null( running.sp_dn.s2 );
+               _vector_null( running.sp_dn.s3 );
+               _vector_assign( running.sp_dn.s0, propfields[12*s1+4*c1+2*f1][ix].sp_dn.s0 );
+               _vector_assign( running.sp_dn.s1, propfields[12*s1+4*c1+2*f1][ix].sp_dn.s1 );
 
-      for (f1=0; f1<2; ++f1){
+               taui_scalarfield_spinor( &running, &running, GAMMA_UP, tauindex, ix, TDOWN, NO_DAGG );
 
-//Trace over spinor indices
-         for (i=0; i<2*T_global; ++i){
-            spinortrace[i]=0.;
-         }
+               multiply_backward_propagator(&running, propfields, &running, ix, NODIR );
 
-         for (s1=spinorstart; s1<spinorend; ++s1){
-
-//Trace over spatial indices
-            for (i=0; i<8*T_global; ++i){
-               spacetrace[i]=0.;
-            }
-            for (ix=0; ix<VOLUME; ++ix){
-
-//Trace over the color indices for each sites
-               for (i=0; i<8; ++i)
-                  colortrace[i]=0.;
-               for (c1=0; c1<3; ++c1){
-
-/*   
-       TYPE IV.1.a OR  IV.1.b                                     (1+gamma5)/2*S(x    ,ytilde)
-       TYPE IV.2.a OR  IV.2.b     U0^dagger(x-0)*U0^dagger(x-2*0)*(1+gamma5)/2*S(x-2*0,ytilde)
-*/
-                  _vector_null(running.sp_up.s2);
-                  _vector_null(running.sp_up.s3);
-                  _vector_null(running.sp_dn.s2);
-                  _vector_null(running.sp_dn.s3);
-                  if ( type_12 == TYPE_2){
-//for the up quark
-                     _vector_assign( running.sp_up.s0, propsecneighbour[12*f1 + 3*s1 + c1][g_idn[ix][TUP]].sp_up.s0);
-                     _vector_assign( running.sp_up.s1, propsecneighbour[12*f1 + 3*s1 + c1][g_idn[ix][TUP]].sp_up.s1);
-
-//for the down quark
-                     _vector_assign( running.sp_dn.s0, propsecneighbour[12*f1 + 3*s1 + c1][g_idn[ix][TUP]].sp_dn.s0);
-                     _vector_assign( running.sp_dn.s1, propsecneighbour[12*f1 + 3*s1 + c1][g_idn[ix][TUP]].sp_dn.s1);
-                  }
-                  else if ( type_12 == TYPE_1){
-                     _vector_assign( running.sp_up.s0, propfields[12*s1 + 4*c1 + 2*f1][ix].sp_up.s0 );
-                     _vector_assign( running.sp_up.s1, propfields[12*s1 + 4*c1 + 2*f1][ix].sp_up.s1 );
-
-                     _vector_assign( running.sp_dn.s0, propfields[12*s1 + 4*c1 + 2*f1][ix].sp_dn.s0 );
-                     _vector_assign( running.sp_dn.s1, propfields[12*s1 + 4*c1 + 2*f1][ix].sp_dn.s1 );
-                  }
-/*   
-       TYPE IV.1.a OR  IV.1.b   tau_i*phi(x)*                                  (1+gamma5)/2*S(x+   ,ytilde)
-       TYPE IV.2.a OR  IV.2.b   tau_i*phi(x)*  U0^dagger(x-0)*U0^dagger(x-2*0)*(1+gamma5)/2*S(x-2*0,ytilde)
-*/
-                  taui_scalarfield_spinor( &running, &running, GAMMA_UP, tauindex, ix, TDOWN, NO_DAGG);
-
-/*   
-       TYPE IV.1.a OR  IV.1.b   S(ytilde, x)*tau_i*phi(x)*                                  (1+gamma5)/2*S(x+   ,ytilde)
-       TYPE IV.2.a OR  IV.2.b   S(ytilde, x)*tau_i*phi(x)*  U0^dagger(x-0)*U0^dagger(x-2*0)*(1+gamma5)/2*S(x-2*0,ytilde)
-*/
-
-                  multiply_backward_propagator(&running, propfields, &running, ix, NODIR);
-
-/*   
-       TYPE IV.1.a tau_i*phi(ytilde)*         S(ytilde, x)*tau_i*phi(x)*                                  (1+gamma5)/2*S(x+   ,ytilde)
-       TYPE IV.1.b phi^dagger(ytilde)*tau_i*  S(ytilde, x)*tau_i*phi(x)*                                  (1+gamma5)/2*S(x+   ,ytilde)
-
-       TYPE IV.2.a tau_i*phi(ytilde)*         S(ytilde, x)*tau_i*phi(x)*  U0^dagger(x-0)*U0^dagger(x-2*0)*(1+gamma5)/2*S(x-2*0,ytilde)
-       TYPE IV.2.b phi^dagger(ytilde)*tau_i*  S(ytilde, x)*tau_i*phi(x)*  U0^dagger(x-0)*U0^dagger(x-2*0)*(1+gamma5)/2*S(x-2*0,ytilde)
-*/
-                  //delta( color component of bispinor running, c1) for all spinor and flavor indices
-                  trace_in_color(colortrace, &running, c1 );
-               } //End of trace color
-               //sum over all lattice sites the result of the color trace
-               trace_in_space( spacetrace, colortrace, ix);
-            }  //End of trace in space
-
-//Gather the results from all nodes to complete the trace in space
+               trace_in_color(colortrace,&running,c1);
+             }  //End of trace color
+              //sum over all lattice sites the result of the color trace
+             trace_in_space(spacetrace,colortrace,ix);
+           } //End of trace space
 #if defined MPI
-            for (i=0; i<8*T_global; ++i){
-               _Complex double tmp;
-               MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
-               spacetrace[i]= tmp;
-            }
+           for (i=0; i<8*T_global; ++i){
+             _Complex double tmp;
+             MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
+             spacetrace[i]= tmp;
+           }
 #endif
             // delta (spinor components of spacetrace, s1) for all time slices and flavor indices
-            trace_in_spinor(spinortrace, spacetrace, s1);
-
-         } //End of trace in spinor space
-
+           trace_in_spinor(spinortrace, spacetrace, s1);
+         }//End of trace in spinor space
          if ( type_ab == TYPE_A ){
            taui_scalarfield_flavoronly( spinortrace, tauindex, NO_DAGG );
          }
-         else if ( type_ab == TYPE_B){
+         else if ( type_ab == TYPE_B ){
            taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER  );
          }
-         //delta(flavor component in spinortrace, f1) for all time slices
          trace_in_flavor( flavortrace, spinortrace, f1 );
-
-      } //End of trace in flavor space
+       } //End of trace in flavor space
       //sum for all Pauli matrices
-      for (i=0;i<T_global; ++i)
+       for (i=0;i<T_global; ++i)
          paulitrace[i]+=flavortrace[i];
-   } //End of trace for Pauli matrices
-
-
-   if (g_cart_id == 0){printf("Wilson term Dirac Current Density correlator typeIV results= %s %s\n", type_12 == TYPE_1 ? "1" : "2",type_ab == TYPE_A ? "a" :"b");}
-   for (i=0; i<T_global; ++i){
-      if (g_cart_id == 0){
-        printf("WCDPR2 %d %d %.3d %10.10e %10.10e\n", type_12, type_ab,i, creal(paulitrace[i])/4., cimag(paulitrace[i])/4.);
+     } //End of trace for Pauli matrices
+     if  (g_cart_id == 0){printf("Wilson term Dirac Current Density correlator typeIV results= %s %s\n", type_12 == TYPE_1 ? "1" : "2",type_ab == TYPE_A ? "a" :"b");}
+     for (i=0; i<T_global; ++i){
+       if (g_cart_id == 0){
+        printf("WCDPR2 %d %d %.3d %10.10e %10.10e\n", type_12, type_ab, i, creal(paulitrace[i])/4., cimag(paulitrace[i])/4.);
+       }
+     }
+   }
+   if (type_12 == TYPE_2 ){
+      starting2d=(bispinor **)malloc(sizeof(bispinor *)*3);
+      for (i=0; i<3; ++i){
+        starting2d[i] =(bispinor *)malloc(sizeof(bispinor)*VOLUMEPLUSRAND);
+        if (starting2d[i] == NULL){
+          if (g_cart_id == 0) printf("Memory allocation error starting2d VI\n");
+          exit(1);
+        }
+        for (ix=0; ix<VOLUME; ++ix){
+          _bispinor_null(starting2d[i][ix]);
+        }
       }
+//Doing the neccesary communication
+#if defined MPI
+      for (s1=spinorstart; s1<spinorend; ++s1)
+        for (c1=0; c1<3; ++c1)
+           for (f1=0; f1<2; ++f1){
+             count=0;
+             generic_exchange_direction_nonblocking( propfields[12*s1 + 4*c1 + 2*f1 + 0], sizeof(bispinor), TDOWN   , request, &count );
+             MPI_Waitall( count, request, statuses);
+             count=0;
+             generic_exchange_direction_nonblocking( propfields[12*s1 + 4*c1 + 2*f1 + 1], sizeof(bispinor), TUP     , request, &count );
+             MPI_Waitall( count, request, statuses);
+          }
+#endif
+        for (i=0; i<T_global; ++i)
+          paulitrace[i]=0.;
+        for (tauindex=0; tauindex<3; ++tauindex){
+          for (i=0; i<T_global; ++i)
+            flavortrace[i]=0.;
+          for (f1=0; f1<2; ++f1){
+            for (i=0; i<2*T_global; ++i)
+              spinortrace[i]=0.;
+            for (s1= spinorstart; s1<spinorend; ++s1){
+              for (i=0; i<8*T_global; ++i)
+                spacetrace[i]=0.;
+              for (ix = 0; ix< VOLUME; ++ix){
+                for (i=0; i<8; ++i)
+                  colortrace[i]=0.;
+                for (c1=0; c1<3; ++c1){
+                  _vector_null( starting2d[c1][ix].sp_up.s2 );
+                  _vector_null( starting2d[c1][ix].sp_up.s3 );
+
+                  _vector_null( starting2d[c1][ix].sp_dn.s2 );
+                  _vector_null( starting2d[c1][ix].sp_dn.s3 );
+
+                  upm = &g_gauge_field[g_idn[ix][TUP]][TUP];
+
+                  _su3_inverse_multiply(starting2d[c1][ix].sp_up.s0, (*upm), propfields[12*s1 + 4*c1 + 2*f1][g_iup[ix][TUP]].sp_up.s0);
+                  _su3_inverse_multiply(starting2d[c1][ix].sp_up.s1, (*upm), propfields[12*s1 + 4*c1 + 2*f1][g_iup[ix][TUP]].sp_up.s1);
+
+                  _su3_inverse_multiply(starting2d[c1][ix].sp_dn.s0, (*upm), propfields[12*s1 + 4*c1 + 2*f1][g_iup[ix][TUP]].sp_dn.s0);
+                  _su3_inverse_multiply(starting2d[c1][ix].sp_dn.s1, (*upm), propfields[12*s1 + 4*c1 + 2*f1][g_iup[ix][TUP]].sp_dn.s1);
+
+                  upm = &g_gauge_field[ix][TUP];
+
+                  _su3_multiply(tmpvec, (*upm), starting2d[c1][ix].sp_up.s0);
+                  _vector_assign(  starting2d[c1][ix].sp_up.s0, tmpvec);
+                  _su3_multiply(tmpvec, (*upm), starting2d[c1][ix].sp_up.s1);
+                  _vector_assign(  starting2d[c1][ix].sp_up.s1, tmpvec);
+
+                  _su3_multiply(tmpvec, (*upm), starting2d[c1][ix].sp_dn.s0);
+                  _vector_assign(  starting2d[c1][ix].sp_dn.s0, tmpvec);
+                  _su3_multiply(tmpvec, (*upm), starting2d[c1][ix].sp_dn.s1);
+                  _vector_assign(  starting2d[c1][ix].sp_dn.s1, tmpvec);
+
+                  _complexcjg_times_vector(starting2d[c1][ix].sp_up.s0,phase_00,starting2d[c1][ix].sp_up.s0);
+                  _complexcjg_times_vector(starting2d[c1][ix].sp_up.s1,phase_00,starting2d[c1][ix].sp_up.s1);
+                  _complexcjg_times_vector(starting2d[c1][ix].sp_dn.s0,phase_00,starting2d[c1][ix].sp_dn.s0);
+                  _complexcjg_times_vector(starting2d[c1][ix].sp_dn.s1,phase_00,starting2d[c1][ix].sp_dn.s1);
+
+                  taui_scalarfield_spinor( &starting2d[c1][ix], &starting2d[c1][ix], GAMMA_UP, tauindex, ix, NODIR, NO_DAGG );
+
+                  multiply_backward_propagator(&starting2d[c1][ix], propfields, &starting2d[c1][ix], ix, TUP);
+
+                }
+              }
+              for (c1=0; c1<3; ++c1){
+                count=0;
+                generic_exchange_direction_nonblocking( starting2d[c1], sizeof(bispinor), TDOWN, request, &count );
+                MPI_Waitall( count, request, statuses);
+              }
+              for (ix=0; ix<VOLUME; ++ix){
+                for (i=0; i<8; ++i)
+                  colortrace[i]=0.;
+                for (c1=0; c1<3; ++c1)
+                  trace_in_color(colortrace,&starting2d[c1][g_idn[ix][TUP]],c1);
+                trace_in_space(spacetrace,colortrace,ix);
+              }
+#if defined MPI
+              for (i=0; i<8*T_global; ++i){
+                _Complex double tmp;
+                MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
+                spacetrace[i]= tmp;
+              }
+#endif
+            // delta (spinor components of spacetrace, s1) for all time slices and flavor indices
+              trace_in_spinor(spinortrace, spacetrace, s1);
+            }//End of trace in spinor space
+            if ( type_ab == TYPE_A ){
+              taui_scalarfield_flavoronly( spinortrace, tauindex, NO_DAGG );
+            }
+            else if ( type_ab == TYPE_B ){
+              taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER  );
+            }
+            trace_in_flavor( flavortrace, spinortrace, f1 );
+          } //End of trace in flavor space
+      //sum for all Pauli matrices
+          for (i=0;i<T_global; ++i)
+            paulitrace[i]+=flavortrace[i];
+        } //End of trace for Pauli matrices
+        if  (g_cart_id == 0){printf("Wilson term Dirac Current Density correlator typeIV results= %s %s\n", type_12 == TYPE_1 ? "1" : "2",type_ab == TYPE_A ? "a" :"b");}
+        for (i=0; i<T_global; ++i){
+          if (g_cart_id == 0){
+            printf("WCDPR2 %d %d %.3d %10.10e %10.10e\n", type_12, type_ab, i, creal(paulitrace[i])/4., cimag(paulitrace[i])/4.);
+          }
+        }
+      for (i=0; i<3; ++i){
+        free(starting2d[i]);
+      }
+      free(starting2d);
    }
    free(flavortrace);
    free(paulitrace);
    free(spacetrace);
    free(spinortrace);
-   free(colortrace); 
-
-   if (type_12 == TYPE_2){
-     for(i=0;i<24;++i){
-       free(tmpbisp2d[i]);
-       free(propsecneighbour[i]);
-     }
-     free(tmpbisp2d);
-     free(propsecneighbour);
-   }
+   free(colortrace);
 #if defined MPI
-   free(request);
-#endif 
+   if (type_12 == TYPE_2)
+     free(request);
+#endif
 }
+
 void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int type_ab ){
    int ix,i;
    int f1,c1,s1,tauindex;

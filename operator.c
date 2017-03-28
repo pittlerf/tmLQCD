@@ -72,7 +72,6 @@ void op_invert(const int op_id, const int index_start, const int write_prop);
 void op_invert_save(const int op_id, const int index_start, const int write_prop);
 
 void op_write_prop(const int op_id, const int index_start, const int append_);
-
 operator operator_list[max_no_operators];
 
 int no_operators = 0;
@@ -274,6 +273,7 @@ void dummy_DbD(spinor * const s, spinor * const r, spinor * const p, spinor * co
   }
   return;
 }
+
 
 void op_invert(const int op_id, const int index_start, const int write_prop) {
   operator * optr = &operator_list[op_id];
@@ -573,12 +573,16 @@ void op_invert_save(const int op_id, const int index_start, const int write_prop
   optr->iterations = 0;
   optr->reached_prec = -1.;
   g_kappa = optr->kappa;
+  if (g_cart_id == 0) printf("#Kappa value=%e\n", g_kappa);
   boundary(g_kappa);
   bispinor *src =(bispinor *)malloc(sizeof(bispinor)*VOLUMEPLUSRAND );
   bispinor *dest=(bispinor *)malloc(sizeof(bispinor)*VOLUMEPLUSRAND );
   bispinor *tmp =(bispinor *)malloc(sizeof(bispinor)*VOLUMEPLUSRAND );
   bispinor *tmp2=(bispinor *)malloc(sizeof(bispinor)*VOLUMEPLUSRAND );
-
+  if (( src==NULL ) || ( dest==NULL ) || ( tmp == NULL ) || ( tmp2 == NULL ) ) {
+    printf("Error in memory allocation\n");
+    exit(1);
+  }
   atime = gettime();
   if( optr->type == BSM || optr->type == BSM2b || optr->type == BSM2m || optr->type == BSM2f ) {
     for(i = 0; i < SourceInfo.no_flavours; i++) {
