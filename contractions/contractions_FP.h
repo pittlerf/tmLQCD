@@ -20,12 +20,12 @@
 
 #ifndef _CONTRACTIONS_FP_H
 #define _CONTRACTIONS_FP_H
-void density_density_1234(bispinor **propagators, int type);
-void density_density_1234_s0s0( bispinor ** propagators, int type );
-void density_density_1234_sxsx( bispinor ** propagators, int type );
-void naivedirac_current_density_12ab( bispinor ** propagators, int type_12, int type_ab );
-void wilsonterm_current_density_312ab( bispinor ** propagators, int type_12, int type_ab );
-void wilsonterm_current_density_412ab( bispinor ** propagators, int type_12, int type_ab );
-void wilsonterm_current_density_512ab( bispinor ** propagators, int type_12, int type_ab );
-void wilsonterm_current_density_612ab( bispinor ** propagators, int type_12, int type_ab );
+void density_density_1234(bispinor **propagators, int type, char *filename);
+void density_density_1234_s0s0( bispinor ** propagators, int type, char *filename );
+void density_density_1234_sxsx( bispinor ** propagators, int type, char *filename );
+void naivedirac_current_density_12ab( bispinor ** propagators, int type_12, int type_ab, char *filename );
+void wilsonterm_current_density_312ab( bispinor ** propagators, int type_12, int type_ab, char *filename );
+void wilsonterm_current_density_412ab( bispinor ** propagators, int type_12, int type_ab, char *filename );
+void wilsonterm_current_density_512ab( bispinor ** propagators, int type_12, int type_ab, char *filename );
+void wilsonterm_current_density_612ab( bispinor ** propagators, int type_12, int type_ab, char *filename );
 #endif

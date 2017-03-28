@@ -614,10 +614,10 @@ void op_invert_save(const int op_id, const int index_start, const int write_prop
         fflush(stdout);
       }
       /*save*/
-      assign((spinor *)g_bispinor_field[4*index_start+2*(1-i)], (spinor *)tmp,2*VOLUME);
-      checknorm=square_norm((spinor *)g_bispinor_field[4*index_start+2*(1-i)], 2*VOLUME, 1);
+      assign((spinor *)g_bispinor_field[4*SourceInfo.ix+2*(1-i)], (spinor *)tmp,2*VOLUME);
+      checknorm=square_norm((spinor *)g_bispinor_field[4*SourceInfo.ix+2*(1-i)], 2*VOLUME, 1);
       if (g_cart_id ==0) printf("Checking the norm inside inversion=%e\n", checknorm);
-      if (g_cart_id == 0) printf("Index saved=%d index_start=%d i=%d \n", 4*index_start+2*(1-i), index_start, i);
+      if (g_cart_id == 0) printf("Index saved=%d index_start=%d i=%d \n", 4*SourceInfo.ix+2*(1-i), index_start, i);
 
       decompact(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], tmp);
 
@@ -657,10 +657,10 @@ void op_invert_save(const int op_id, const int index_start, const int write_prop
       }
 
       /*save*/
-      assign((spinor*)g_bispinor_field[4*index_start+2*(1-i)+1], (spinor *)dest,2*VOLUME);
-      checknorm=square_norm((spinor *)g_bispinor_field[4*index_start+2*(1-i)+1], 2*VOLUME, 1);
+      assign((spinor*)g_bispinor_field[4*SourceInfo.ix+2*(1-i)+1], (spinor *)dest,2*VOLUME);
+      checknorm=square_norm((spinor *)g_bispinor_field[4*SourceInfo.ix+2*(1-i)+1], 2*VOLUME, 1);
       if (g_cart_id ==0) printf("Checking the norm inside inversion=%e\n", checknorm);
-      if (g_cart_id == 0) printf("Index saved dagger =%d index_start=%d i=%d \n", 4*index_start+2*(1-i)+1, index_start, i);
+      if (g_cart_id == 0) printf("Index saved dagger =%d index_start=%d i=%d \n", 4*SourceInfo.ix+2*(1-i)+1, index_start, i);
 
       decompact(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], dest);
 
@@ -750,6 +750,7 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
     append = 1;
   /* the 1 is for appending */
   construct_writer(&writer, filename, append);
+  printf("\n\nSourceinfo = %d index_start=%d\n\n",SourceInfo.ix, index_start);
   if (PropInfo.splitted || SourceInfo.ix == index_start) {
     inverterInfo = construct_paramsInverterInfo(optr->reached_prec, optr->iterations, 
             optr->solver, optr->no_flavours);

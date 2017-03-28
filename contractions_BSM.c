@@ -157,6 +157,7 @@ int main(int argc, char *argv[]){
   double plaquette_energy;
   int i,j,isample=0,op_id=0;
   char prop_fname[200];
+  char contractions_fname[200];
   int src_idx, pos;
 //  int count;
   int status_geo;
@@ -438,7 +439,7 @@ int main(int argc, char *argv[]){
                         gaussian_volume_source( operator_list[op_id].prop0, operator_list[op_id].prop1,isample,ix,0); //need to check this
                     } 
 		    
-		    operator_list[op_id].inverter_save(op_id, ix, 1);
+		    operator_list[op_id].inverter_save(op_id, index_start, 1);
 
                  }//end of loop for spinor and color source degrees of freedom
                }
@@ -467,6 +468,9 @@ int main(int argc, char *argv[]){
 
                  }//end of loop for spinor and color source degrees of freedom
                }
+               if (g_cart_id == 0){
+                    snprintf(contractions_fname,200,"bsmcontractions.%.4d.%.2d.%02d.%.8d",nstore, isample, src_idx, iscalar);
+               }
 
                if (smearedcorrelator_BSM == 1){
                 smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field);
@@ -487,11 +491,11 @@ int main(int argc, char *argv[]){
                }
 
                if (densitydensity_BSM == 1){
-                 density_density_1234(g_bispinor_field, TYPE_1);
+                 density_density_1234(g_bispinor_field, TYPE_1, contractions_fname);
 //                 density_density_1234_petros(g_bispinor_field);
-                 density_density_1234(g_bispinor_field, TYPE_2);
-                 density_density_1234(g_bispinor_field, TYPE_3);
-                 density_density_1234(g_bispinor_field, TYPE_4);
+                 density_density_1234(g_bispinor_field, TYPE_2, contractions_fname);
+                 density_density_1234(g_bispinor_field, TYPE_3, contractions_fname);
+                 density_density_1234(g_bispinor_field, TYPE_4, contractions_fname);
                }
                if (densitydensity_s0s0_BSM == 1){
                  unit_scalar_field(g_scalar_field);
@@ -502,10 +506,10 @@ int main(int argc, char *argv[]){
                    for ( int s=0; s<4; s++ )
                     generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
                  }
-                 density_density_1234_s0s0(g_bispinor_field, TYPE_1);
-                 density_density_1234_s0s0(g_bispinor_field, TYPE_2);
-                 density_density_1234_s0s0(g_bispinor_field, TYPE_3);
-                 density_density_1234_s0s0(g_bispinor_field, TYPE_4);
+                 density_density_1234_s0s0(g_bispinor_field, TYPE_1, contractions_fname);
+                 density_density_1234_s0s0(g_bispinor_field, TYPE_2, contractions_fname);
+                 density_density_1234_s0s0(g_bispinor_field, TYPE_3, contractions_fname);
+                 density_density_1234_s0s0(g_bispinor_field, TYPE_4, contractions_fname);
                  double read_end, read_begin=gettime();
                  if( (i = read_scalar_field_parallel(scalar_filename,g_scalar_field)) !=0 )
                  {
@@ -534,10 +538,10 @@ int main(int argc, char *argv[]){
                    for ( int s=0; s<4; s++ )
                     generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
                  }
-                 density_density_1234_sxsx(g_bispinor_field, TYPE_1);
-                 density_density_1234_sxsx(g_bispinor_field, TYPE_2);
-                 density_density_1234_sxsx(g_bispinor_field, TYPE_3);
-                 density_density_1234_sxsx(g_bispinor_field, TYPE_4);
+                 density_density_1234_sxsx(g_bispinor_field, TYPE_1, contractions_fname);
+                 density_density_1234_sxsx(g_bispinor_field, TYPE_2, contractions_fname);
+                 density_density_1234_sxsx(g_bispinor_field, TYPE_3, contractions_fname);
+                 density_density_1234_sxsx(g_bispinor_field, TYPE_4, contractions_fname);
                  double read_end, read_begin=gettime();
                  if( (i = read_scalar_field_parallel(scalar_filename,g_scalar_field)) !=0 )
                  {
@@ -558,38 +562,38 @@ int main(int argc, char *argv[]){
                  }
                }
                if (diraccurrentdensity_BSM == 1){
-                 naivedirac_current_density_12ab( g_bispinor_field, TYPE_I , TYPE_A );
+                 naivedirac_current_density_12ab( g_bispinor_field, TYPE_I , TYPE_A, contractions_fname);
 //                 diraccurrent1a_petros( g_bispinor_field );
-                 naivedirac_current_density_12ab( g_bispinor_field, TYPE_I , TYPE_B );
-                 naivedirac_current_density_12ab( g_bispinor_field, TYPE_II, TYPE_A );
-                 naivedirac_current_density_12ab( g_bispinor_field, TYPE_II, TYPE_B );
+                 naivedirac_current_density_12ab( g_bispinor_field, TYPE_I , TYPE_B, contractions_fname);
+                 naivedirac_current_density_12ab( g_bispinor_field, TYPE_II, TYPE_A, contractions_fname);
+                 naivedirac_current_density_12ab( g_bispinor_field, TYPE_II, TYPE_B, contractions_fname);
                }
                if (wilsoncurrentdensitypr1_BSM == 1){
-                 wilsonterm_current_density_312ab( g_bispinor_field, TYPE_1, TYPE_A );
+                 wilsonterm_current_density_312ab( g_bispinor_field, TYPE_1, TYPE_A, contractions_fname);
 //                 wilsoncurrent_density_3_petros( g_bispinor_field );
-                 wilsonterm_current_density_312ab( g_bispinor_field, TYPE_1, TYPE_B );
-                 wilsonterm_current_density_312ab( g_bispinor_field, TYPE_2, TYPE_A );
-                 wilsonterm_current_density_312ab( g_bispinor_field, TYPE_2, TYPE_B );
+                 wilsonterm_current_density_312ab( g_bispinor_field, TYPE_1, TYPE_B, contractions_fname);
+                 wilsonterm_current_density_312ab( g_bispinor_field, TYPE_2, TYPE_A, contractions_fname);
+                 wilsonterm_current_density_312ab( g_bispinor_field, TYPE_2, TYPE_B, contractions_fname);
                }
                if (wilsoncurrentdensitypr2_BSM == 1){
-                 wilsonterm_current_density_412ab( g_bispinor_field, TYPE_1, TYPE_A );
-                 wilsonterm_current_density_412ab( g_bispinor_field, TYPE_1, TYPE_B );
-                 wilsonterm_current_density_412ab( g_bispinor_field, TYPE_2, TYPE_A );
-                 wilsonterm_current_density_412ab( g_bispinor_field, TYPE_2, TYPE_B );
+                 wilsonterm_current_density_412ab( g_bispinor_field, TYPE_1, TYPE_A, contractions_fname);
+                 wilsonterm_current_density_412ab( g_bispinor_field, TYPE_1, TYPE_B, contractions_fname);
+                 wilsonterm_current_density_412ab( g_bispinor_field, TYPE_2, TYPE_A, contractions_fname);
+                 wilsonterm_current_density_412ab( g_bispinor_field, TYPE_2, TYPE_B, contractions_fname);
                }
                if (wilsoncurrentdensitypl1_BSM == 1){
-                 wilsonterm_current_density_512ab( g_bispinor_field, TYPE_1, TYPE_A );
-                 wilsonterm_current_density_512ab( g_bispinor_field, TYPE_1, TYPE_B );
-                 wilsonterm_current_density_512ab( g_bispinor_field, TYPE_2, TYPE_A );
-                 wilsonterm_current_density_512ab( g_bispinor_field, TYPE_2, TYPE_B );
+                 wilsonterm_current_density_512ab( g_bispinor_field, TYPE_1, TYPE_A, contractions_fname);
+                 wilsonterm_current_density_512ab( g_bispinor_field, TYPE_1, TYPE_B, contractions_fname);
+                 wilsonterm_current_density_512ab( g_bispinor_field, TYPE_2, TYPE_A, contractions_fname);
+                 wilsonterm_current_density_512ab( g_bispinor_field, TYPE_2, TYPE_B, contractions_fname);
                }
                if (wilsoncurrentdensitypl2_BSM == 1){
                //wilsoncurrent61a_petros( g_bispinor_field );
-                 wilsonterm_current_density_612ab( g_bispinor_field, TYPE_1, TYPE_A );
-                 wilsonterm_current_density_612ab( g_bispinor_field, TYPE_1, TYPE_B );
+                 wilsonterm_current_density_612ab( g_bispinor_field, TYPE_1, TYPE_A, contractions_fname);
+                 wilsonterm_current_density_612ab( g_bispinor_field, TYPE_1, TYPE_B, contractions_fname);
                //wilsoncurrent62a_petros( g_bispinor_field );
-                 wilsonterm_current_density_612ab( g_bispinor_field, TYPE_2, TYPE_A );
-                 wilsonterm_current_density_612ab( g_bispinor_field, TYPE_2, TYPE_B );
+                 wilsonterm_current_density_612ab( g_bispinor_field, TYPE_2, TYPE_A, contractions_fname);
+                 wilsonterm_current_density_612ab( g_bispinor_field, TYPE_2, TYPE_B, contractions_fname);
                }
 //               density_density_1234_petros(g_bispinor_field);
 

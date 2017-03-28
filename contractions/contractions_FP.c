@@ -739,7 +739,7 @@ static void trace_in_flavor(_Complex double *dest, _Complex double *source, int 
      }
 }
 
-void density_density_1234_s0s0( bispinor ** propfields, int type_1234 ){
+void density_density_1234_s0s0( bispinor ** propfields, int type_1234, char *filename ){
    int ix,i;
    int f1,c1,s1;
    int spinorstart=0, spinorend=4;
@@ -749,11 +749,28 @@ void density_density_1234_s0s0( bispinor ** propfields, int type_1234 ){
    _Complex double *spacetrace;
    _Complex double *spinortrace;
    _Complex double *flavortrace;
+
    int type;
+   FILE *out;
    colortrace=(_Complex double *)malloc(sizeof(_Complex double) *8);
    spacetrace=(_Complex double *)malloc(sizeof(_Complex double) *8*T_global);
    spinortrace=(_Complex double *)malloc(sizeof(_Complex double)*2*T_global);
    flavortrace=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
+
+   if ( (colortrace == NULL) || (spacetrace == NULL) || (spinortrace == NULL) || (flavortrace == NULL) )
+   {
+     printf("Error in mem allocation in density_density_1234_s0s0\n");
+     exit(1);
+   }
+
+   if (g_cart_id == 0){
+     out=fopen(filename,"a");
+     if (out == NULL){
+       printf("Error in opening file density_density_1234_s0s0 %s\n",filename);
+       exit(1);
+     }
+   }
+   
 
    if ( ( type_1234 == TYPE_1 )|| ( type_1234 == TYPE_3 ) ) {
      spinorstart=0;
@@ -869,11 +886,17 @@ void density_density_1234_s0s0( bispinor ** propfields, int type_1234 ){
    } //End of traCe in flavor space
 
    type = type_1234 == TYPE_1 ? 1 : type_1234 == TYPE_2 ? 2 : type_1234 == TYPE_3 ? 3 : 4 ;
-   if (g_cart_id == 0){printf("Density Density correlator type (%s) results\n", type_1234 == TYPE_1 ? "1" : type_1234 == TYPE_2 ? "2" : type_1234 == TYPE_3 ? "3" : "4");}
+   if (g_cart_id == 0){ fprintf(out, "Density Density correlator type (%s) results\n", type_1234 == TYPE_1 ? "1" : type_1234 == TYPE_2 ? "2" : type_1234 == TYPE_3 ? "3" : "4");}
    for (i=0; i<T_global; ++i){
       if (g_cart_id == 0){
-        printf("DDS0S0 %d %.3d %10.10e %10.10e\n", type, i, creal(flavortrace[i])/4.,cimag(flavortrace[i])/4.);
+        fprintf(out, "DDS0S0 %d %.3d %10.10e %10.10e\n", type, i, creal(flavortrace[i])/4.,cimag(flavortrace[i])/4.);
       }
+   }
+   if (g_cart_id == 0){
+     if (fclose(out) != 0){
+      printf("Error in closing file %s\n", filename);
+      exit(1);
+     }
    }
    free(flavortrace);
    free(spacetrace);
@@ -883,11 +906,12 @@ void density_density_1234_s0s0( bispinor ** propfields, int type_1234 ){
 }
 
 
-void density_density_1234( bispinor ** propfields, int type_1234 ){
+void density_density_1234( bispinor ** propfields, int type_1234, char *filename ){
    int ix,i;
    int f1,c1,s1,tauindex;
    int spinorstart=0, spinorend=4;
    bispinor running;
+   FILE *out;
 
    _Complex double *colortrace;
    _Complex double *spacetrace;
@@ -901,6 +925,21 @@ void density_density_1234( bispinor ** propfields, int type_1234 ){
    spinortrace=(_Complex double *)malloc(sizeof(_Complex double)*2*T_global);
    flavortrace=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
    paulitrace= (_Complex double *)malloc(sizeof(_Complex double)*T_global);
+
+   if ( (colortrace == NULL) || (spacetrace == NULL) || (spinortrace == NULL) || (flavortrace == NULL) || (paulitrace == NULL) )
+   {
+     printf("Error in mem allocation in density_density_1234\n");
+     exit(1);
+   }
+
+   if (g_cart_id == 0){
+     out=fopen(filename,"a");
+     if (out == NULL){
+       printf("Error in opening file density_density_1234 %s\n",filename);
+       exit(1);
+     }
+   }
+
 
    if ( ( type_1234 == TYPE_1 )|| ( type_1234 == TYPE_3 ) ) {
      spinorstart=0; 
@@ -1024,10 +1063,10 @@ void density_density_1234( bispinor ** propfields, int type_1234 ){
          trace_in_flavor( flavortrace, spinortrace, f1 );
       } //End of trace in flavor space
       type = type_1234 == TYPE_1 ? 1 : type_1234 == TYPE_2 ? 2 : type_1234 == TYPE_3 ? 3 : 4 ;
-      if (g_cart_id == 0){printf("Density Density correlator type (%s) for tau matrix %d results\n", type_1234 == TYPE_1 ? "1" : type_1234 == TYPE_2 ? "2" : type_1234 == TYPE_3 ? "3" : "4",tauindex);}
+      if (g_cart_id == 0){fprintf(out, "Density Density correlator type (%s) for tau matrix %d results\n", type_1234 == TYPE_1 ? "1" : type_1234 == TYPE_2 ? "2" : type_1234 == TYPE_3 ? "3" : "4",tauindex);}
       for (i=0; i<T_global; ++i){
         if (g_cart_id == 0){
-         printf("DDTAU%dTAU%d %d %.3d %10.10e %10.10e\n", tauindex,tauindex,type, i, creal(flavortrace[i])/4.,cimag(flavortrace[i])/4.);
+         fprintf(out, "DDTAU%dTAU%d %d %.3d %10.10e %10.10e\n", tauindex,tauindex,type, i, creal(flavortrace[i])/4.,cimag(flavortrace[i])/4.);
         }
       }
       //sum for all Pauli matrices
@@ -1036,11 +1075,17 @@ void density_density_1234( bispinor ** propfields, int type_1234 ){
    } //End of trace for Pauli matrices
 
    type = type_1234 == TYPE_1 ? 1 : type_1234 == TYPE_2 ? 2 : type_1234 == TYPE_3 ? 3 : 4 ;
-   if (g_cart_id == 0){printf("Density Density correlator type (%s) results\n", type_1234 == TYPE_1 ? "1" : type_1234 == TYPE_2 ? "2" : type_1234 == TYPE_3 ? "3" : "4");}
+   if (g_cart_id == 0){fprintf(out, "Density Density correlator type (%s) results\n", type_1234 == TYPE_1 ? "1" : type_1234 == TYPE_2 ? "2" : type_1234 == TYPE_3 ? "3" : "4");}
    for (i=0; i<T_global; ++i){
       if (g_cart_id == 0){
-        printf("DD %d %.3d %10.10e %10.10e\n", type, i, creal(paulitrace[i])/4.,cimag(paulitrace[i])/4.);
+        fprintf(out, "DD %d %.3d %10.10e %10.10e\n", type, i, creal(paulitrace[i])/4.,cimag(paulitrace[i])/4.);
       }
+   }
+   if (g_cart_id == 0){
+     if (fclose(out) != 0){
+      printf("Error in closing file %s\n", filename);
+      exit(1);
+     }
    }
    free(flavortrace);
    free(paulitrace);
@@ -1049,11 +1094,12 @@ void density_density_1234( bispinor ** propfields, int type_1234 ){
    free(colortrace);
 
 }
-void density_density_1234_sxsx( bispinor ** propfields, int type_1234 ){
+void density_density_1234_sxsx( bispinor ** propfields, int type_1234, char *filename ){
    int ix,i;
    int f1,c1,s1,tauindex;
    int spinorstart=0, spinorend=4;
    bispinor running;
+   FILE *out;
 
    _Complex double *colortrace;
    _Complex double *spacetrace;
@@ -1067,6 +1113,22 @@ void density_density_1234_sxsx( bispinor ** propfields, int type_1234 ){
    spinortrace=(_Complex double *)malloc(sizeof(_Complex double)*2*T_global);
    flavortrace=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
    paulitrace= (_Complex double *)malloc(sizeof(_Complex double)*T_global);
+
+   if ( (colortrace == NULL) || (spacetrace == NULL) || (spinortrace == NULL) || (flavortrace == NULL) || (paulitrace == NULL) )
+   {
+     printf("Error in mem allocation in density_density_1234_sxsx\n");
+     exit(1);
+   }
+
+   if (g_cart_id == 0){
+     out=fopen(filename,"a");
+     if (out == NULL){
+       printf("Error in opening file density_density_1234_sxsx %s\n",filename);
+       exit(1);
+     }
+   }
+
+
 
    if ( ( type_1234 == TYPE_1 )|| ( type_1234 == TYPE_3 ) ) {
      spinorstart=0;
@@ -1190,10 +1252,10 @@ void density_density_1234_sxsx( bispinor ** propfields, int type_1234 ){
          trace_in_flavor( flavortrace, spinortrace, f1 );
       } //End of trace in flavor space
       type = type_1234 == TYPE_1 ? 1 : type_1234 == TYPE_2 ? 2 : type_1234 == TYPE_3 ? 3 : 4 ;
-      if (g_cart_id == 0){printf("Density Density correlator type (%s) results\n", type_1234 == TYPE_1 ? "1" : type_1234 == TYPE_2 ? "2" : type_1234 == TYPE_3 ? "3" : "4");}
+      if (g_cart_id == 0){fprintf(out, "Density Density correlator type (%s) results\n", type_1234 == TYPE_1 ? "1" : type_1234 == TYPE_2 ? "2" : type_1234 == TYPE_3 ? "3" : "4");}
         for (i=0; i<T_global; ++i){
           if (g_cart_id == 0){
-            printf("DDS%dS%d %d %.3d %10.10e %10.10e\n", tauindex+1, tauindex+1, type, i, creal(flavortrace[i])/4.,cimag(flavortrace[i])/4.);
+            fprintf(out, "DDS%dS%d %d %.3d %10.10e %10.10e\n", tauindex+1, tauindex+1, type, i, creal(flavortrace[i])/4.,cimag(flavortrace[i])/4.);
           }
         }
       //sum for all Pauli matrices
@@ -1202,12 +1264,20 @@ void density_density_1234_sxsx( bispinor ** propfields, int type_1234 ){
    } //End of trace for Pauli matrices
 
    type = type_1234 == TYPE_1 ? 1 : type_1234 == TYPE_2 ? 2 : type_1234 == TYPE_3 ? 3 : 4 ;
-   if (g_cart_id == 0){printf("Density Density correlator type (%s) results\n", type_1234 == TYPE_1 ? "1" : type_1234 == TYPE_2 ? "2" : type_1234 == TYPE_3 ? "3" : "4");}
+   if (g_cart_id == 0){fprintf(out, "Density Density correlator type (%s) results\n", type_1234 == TYPE_1 ? "1" : type_1234 == TYPE_2 ? "2" : type_1234 == TYPE_3 ? "3" : "4");}
    for (i=0; i<T_global; ++i){
       if (g_cart_id == 0){
-        printf("DD %d %.3d %10.10e %10.10e\n", type, i, creal(paulitrace[i])/4.,cimag(paulitrace[i])/4.);
+        fprintf(out, "DD %d %.3d %10.10e %10.10e\n", type, i, creal(paulitrace[i])/4.,cimag(paulitrace[i])/4.);
       }
    }
+
+   if (g_cart_id == 0){
+     if (fclose(out) != 0){
+      printf("Error in closing file %s\n", filename);
+      exit(1);
+     }
+   }
+
    free(flavortrace);
    free(paulitrace);
    free(spacetrace);
@@ -1218,7 +1288,7 @@ void density_density_1234_sxsx( bispinor ** propfields, int type_1234 ){
 
 
 
-void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int type_ab ){
+void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int type_ab, char *filename ){
    int ix,i;
    int f1,c1,s1,tauindex;
    int spinorstart=0, spinorend=4;
@@ -1230,6 +1300,7 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
    MPI_Request *request;
    request=( MPI_Request *) malloc(sizeof(MPI_Request)*8);
 #endif
+   FILE *out;
    _Complex double *colortrace;
    _Complex double *spacetrace;
    _Complex double *spinortrace;
@@ -1241,6 +1312,21 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
    spinortrace=(_Complex double *)malloc(sizeof(_Complex double)*2*T_global);
    flavortrace=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
    paulitrace= (_Complex double *)malloc(sizeof(_Complex double)*T_global);
+
+   if ( (colortrace == NULL) || (spacetrace == NULL) || (spinortrace == NULL) || (flavortrace == NULL) || (paulitrace == NULL) )
+   {
+     printf("Error in mem allocation in naivedirac_current_density_12ab\n");
+     exit(1);
+   }
+
+   if (g_cart_id == 0){
+     out=fopen(filename,"a");
+     if (out == NULL){
+       printf("Error in opening file naivedirac_current_density_12ab %s\n",filename);
+       exit(1);
+     }
+   }
+
 
    if ( type_ab == TYPE_A ) {
      spinorstart=0;
@@ -1417,22 +1503,30 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
          trace_in_flavor( flavortrace, spinortrace, f1 );
       } //End of trace in flavor space
       //sum for all Pauli matrices
-      if (g_cart_id == 0){printf("NaiveDirac Current Density correlator type (%s %s) for tau matrixes %d results\n", type_12 == TYPE_I ? "I" : "II",type_ab == TYPE_A ? "a" :"b", tauindex);}
+      if (g_cart_id == 0){fprintf(out,"NaiveDirac Current Density correlator type (%s %s) for tau matrixes %d results\n", type_12 == TYPE_I ? "I" : "II",type_ab == TYPE_A ? "a" :"b", tauindex);}
       for (i=0; i<T_global; ++i){
         if (g_cart_id == 0){
-          printf("DCDTAU%dTAU%d %d %d %.3d %10.10e %10.10e\n",tauindex, tauindex,type_12, type_ab,  i, creal(flavortrace[i])/4.,cimag(flavortrace[i])/4.0);
+          fprintf(out, "DCDTAU%dTAU%d %d %d %.3d %10.10e %10.10e\n",tauindex, tauindex,type_12, type_ab,  i, creal(flavortrace[i])/4.,cimag(flavortrace[i])/4.0);
         }
       }
       for (i=0;i<T_global; ++i)
          paulitrace[i]+=flavortrace[i];
    } //End of trace for Pauli matrices
    
-   if (g_cart_id == 0){printf("NaiveDirac Current Density correlator type (%s %s) results\n", type_12 == TYPE_I ? "I" : "II",type_ab == TYPE_A ? "a" :"b");}
+   if (g_cart_id == 0){fprintf(out, "NaiveDirac Current Density correlator type (%s %s) results\n", type_12 == TYPE_I ? "I" : "II",type_ab == TYPE_A ? "a" :"b");}
    for (i=0; i<T_global; ++i){
       if (g_cart_id == 0){
-        printf("DCD %d %d %.3d %10.10e %10.10e\n",type_12, type_ab,  i, creal(paulitrace[i])/4.,cimag(paulitrace[i])/4.0);
+        fprintf(out, "DCD %d %d %.3d %10.10e %10.10e\n",type_12, type_ab,  i, creal(paulitrace[i])/4.,cimag(paulitrace[i])/4.0);
       }
    }
+
+   if (g_cart_id == 0){
+     if (fclose(out) != 0){
+      printf("Error in closing file %s\n", filename);
+      exit(1);
+     }
+   }
+
    free(flavortrace);
    free(paulitrace);
    free(spacetrace);
@@ -1440,13 +1534,14 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
    free(colortrace); 
 
 }
-void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int type_ab ){
+void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int type_ab, char *filename ){
    int ix,i;
    int f1,c1,s1,tauindex;
    int spinorstart=0, spinorend=4;
    su3 * restrict upm;
    su3_vector tmpvec;
    bispinor running;
+   FILE *out;
 #if defined MPI
    int count;
    MPI_Status  statuses[8];
@@ -1464,6 +1559,21 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
    spinortrace=(_Complex double *)malloc(sizeof(_Complex double)*2*T_global);
    flavortrace=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
    paulitrace= (_Complex double *)malloc(sizeof(_Complex double)*T_global);
+
+   if ( (colortrace == NULL) || (spacetrace == NULL) || (spinortrace == NULL) || (flavortrace == NULL) || (paulitrace == NULL) )
+   {
+     printf("Error in mem allocation in wilsonterm_current_density_312ab\n");
+     exit(1);
+   }
+
+   if (g_cart_id == 0){
+     out=fopen(filename,"a");
+     if (out == NULL){
+       printf("Error in opening file wilsonterm_current_density_312ab %s\n",filename);
+       exit(1);
+     }
+   }
+
 
    if ( type_ab == TYPE_A ) {
       spinorstart=0;
@@ -1556,11 +1666,7 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
                     _complex_times_vector(running.sp_up.s0,phase_00,running.sp_up.s0);
                     _complex_times_vector(running.sp_up.s1,phase_00,running.sp_up.s1);
 
-
-
-
 //for the down quark
-
                     _su3_multiply(tmpvec, (*upm), running.sp_dn.s0);
                     _vector_assign(  running.sp_dn.s0, tmpvec);
                     _su3_multiply(tmpvec, (*upm), running.sp_dn.s1);
@@ -1568,8 +1674,6 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
 
                     _complex_times_vector(running.sp_dn.s0,phase_00,running.sp_dn.s0);
                     _complex_times_vector(running.sp_dn.s1,phase_00,running.sp_dn.s1);
-
-
 
                   }
                   else if ( type_12 == TYPE_2){
@@ -1638,12 +1742,20 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
    } //End of trace for Pauli matrices
 
  
-   if (g_cart_id == 0){printf("Wilson term Dirac Current Density correlator typeIII results= %s %s\n", type_12 == TYPE_1 ? "1" : "2",type_ab == TYPE_A ? "a" :"b");}
+   if (g_cart_id == 0){fprintf(out, "Wilson term Dirac Current Density correlator typeIII results= %s %s\n", type_12 == TYPE_1 ? "1" : "2",type_ab == TYPE_A ? "a" :"b");}
    for (i=0; i<T_global; ++i){
       if (g_cart_id == 0){
-        printf("WCDPR1 %d %d %.3d %10.10e %10.10e\n", type_12, type_ab, i, creal(paulitrace[i])/4., cimag(paulitrace[i])/4.);
+        fprintf(out, "WCDPR1 %d %d %.3d %10.10e %10.10e\n", type_12, type_ab, i, creal(paulitrace[i])/4., cimag(paulitrace[i])/4.);
       }
    }
+
+   if (g_cart_id == 0){
+     if (fclose(out) != 0){
+      printf("Error in closing file %s\n", filename);
+      exit(1);
+     }
+   }
+
    free(flavortrace);
    free(paulitrace);
    free(spacetrace);
@@ -1651,7 +1763,7 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
    free(colortrace);
 }
 
-void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int type_ab ){
+void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int type_ab, char *filename ){
    int ix,i;
    int f1,c1,s1,tauindex;
    int spinorstart=0, spinorend=4;
@@ -1664,6 +1776,7 @@ void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int 
    MPI_Status  statuses[8];
    MPI_Request *request;
 #endif
+   FILE *out;
    _Complex double *colortrace;
    _Complex double *spacetrace;
    _Complex double *spinortrace;
@@ -1680,6 +1793,14 @@ void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int 
    {
      printf("Error in mem allocation\n");
      exit(1);
+   }
+
+   if (g_cart_id == 0){
+     out=fopen(filename,"a");
+     if (out == NULL){
+       printf("Error in opening file wilsonterm_current_density_412ab %s\n",filename);
+       exit(1);
+     }
    }
 
 
@@ -1755,10 +1876,10 @@ void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int 
        for (i=0;i<T_global; ++i)
          paulitrace[i]+=flavortrace[i];
      } //End of trace for Pauli matrices
-     if  (g_cart_id == 0){printf("Wilson term Dirac Current Density correlator typeIV results= %s %s\n", type_12 == TYPE_1 ? "1" : "2",type_ab == TYPE_A ? "a" :"b");}
+     if  (g_cart_id == 0){fprintf(out, "Wilson term Dirac Current Density correlator typeIV results= %s %s\n", type_12 == TYPE_1 ? "1" : "2",type_ab == TYPE_A ? "a" :"b");}
      for (i=0; i<T_global; ++i){
        if (g_cart_id == 0){
-        printf("WCDPR2 %d %d %.3d %10.10e %10.10e\n", type_12, type_ab, i, creal(paulitrace[i])/4., cimag(paulitrace[i])/4.);
+        fprintf(out, "WCDPR2 %d %d %.3d %10.10e %10.10e\n", type_12, type_ab, i, creal(paulitrace[i])/4., cimag(paulitrace[i])/4.);
        }
      }
    }
@@ -1810,11 +1931,11 @@ void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int 
 
                   upm = &g_gauge_field[g_idn[ix][TUP]][TUP];
 
-                  _su3_inverse_multiply(starting2d[c1][ix].sp_up.s0, (*upm), propfields[12*s1 + 4*c1 + 2*f1][g_iup[ix][TUP]].sp_up.s0);
-                  _su3_inverse_multiply(starting2d[c1][ix].sp_up.s1, (*upm), propfields[12*s1 + 4*c1 + 2*f1][g_iup[ix][TUP]].sp_up.s1);
+                  _su3_inverse_multiply(starting2d[c1][ix].sp_up.s0, (*upm), propfields[12*s1 + 4*c1 + 2*f1][g_idn[ix][TUP]].sp_up.s0);
+                  _su3_inverse_multiply(starting2d[c1][ix].sp_up.s1, (*upm), propfields[12*s1 + 4*c1 + 2*f1][g_idn[ix][TUP]].sp_up.s1);
 
-                  _su3_inverse_multiply(starting2d[c1][ix].sp_dn.s0, (*upm), propfields[12*s1 + 4*c1 + 2*f1][g_iup[ix][TUP]].sp_dn.s0);
-                  _su3_inverse_multiply(starting2d[c1][ix].sp_dn.s1, (*upm), propfields[12*s1 + 4*c1 + 2*f1][g_iup[ix][TUP]].sp_dn.s1);
+                  _su3_inverse_multiply(starting2d[c1][ix].sp_dn.s0, (*upm), propfields[12*s1 + 4*c1 + 2*f1][g_idn[ix][TUP]].sp_dn.s0);
+                  _su3_inverse_multiply(starting2d[c1][ix].sp_dn.s1, (*upm), propfields[12*s1 + 4*c1 + 2*f1][g_idn[ix][TUP]].sp_dn.s1);
 
                   upm = &g_gauge_field[ix][TUP];
 
@@ -1873,10 +1994,10 @@ void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int 
           for (i=0;i<T_global; ++i)
             paulitrace[i]+=flavortrace[i];
         } //End of trace for Pauli matrices
-        if  (g_cart_id == 0){printf("Wilson term Dirac Current Density correlator typeIV results= %s %s\n", type_12 == TYPE_1 ? "1" : "2",type_ab == TYPE_A ? "a" :"b");}
+        if  (g_cart_id == 0){fprintf(out, "Wilson term Dirac Current Density correlator typeIV results= %s %s\n", type_12 == TYPE_1 ? "1" : "2",type_ab == TYPE_A ? "a" :"b");}
         for (i=0; i<T_global; ++i){
           if (g_cart_id == 0){
-            printf("WCDPR2 %d %d %.3d %10.10e %10.10e\n", type_12, type_ab, i, creal(paulitrace[i])/4., cimag(paulitrace[i])/4.);
+            fprintf(out, "WCDPR2 %d %d %.3d %10.10e %10.10e\n", type_12, type_ab, i, creal(paulitrace[i])/4., cimag(paulitrace[i])/4.);
           }
         }
       for (i=0; i<3; ++i){
@@ -1884,6 +2005,14 @@ void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int 
       }
       free(starting2d);
    }
+
+   if (g_cart_id == 0){
+     if (fclose(out) != 0){
+      printf("Error in closing file %s\n", filename);
+      exit(1);
+     }
+   }
+
    free(flavortrace);
    free(paulitrace);
    free(spacetrace);
@@ -1895,7 +2024,7 @@ void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int 
 #endif
 }
 
-void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int type_ab ){
+void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int type_ab, char *filename ){
    int ix,i;
    int f1,c1,s1,tauindex;
    int spinorstart=0, spinorend=4;
@@ -1913,12 +2042,27 @@ void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int 
    _Complex double *spinortrace;
    _Complex double *flavortrace;
    _Complex double *paulitrace;
-
+   FILE *out;
    colortrace= (_Complex double *)malloc(sizeof(_Complex double)*8);
    spacetrace= (_Complex double *)malloc(sizeof(_Complex double)*8*T_global);
    spinortrace=(_Complex double *)malloc(sizeof(_Complex double)*2*T_global);
    flavortrace=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
    paulitrace= (_Complex double *)malloc(sizeof(_Complex double)*T_global);
+
+   if ( (colortrace == NULL) || (spacetrace == NULL) || (spinortrace == NULL) || (flavortrace == NULL) || (paulitrace == NULL) )
+   {
+     printf("Error in mem allocation\n");
+     exit(1);
+   }
+
+   if (g_cart_id == 0){
+     out=fopen(filename,"a");
+     if (out == NULL){
+       printf("Error in opening file wilsonterm_current_density_512ab %s\n",filename);
+       exit(1);
+     }
+   }
+
 
    if ( type_ab == TYPE_A ) {
      spinorstart=0;
@@ -2025,7 +2169,6 @@ void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int 
                     _su3_inverse_multiply(tmpvec, (*upm), running.sp_dn.s3);
                     _vector_assign(  running.sp_dn.s3, tmpvec);
 
-
                     _complexcjg_times_vector(running.sp_dn.s2,phase_00,running.sp_dn.s2);
                     _complexcjg_times_vector(running.sp_dn.s3,phase_00,running.sp_dn.s3);
 
@@ -2098,10 +2241,10 @@ void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int 
    } //End of trace for Pauli matrices
 
 
-   if (g_cart_id == 0){printf("Wilson term Dirac Current Density correlator typeV results= %s %s\n", type_12 == TYPE_1 ? "1" : "2",type_ab == TYPE_A ? "a" :"b");}
+   if (g_cart_id == 0){fprintf(out,"Wilson term Dirac Current Density correlator typeV results= %s %s\n", type_12 == TYPE_1 ? "1" : "2",type_ab == TYPE_A ? "a" :"b");}
    for (i=0; i<T_global; ++i){
       if (g_cart_id == 0){
-        printf("WCDPL1 %d %d %.3d %10.10e %10.10e\n", type_12, type_ab, i, creal(paulitrace[i])/4., cimag(paulitrace[i])/4.);
+        fprintf(out,"WCDPL1 %d %d %.3d %10.10e %10.10e\n", type_12, type_ab, i, creal(paulitrace[i])/4., cimag(paulitrace[i])/4.);
       }
    }
    free(flavortrace);
@@ -2109,8 +2252,16 @@ void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int 
    free(spacetrace);
    free(spinortrace);
    free(colortrace);
+
+   if (g_cart_id == 0){
+     if (fclose(out) != 0){
+      printf("Error in closing file %s\n", filename);
+      exit(1);
+     }
+   }
+
 }
-void wilsonterm_current_density_612ab( bispinor ** propfields, int type_12, int type_ab ){
+void wilsonterm_current_density_612ab( bispinor ** propfields, int type_12, int type_ab, char *filename ){
    int ix,i;
    int f1,c1,s1,tauindex;
    int spinorstart=0, spinorend=4;
@@ -2123,6 +2274,7 @@ void wilsonterm_current_density_612ab( bispinor ** propfields, int type_12, int 
    MPI_Status  statuses[8];
    MPI_Request *request;
 #endif
+   FILE *out;
    _Complex double *colortrace;
    _Complex double *spacetrace;
    _Complex double *spinortrace;
@@ -2134,6 +2286,21 @@ void wilsonterm_current_density_612ab( bispinor ** propfields, int type_12, int 
    spinortrace=(_Complex double *)malloc(sizeof(_Complex double)*2*T_global);
    flavortrace=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
    paulitrace= (_Complex double *)malloc(sizeof(_Complex double)*T_global);
+
+   if ( (colortrace == NULL) || (spacetrace == NULL) || (spinortrace == NULL) || (flavortrace == NULL) || (paulitrace == NULL) )
+   {
+     printf("Error in mem allocation\n");
+     exit(1);
+   }
+
+   if (g_cart_id == 0){
+     out=fopen(filename,"a");
+     if (out == NULL){
+       printf("Error in opening file wilsonterm_current_density_612ab %s\n",filename);
+       exit(1);
+     }
+   }
+
 
 #if defined MPI
    request=( MPI_Request *) malloc(sizeof(MPI_Request)*8);
@@ -2206,10 +2373,10 @@ void wilsonterm_current_density_612ab( bispinor ** propfields, int type_12, int 
        for (i=0;i<T_global; ++i)
          paulitrace[i]+=flavortrace[i];
      } //End of trace for Pauli matrices
-     if  (g_cart_id == 0){printf("Wilson term Dirac Current Density correlator typeVI results= %s %s\n", type_12 == TYPE_1 ? "1" : "2",type_ab == TYPE_A ? "a" :"b");}
+     if  (g_cart_id == 0){fprintf(out, "Wilson term Dirac Current Density correlator typeVI results= %s %s\n", type_12 == TYPE_1 ? "1" : "2",type_ab == TYPE_A ? "a" :"b");}
      for (i=0; i<T_global; ++i){
        if (g_cart_id == 0){
-        printf("WCDPL2 %d %d %.3d %10.10e %10.10e\n", type_12, type_ab, i, creal(paulitrace[i])/4., cimag(paulitrace[i])/4.);
+        fprintf(out, "WCDPL2 %d %d %.3d %10.10e %10.10e\n", type_12, type_ab, i, creal(paulitrace[i])/4., cimag(paulitrace[i])/4.);
        }
      }
    }
@@ -2324,10 +2491,10 @@ void wilsonterm_current_density_612ab( bispinor ** propfields, int type_12, int 
           for (i=0;i<T_global; ++i)
             paulitrace[i]+=flavortrace[i];
         } //End of trace for Pauli matrices
-        if  (g_cart_id == 0){printf("Wilson term Dirac Current Density correlator typeVI results= %s %s\n", type_12 == TYPE_1 ? "1" : "2",type_ab == TYPE_A ? "a" :"b");}
+        if  (g_cart_id == 0){fprintf(out, "Wilson term Dirac Current Density correlator typeVI results= %s %s\n", type_12 == TYPE_1 ? "1" : "2",type_ab == TYPE_A ? "a" :"b");}
         for (i=0; i<T_global; ++i){
           if (g_cart_id == 0){
-            printf("WCDPL2 %d %d %.3d %10.10e %10.10e\n", type_12, type_ab, i, creal(paulitrace[i])/4., cimag(paulitrace[i])/4.);
+            fprintf(out, "WCDPL2 %d %d %.3d %10.10e %10.10e\n", type_12, type_ab, i, creal(paulitrace[i])/4., cimag(paulitrace[i])/4.);
           }
         }
       for (i=0; i<3; ++i){
@@ -2344,4 +2511,10 @@ void wilsonterm_current_density_612ab( bispinor ** propfields, int type_12, int 
    if (type_12 == TYPE_2)
      free(request);
 #endif
+   if (g_cart_id == 0){
+     if (fclose(out) != 0){
+      printf("Error in closing file %s\n", filename);
+      exit(1);
+     }
+   }
 }
