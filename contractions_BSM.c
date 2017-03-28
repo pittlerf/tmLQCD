@@ -469,7 +469,7 @@ int main(int argc, char *argv[]){
                  }//end of loop for spinor and color source degrees of freedom
                }
                if (g_cart_id == 0){
-                    snprintf(contractions_fname,200,"bsmcontractions.%.4d.%.2d.%02d.%.8d",nstore, isample, src_idx, iscalar);
+                    snprintf(contractions_fname,200,"bsmcontractions.%.4d.%d.%.8d",nstore, src_idx, iscalar);
                }
 
                if (smearedcorrelator_BSM == 1){
