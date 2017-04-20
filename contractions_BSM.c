@@ -148,6 +148,7 @@ static void set_default_filenames(char ** input_filename, char ** filename);
 static void process_args(int argc, char *argv[], char ** input_filename, char ** filename);
 int main(int argc, char *argv[]){
   FILE *parameterfile = NULL;
+  FILE *out=NULL;
   char datafilename[206];
   char parameterfilename[206];
   char conf_filename[50];
@@ -162,6 +163,10 @@ int main(int argc, char *argv[]){
 //  int count;
   int status_geo;
   int ix;
+  _Complex double *current,*pseudoscalar,*scalar,*temp;
+  _Complex double *current1,*current2,*current3;
+  _Complex double *pscalar1,*pscalar2,*pscalar3;
+  _Complex double *scalar1, *scalar2, *scalar3 ;
 #if defined MPI
   MPI_Status  statuses[8];
   MPI_Request *request;
@@ -488,16 +493,436 @@ int main(int argc, char *argv[]){
                  if (wilsoncurrentdensitypr2_BSM == 1) printf("#Wilson  current density PR2 correlation function\n");
                  if (wilsoncurrentdensitypl1_BSM == 1) printf("#Wilson  current density PL1 correlation function\n");
                  if (wilsoncurrentdensitypl2_BSM == 1) printf("#Wilson  current density PL2 correlation function\n");
+                 if (vectorcurrentdensity_BSM == 1) printf("JtildeV3 D3, JtildeV1 P2, JtildeV2 P1 to be calculated\n");
+                 if (axialcurrentdensity_BSM == 1) printf("JtildeA1 P1, JtildeA2 P2 to be calculated\n");
+
+               }
+               scalar=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
+               pseudoscalar=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
+               current=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
+               if ( scalar == NULL || pseudoscalar == NULL || current == NULL){
+                 printf("Error in memory allocation for scalar pseudoscalar and current\n");
+                 exit(1);
+               }
+               pscalar1=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
+               pscalar2=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
+               pscalar3=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
+
+               if (pscalar1 == NULL || pscalar2 == NULL || pscalar3 == NULL){
+                 printf("Error in allocating memory for storing pseudoscalar results\n");
+                 exit(1);
                }
 
-               if (densitydensity_BSM == 1){
-                 density_density_1234(g_bispinor_field, TYPE_1, contractions_fname);
-//                 density_density_1234_petros(g_bispinor_field);
-                 density_density_1234(g_bispinor_field, TYPE_2, contractions_fname);
-                 density_density_1234(g_bispinor_field, TYPE_3, contractions_fname);
-                 density_density_1234(g_bispinor_field, TYPE_4, contractions_fname);
+               scalar1=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
+               scalar2=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
+               scalar3=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
+
+               if (scalar1 == NULL || scalar2 == NULL || scalar3 == NULL){
+                 printf("Error in allocating memory for storing scalar results\n");
+                 exit(1);
                }
+
+               current1=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
+               current2=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
+               current3=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
+
+               if (current1 == NULL || current2 == NULL || current3 == NULL){
+                 printf("Error in allocating memory for storing current results\n");
+                 exit(1);
+               }
+
+
+
+               for (int ii=0;ii<T_global; ++ii){
+                 scalar[ii]=0.0;
+                 pseudoscalar[ii]=0.0;
+                 current[ii]=0.0;
+                 pscalar1[ii]=0.0;
+                 pscalar2[ii]=0.0;
+                 pscalar3[ii]=0.0;
+                 scalar1[ii]=0.0;
+                 scalar2[ii]=0.0;
+                 scalar3[ii]=0.0;
+                 current1[ii]=0.0;
+                 current2[ii]=0.0;
+                 current3[ii]=0.0;
+               }
+               if (g_cart_id == 0){
+                  out=fopen(contractions_fname,"a");
+                  if (out == NULL){
+                    printf("Error in opening file for storing contractions %s\n",filename);
+                    exit(1);
+                  }
+               }
+
+               if (vectorcurrentdensity_BSM == 1){
+                 vector_current_density_1234(g_bispinor_field, TYPE_1,1, 2, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_current_density_1234(g_bispinor_field, TYPE_2,1, 2, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_current_density_1234(g_bispinor_field, TYPE_3,1, 2, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(+1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_current_density_1234(g_bispinor_field, TYPE_4,1, 2, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(+1.)*temp[ii];
+                 }
+                 free(temp);
+                 if (g_cart_id == 0){
+//                 fprintf(out,"S1S1nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JTILDEV2P1NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
+                   }
+                 }
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
+
+                 vector_current_density_1234(g_bispinor_field, TYPE_1,2, 1, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_current_density_1234(g_bispinor_field, TYPE_2,2, 1, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_current_density_1234(g_bispinor_field, TYPE_3,2, 1, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(+1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_current_density_1234(g_bispinor_field, TYPE_4,2, 1, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(+1.)*temp[ii];
+                 }
+                 free(temp);
+                 if (g_cart_id == 0){
+//                 fprintf(out,"S1S1nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JTILDEV1P2NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
+                   }
+                 }
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
+
+                 vector_current_density_1234(g_bispinor_field, TYPE_1,3, 3, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_current_density_1234(g_bispinor_field, TYPE_2,3, 3, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_current_density_1234(g_bispinor_field, TYPE_3,3, 3, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(+1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_current_density_1234(g_bispinor_field, TYPE_4,3, 3, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(+1.)*temp[ii];
+                 }
+                 free(temp);
+                 temp= NULL;
+                 if (g_cart_id == 0){
+//                 fprintf(out,"S1S1nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JTILDEV3P3NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
+                   }
+                 }
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
+                  
+               }
+               if (axialcurrentdensity_BSM == 1){
+                 printf("itt vahyokksas\n");
+                 if (temp != NULL)
+                   printf("dsadad\n");
+                 printf("temp =%p\n",temp);
+                 printf("addres von temp %p\n", &temp);
+                 axial_current_density_1234(g_bispinor_field, TYPE_1, 1, 1, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 axial_current_density_1234(g_bispinor_field, TYPE_2, 1, 1, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 axial_current_density_1234(g_bispinor_field, TYPE_3, 1, 1, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(+1.)*temp[ii];
+                 }
+                 free(temp);
+                 axial_current_density_1234(g_bispinor_field, TYPE_4, 1, 1, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(+1.)*temp[ii];
+                 }
+                 free(temp);
+                 if (g_cart_id == 0){
+//                 fprintf(out,"S1S1nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JTILDEA1P1NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
+                   }
+                 }
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
+
+                 axial_current_density_1234(g_bispinor_field, TYPE_1,2, 2, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 axial_current_density_1234(g_bispinor_field, TYPE_2,2, 2, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 axial_current_density_1234(g_bispinor_field, TYPE_3,2, 2, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(+1.)*temp[ii];
+                 }
+                 free(temp);
+                 axial_current_density_1234(g_bispinor_field, TYPE_4,2, 2, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(+1.)*temp[ii];
+                 }
+                 free(temp);
+                 if (g_cart_id == 0){
+//                 fprintf(out,"S1S1nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JTILDEA2P2NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
+                   }
+                 }
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
+
+                 vector_current_density_1234(g_bispinor_field, TYPE_1,3, 3, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_current_density_1234(g_bispinor_field, TYPE_2,3, 3, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_current_density_1234(g_bispinor_field, TYPE_3,3, 3, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(+1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_current_density_1234(g_bispinor_field, TYPE_4,3, 3, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(+1.)*temp[ii];
+                 }
+                 free(temp);
+                 if (g_cart_id == 0){
+//                 fprintf(out,"S1S1nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JTILDEV3P3NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
+                   }
+                 }
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
+
+               }
+
+
+
+               if (densitydensity_BSM == 1){
+                 density_density_1234(g_bispinor_field, TYPE_1, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   pscalar1[ii]+=(-1.)*temp[ii           ];
+                   pscalar2[ii]+=(-1.)*temp[ii+1*T_global];
+                   pscalar3[ii]+=(-1.)*temp[ii+2*T_global];
+                   pseudoscalar[ii] +=(-1.)*temp[ii+3*T_global];
+
+                   scalar1[ii]+=(-1.)*temp[ii           ];
+                   scalar2[ii]+=(-1.)*temp[ii+1*T_global];
+                   scalar3[ii]+=(-1.)*temp[ii+2*T_global];
+                   scalar[ii] +=(-1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+//                 density_density_1234_petros(g_bispinor_field);
+                 density_density_1234(g_bispinor_field, TYPE_2, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   pscalar1[ii]+=temp[ii           ];
+                   pscalar2[ii]+=temp[ii+1*T_global];
+                   pscalar3[ii]+=temp[ii+2*T_global];
+                   pseudoscalar[ii] +=temp[ii+3*T_global];
+
+                   scalar1[ii]+=(-1.)*temp[ii           ];
+                   scalar2[ii]+=(-1.)*temp[ii+1*T_global];
+                   scalar3[ii]+=(-1.)*temp[ii+2*T_global];
+                   scalar[ii] +=(-1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+
+                 density_density_1234(g_bispinor_field, TYPE_3, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   pscalar1[ii]+=temp[ii           ];
+                   pscalar2[ii]+=temp[ii+1*T_global];
+                   pscalar3[ii]+=temp[ii+2*T_global];
+                   pseudoscalar[ii] +=temp[ii+3*T_global];
+
+                   scalar1[ii]+=(-1.)*temp[ii           ];
+                   scalar2[ii]+=(-1.)*temp[ii+1*T_global];
+                   scalar3[ii]+=(-1.)*temp[ii+2*T_global];
+                   scalar[ii] +=(-1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+
+                 density_density_1234(g_bispinor_field, TYPE_4, &temp);
+                 for (int ii=0; ii<T_global; ++ii){      
+                   pscalar1[ii]+=(-1.)*temp[ii           ];
+                   pscalar2[ii]+=(-1.)*temp[ii+1*T_global];
+                   pscalar3[ii]+=(-1.)*temp[ii+2*T_global];
+                   pseudoscalar[ii] +=(-1.)*temp[ii+3*T_global];
+
+                   scalar1[ii]+=(-1.)*temp[ii           ];
+                   scalar2[ii]+=(-1.)*temp[ii+1*T_global];
+                   scalar3[ii]+=(-1.)*temp[ii+2*T_global];
+                   scalar[ii] +=(-1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+                 if (g_cart_id == 0){
+//                 fprintf(out,"S1S1nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"S1S1NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(scalar1[ii]), cimag(scalar1[ii])); 
+                   }
+//                 fprintf(out,"S2S2nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"S2S2NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(scalar2[ii]), cimag(scalar2[ii]));
+                   }
+//                 fprintf(out,"S3S3nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"S3S3NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(scalar3[ii]), cimag(scalar3[ii]));
+                   }
+//                 fprintf(out,"SSnontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"SSNONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(scalar[ii]), cimag(scalar[ii]));
+                   }
+//                 fprintf(out,"S1S1nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"P1P1NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(pscalar1[ii]), cimag(pscalar1[ii]));
+                   }
+//                 fprintf(out,"S2S2nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"P2P2NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(pscalar2[ii]), cimag(pscalar2[ii]));
+                   }
+//                 fprintf(out,"PS3PS3nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"P3P3NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(pscalar3[ii]), cimag(pscalar3[ii]));
+                   }
+//                 fprintf(out,"SSnontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"PPNONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(pseudoscalar[ii]), cimag(pseudoscalar[ii]));
+                   }
+
+                 }
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
+               }
+
                if (densitydensity_s0s0_BSM == 1){
+
                  unit_scalar_field(g_scalar_field);
                  for( int s=0; s<4; s++ )
                    generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
@@ -506,10 +931,54 @@ int main(int argc, char *argv[]){
                    for ( int s=0; s<4; s++ )
                     generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
                  }
-                 density_density_1234_s0s0(g_bispinor_field, TYPE_1, contractions_fname);
-                 density_density_1234_s0s0(g_bispinor_field, TYPE_2, contractions_fname);
-                 density_density_1234_s0s0(g_bispinor_field, TYPE_3, contractions_fname);
-                 density_density_1234_s0s0(g_bispinor_field, TYPE_4, contractions_fname);
+                 density_density_1234_s0s0(g_bispinor_field, TYPE_1, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   pseudoscalar[ii] +=(-1.0)*temp[ii];
+                   scalar[ii] +=(-1.)*temp[ii];
+                 }
+                 free(temp);                  
+                 density_density_1234_s0s0(g_bispinor_field, TYPE_2, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   pseudoscalar[ii] +=temp[ii];
+                   scalar[ii] +=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 density_density_1234_s0s0(g_bispinor_field, TYPE_3, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   pseudoscalar[ii] +=temp[ii];
+                   scalar[ii] +=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 density_density_1234_s0s0(g_bispinor_field, TYPE_4, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   pseudoscalar[ii] +=(-1.)*temp[ii];
+                   scalar[ii] +=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 if (g_cart_id == 0){
+//                 fprintf(out,"S0S0trivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"S0S0TRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(scalar[ii]), cimag(scalar[ii]));
+                   }
+//                 fprintf(out,"S2S2nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"P0PSTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(pseudoscalar[ii]), cimag(pseudoscalar[ii]));
+                   }
+                 }
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
                  double read_end, read_begin=gettime();
                  if( (i = read_scalar_field_parallel(scalar_filename,g_scalar_field)) !=0 )
                  {
@@ -528,7 +997,8 @@ int main(int argc, char *argv[]){
                    for ( int s=0; s<4; s++ )
                     generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
                  }
-               } 
+               }
+ 
                if (densitydensity_sxsx_BSM ==1){
                  unit_scalar_field(g_scalar_field);
                  for( int s=0; s<4; s++ )
@@ -538,10 +1008,111 @@ int main(int argc, char *argv[]){
                    for ( int s=0; s<4; s++ )
                     generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
                  }
-                 density_density_1234_sxsx(g_bispinor_field, TYPE_1, contractions_fname);
-                 density_density_1234_sxsx(g_bispinor_field, TYPE_2, contractions_fname);
-                 density_density_1234_sxsx(g_bispinor_field, TYPE_3, contractions_fname);
-                 density_density_1234_sxsx(g_bispinor_field, TYPE_4, contractions_fname);
+                 density_density_1234_sxsx(g_bispinor_field, TYPE_1, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   pscalar1[ii]+=(-1.)*temp[ii           ];
+                   pscalar2[ii]+=(-1.)*temp[ii+1*T_global];
+                   pscalar3[ii]+=(-1.)*temp[ii+2*T_global];
+                   pseudoscalar[ii] +=(-1.)*temp[ii+3*T_global];
+
+                   scalar1[ii]+=(-1.)*temp[ii           ];
+                   scalar2[ii]+=(-1.)*temp[ii+1*T_global];
+                   scalar3[ii]+=(-1.)*temp[ii+2*T_global];
+                   scalar[ii] +=(-1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+
+                 density_density_1234_sxsx(g_bispinor_field, TYPE_2, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   pscalar1[ii]+=temp[ii           ];
+                   pscalar2[ii]+=temp[ii+1*T_global];
+                   pscalar3[ii]+=temp[ii+2*T_global];
+                   pseudoscalar[ii] +=temp[ii+3*T_global];
+
+                   scalar1[ii]+=(-1.)*temp[ii           ];
+                   scalar2[ii]+=(-1.)*temp[ii+1*T_global];
+                   scalar3[ii]+=(-1.)*temp[ii+2*T_global];
+                   scalar[ii] +=(-1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+
+                 density_density_1234_sxsx(g_bispinor_field, TYPE_3, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   pscalar1[ii]+=temp[ii           ];
+                   pscalar2[ii]+=temp[ii+1*T_global];
+                   pscalar3[ii]+=temp[ii+2*T_global];
+                   pseudoscalar[ii] +=temp[ii+3*T_global];
+
+                   scalar1[ii]+=(-1.)*temp[ii           ];
+                   scalar2[ii]+=(-1.)*temp[ii+1*T_global];
+                   scalar3[ii]+=(-1.)*temp[ii+2*T_global];
+                   scalar[ii] +=(-1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+
+                 density_density_1234_sxsx(g_bispinor_field, TYPE_4, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   pscalar1[ii]+=(-1.)*temp[ii           ];
+                   pscalar2[ii]+=(-1.)*temp[ii+1*T_global];
+                   pscalar3[ii]+=(-1.)*temp[ii+2*T_global];
+                   pseudoscalar[ii] +=(-1.)*temp[ii+3*T_global];
+
+                   scalar1[ii]+=(-1.)*temp[ii           ];
+                   scalar2[ii]+=(-1.)*temp[ii+1*T_global];
+                   scalar3[ii]+=(-1.)*temp[ii+2*T_global];
+                   scalar[ii] +=(-1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+                 if (g_cart_id == 0){
+//                 fprintf(out,"S1S1nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"S1S1TRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(scalar1[ii]), cimag(scalar1[ii]));
+                   }
+//                 fprintf(out,"S2S2nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"S2S2TRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(scalar2[ii]), cimag(scalar2[ii]));
+                   }
+//                 fprintf(out,"S3S3nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"S3S3TRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(scalar3[ii]), cimag(scalar3[ii]));
+                   }
+//                 fprintf(out,"SSnontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"SSTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(scalar[ii]), cimag(scalar[ii]));
+                   }
+//                 fprintf(out,"S1S1nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"P1P1TRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(pscalar1[ii]), cimag(pscalar1[ii]));
+                   }
+//                 fprintf(out,"S2S2nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"P2P2TRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(pscalar2[ii]), cimag(pscalar2[ii]));
+                   }
+//                 fprintf(out,"PS3PS3nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"P3PS3TRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(pscalar3[ii]), cimag(pscalar3[ii]));
+                   }
+//                 fprintf(out,"SSnontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"PPTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(pseudoscalar[ii]), cimag(pseudoscalar[ii]));
+                   }
+
+                 }
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
+
                  double read_end, read_begin=gettime();
                  if( (i = read_scalar_field_parallel(scalar_filename,g_scalar_field)) !=0 )
                  {
@@ -562,40 +1133,368 @@ int main(int argc, char *argv[]){
                  }
                }
                if (diraccurrentdensity_BSM == 1){
-                 naivedirac_current_density_12ab( g_bispinor_field, TYPE_I , TYPE_A, contractions_fname);
+                 naivedirac_current_density_12ab( g_bispinor_field, TYPE_I , TYPE_A, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   current1[ii]+=(-1.)*temp[ii           ];
+                   current2[ii]+=(-1.)*temp[ii+1*T_global];
+                   current3[ii]+=(-1.)*temp[ii+2*T_global];
+                   current[ii] +=(-1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+
 //                 diraccurrent1a_petros( g_bispinor_field );
-                 naivedirac_current_density_12ab( g_bispinor_field, TYPE_I , TYPE_B, contractions_fname);
-                 naivedirac_current_density_12ab( g_bispinor_field, TYPE_II, TYPE_A, contractions_fname);
-                 naivedirac_current_density_12ab( g_bispinor_field, TYPE_II, TYPE_B, contractions_fname);
+                 naivedirac_current_density_12ab( g_bispinor_field, TYPE_I , TYPE_B, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   current1[ii]+=(+1.)*temp[ii           ];
+                   current2[ii]+=(+1.)*temp[ii+1*T_global];
+                   current3[ii]+=(+1.)*temp[ii+2*T_global];
+                   current[ii] +=(+1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+
+                 naivedirac_current_density_12ab( g_bispinor_field, TYPE_II, TYPE_A, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   current1[ii]+=(-1.)*temp[ii           ];
+                   current2[ii]+=(-1.)*temp[ii+1*T_global];
+                   current3[ii]+=(-1.)*temp[ii+2*T_global];
+                   current[ii] +=(-1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+
+                 naivedirac_current_density_12ab( g_bispinor_field, TYPE_II, TYPE_B, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   current1[ii]+=(+1.)*temp[ii           ];
+                   current2[ii]+=(+1.)*temp[ii+1*T_global];
+                   current3[ii]+=(+1.)*temp[ii+2*T_global];
+                   current[ii] +=(+1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+                 if (g_cart_id == 0){
+//                   fprintf(out,"S1S1nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"J1D1NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current1[ii]), cimag(current1[ii]));
+                   }
+//                 fprintf(out,"S2S2nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"J2D2NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current2[ii]), cimag(current2[ii]));
+                   }
+//                 fprintf(out,"PS3PS3nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"J3D3NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current3[ii]), cimag(current3[ii]));
+                   }
+//                 fprintf(out,"SSnontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JDNONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
+                   }
+                 }
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
                }
                if (wilsoncurrentdensitypr1_BSM == 1){
-                 wilsonterm_current_density_312ab( g_bispinor_field, TYPE_1, TYPE_A, contractions_fname);
+                 wilsonterm_current_density_312ab( g_bispinor_field, TYPE_1, TYPE_A, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   current1[ii]+=(-1.)*temp[ii           ];
+                   current2[ii]+=(-1.)*temp[ii+1*T_global];
+                   current3[ii]+=(-1.)*temp[ii+2*T_global];
+                   current[ii] +=(-1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+
 //                 wilsoncurrent_density_3_petros( g_bispinor_field );
-                 wilsonterm_current_density_312ab( g_bispinor_field, TYPE_1, TYPE_B, contractions_fname);
-                 wilsonterm_current_density_312ab( g_bispinor_field, TYPE_2, TYPE_A, contractions_fname);
-                 wilsonterm_current_density_312ab( g_bispinor_field, TYPE_2, TYPE_B, contractions_fname);
+                 wilsonterm_current_density_312ab( g_bispinor_field, TYPE_1, TYPE_B, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   current1[ii]+=(+1.)*temp[ii           ];
+                   current2[ii]+=(+1.)*temp[ii+1*T_global];
+                   current3[ii]+=(+1.)*temp[ii+2*T_global];
+                   current[ii] +=(+1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+                 wilsonterm_current_density_312ab( g_bispinor_field, TYPE_2, TYPE_A, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   current1[ii]+=(+1.)*temp[ii           ];
+                   current2[ii]+=(+1.)*temp[ii+1*T_global];
+                   current3[ii]+=(+1.)*temp[ii+2*T_global];
+                   current[ii] +=(+1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+
+
+                 wilsonterm_current_density_312ab( g_bispinor_field, TYPE_2, TYPE_B, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   current1[ii]+=(-1.)*temp[ii           ];
+                   current2[ii]+=(-1.)*temp[ii+1*T_global];
+                   current3[ii]+=(-1.)*temp[ii+2*T_global];
+                   current[ii] +=(-1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+                 if (g_cart_id == 0){
+//                   fprintf(out,"S1S1nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JWPR11D1NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current1[ii]), cimag(current1[ii]));
+                   }
+//                 fprintf(out,"S2S2nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JWPR12D2NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current2[ii]), cimag(current2[ii]));
+                   }
+//                 fprintf(out,"PS3PS3nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JWPR13D3NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current3[ii]), cimag(current3[ii]));
+                   }
+//                 fprintf(out,"SSnontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JWPR1DNONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
+                   }
+                 }
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
                }
                if (wilsoncurrentdensitypr2_BSM == 1){
-                 wilsonterm_current_density_412ab( g_bispinor_field, TYPE_1, TYPE_A, contractions_fname);
-                 wilsonterm_current_density_412ab( g_bispinor_field, TYPE_1, TYPE_B, contractions_fname);
-                 wilsonterm_current_density_412ab( g_bispinor_field, TYPE_2, TYPE_A, contractions_fname);
-                 wilsonterm_current_density_412ab( g_bispinor_field, TYPE_2, TYPE_B, contractions_fname);
+                 wilsonterm_current_density_412ab( g_bispinor_field, TYPE_1, TYPE_A, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   current1[ii]+=(-1.)*temp[ii           ];
+                   current2[ii]+=(-1.)*temp[ii+1*T_global];
+                   current3[ii]+=(-1.)*temp[ii+2*T_global];
+                   current[ii] +=(-1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+                 wilsonterm_current_density_412ab( g_bispinor_field, TYPE_1, TYPE_B, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   current1[ii]+=(+1.)*temp[ii           ];
+                   current2[ii]+=(+1.)*temp[ii+1*T_global];
+                   current3[ii]+=(+1.)*temp[ii+2*T_global];
+                   current[ii] +=(+1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+                 wilsonterm_current_density_412ab( g_bispinor_field, TYPE_2, TYPE_A, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   current1[ii]+=(+1.)*temp[ii           ];
+                   current2[ii]+=(+1.)*temp[ii+1*T_global];
+                   current3[ii]+=(+1.)*temp[ii+2*T_global];
+                   current[ii] +=(+1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+                 wilsonterm_current_density_412ab( g_bispinor_field, TYPE_2, TYPE_B, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   current1[ii]+=(-1.)*temp[ii           ];
+                   current2[ii]+=(-1.)*temp[ii+1*T_global];
+                   current3[ii]+=(-1.)*temp[ii+2*T_global];
+                   current[ii] +=(-1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+                 if (g_cart_id == 0){
+//                   fprintf(out,"S1S1nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JWPR21D1NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current1[ii]), cimag(current1[ii]));
+                   }
+//                 fprintf(out,"S2S2nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JWPR2D2NONTRIVIAL\t%d\t%10.10e\t%10.10e\n",  ii, creal(current2[ii]), cimag(current2[ii]));
+                   }
+//                 fprintf(out,"PS3PS3nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JWPR23D3NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current3[ii]), cimag(current3[ii]));
+                   }
+//                 fprintf(out,"SSnontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JWPR2DNONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
+                   }
+                 }
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
+
                }
                if (wilsoncurrentdensitypl1_BSM == 1){
-                 wilsonterm_current_density_512ab( g_bispinor_field, TYPE_1, TYPE_A, contractions_fname);
-                 wilsonterm_current_density_512ab( g_bispinor_field, TYPE_1, TYPE_B, contractions_fname);
-                 wilsonterm_current_density_512ab( g_bispinor_field, TYPE_2, TYPE_A, contractions_fname);
-                 wilsonterm_current_density_512ab( g_bispinor_field, TYPE_2, TYPE_B, contractions_fname);
+                 wilsonterm_current_density_512ab( g_bispinor_field, TYPE_1, TYPE_A, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   current1[ii]+=(-1.)*temp[ii           ];
+                   current2[ii]+=(-1.)*temp[ii+1*T_global];
+                   current3[ii]+=(-1.)*temp[ii+2*T_global];
+                   current[ii] +=(-1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+
+                 wilsonterm_current_density_512ab( g_bispinor_field, TYPE_1, TYPE_B, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   current1[ii]+=(+1.)*temp[ii           ];
+                   current2[ii]+=(+1.)*temp[ii+1*T_global];
+                   current3[ii]+=(+1.)*temp[ii+2*T_global];
+                   current[ii] +=(+1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+
+                 wilsonterm_current_density_512ab( g_bispinor_field, TYPE_2, TYPE_A, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   current1[ii]+=(+1.)*temp[ii           ];
+                   current2[ii]+=(+1.)*temp[ii+1*T_global];
+                   current3[ii]+=(+1.)*temp[ii+2*T_global];
+                   current[ii] +=(+1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+
+                 wilsonterm_current_density_512ab( g_bispinor_field, TYPE_2, TYPE_B, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   current1[ii]+=(-1.)*temp[ii           ];
+                   current2[ii]+=(-1.)*temp[ii+1*T_global];
+                   current3[ii]+=(-1.)*temp[ii+2*T_global];
+                   current[ii] +=(-1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+                 if (g_cart_id == 0){
+//                   fprintf(out,"S1S1nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JWPL11D1NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current1[ii]), cimag(current1[ii]));
+                   }
+//                 fprintf(out,"S2S2nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JWPL12D2NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current2[ii]), cimag(current2[ii]));
+                   }
+//                 fprintf(out,"PS3PS3nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JWPL13D3NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current3[ii]), cimag(current3[ii]));
+                   }
+//                 fprintf(out,"SSnontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JWPL1DNONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
+                   }
+                 }
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
                }
                if (wilsoncurrentdensitypl2_BSM == 1){
                //wilsoncurrent61a_petros( g_bispinor_field );
-                 wilsonterm_current_density_612ab( g_bispinor_field, TYPE_1, TYPE_A, contractions_fname);
-                 wilsonterm_current_density_612ab( g_bispinor_field, TYPE_1, TYPE_B, contractions_fname);
+                 wilsonterm_current_density_612ab( g_bispinor_field, TYPE_1, TYPE_A, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   current1[ii]+=(-1.)*temp[ii           ];
+                   current2[ii]+=(-1.)*temp[ii+1*T_global];
+                   current3[ii]+=(-1.)*temp[ii+2*T_global];
+                   current[ii] +=(-1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+
+                 wilsonterm_current_density_612ab( g_bispinor_field, TYPE_1, TYPE_B, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   current1[ii]+=(+1.)*temp[ii           ];
+                   current2[ii]+=(+1.)*temp[ii+1*T_global];
+                   current3[ii]+=(+1.)*temp[ii+2*T_global];
+                   current[ii] +=(+1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+         
+
                //wilsoncurrent62a_petros( g_bispinor_field );
-                 wilsonterm_current_density_612ab( g_bispinor_field, TYPE_2, TYPE_A, contractions_fname);
-                 wilsonterm_current_density_612ab( g_bispinor_field, TYPE_2, TYPE_B, contractions_fname);
+                 wilsonterm_current_density_612ab( g_bispinor_field, TYPE_2, TYPE_A, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   current1[ii]+=(+1.)*temp[ii           ];
+                   current2[ii]+=(+1.)*temp[ii+1*T_global];
+                   current3[ii]+=(+1.)*temp[ii+2*T_global];
+                   current[ii] +=(+1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+
+                 wilsonterm_current_density_612ab( g_bispinor_field, TYPE_2, TYPE_B, &temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   current1[ii]+=(-1.)*temp[ii           ];
+                   current2[ii]+=(-1.)*temp[ii+1*T_global];
+                   current3[ii]+=(-1.)*temp[ii+2*T_global];
+                   current[ii] +=(-1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+                 if (g_cart_id == 0){
+//                   fprintf(out,"S1S1nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JWPL21D1NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current1[ii]), cimag(current1[ii]));
+                   }
+//                 fprintf(out,"S2S2nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JWPL22D2NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current2[ii]), cimag(current2[ii]));
+                   }
+//                 fprintf(out,"PS3PS3nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JWPL23D3NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current3[ii]), cimag(current3[ii]));
+                   }
+//                 fprintf(out,"SSnontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JWPL2DNONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
+                   }
+                 }
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
+
                }
 //               density_density_1234_petros(g_bispinor_field);
+               fclose(out);
+               free(scalar);
+               free(pseudoscalar);
+               free(current);
+               free(pscalar1);
+               free(pscalar2);
+               free(pscalar3);
+               free(scalar1);
+               free(scalar2);
+               free(scalar3);
+               free(current1);
+               free(current2);
+               free(current3);
 
              } //End of loop over samples
 
@@ -622,5 +1521,4 @@ int main(int argc, char *argv[]){
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 #endif
-
 }
