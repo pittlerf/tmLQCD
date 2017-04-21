@@ -682,11 +682,6 @@ int main(int argc, char *argv[]){
                   
                }
                if (axialcurrentdensity_BSM == 1){
-                 printf("itt vahyokksas\n");
-                 if (temp != NULL)
-                   printf("dsadad\n");
-                 printf("temp =%p\n",temp);
-                 printf("addres von temp %p\n", &temp);
                  axial_current_density_1234(g_bispinor_field, TYPE_1, 1, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
