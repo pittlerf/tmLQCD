@@ -1477,7 +1477,9 @@ int main(int argc, char *argv[]){
 
                }
 //               density_density_1234_petros(g_bispinor_field);
-               fclose(out);
+               if (g_cart_id == 0){
+                 fclose(out);
+               }
                free(scalar);
                free(pseudoscalar);
                free(current);
