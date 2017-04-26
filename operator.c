@@ -69,7 +69,6 @@
 void dummy_D(spinor * const, spinor * const);
 void dummy_DbD(spinor * const s, spinor * const r, spinor * const p, spinor * const q);
 void op_invert(const int op_id, const int index_start, const int write_prop);
-void op_invert_save(const int op_id, const int index_start, const int write_prop);
 
 void op_write_prop(const int op_id, const int index_start, const int append_);
 operator operator_list[max_no_operators];
@@ -126,7 +125,6 @@ int add_operator(const int type) {
 
   optr->inverter = &op_invert;
   optr->write_prop = &op_write_prop;
-  optr->inverter_save = &op_invert_save;
 
   /* Overlap needs special treatment */
   if(optr->type == OVERLAP) {
@@ -471,155 +469,45 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
     if(write_prop) optr->write_prop(op_id, index_start, 0);
   }
   else if( optr->type == BSM || optr->type == BSM2b || optr->type == BSM2m || optr->type == BSM2f ) {
-    for(i = 0; i < SourceInfo.no_flavours; i++) {
+    bispinor *src  = (bispinor *)malloc(sizeof(bispinor)*VOLUMEPLUSRAND );
+    bispinor *dest = (bispinor *)malloc(sizeof(bispinor)*VOLUMEPLUSRAND );
+    bispinor *temp = (bispinor *)malloc(sizeof(bispinor)*VOLUMEPLUSRAND );
+    bispinor *temp2= (bispinor *)malloc(sizeof(bispinor)*VOLUMEPLUSRAND );
 
-      convert_eo_to_lexic(g_spinor_field[DUM_DERI], optr->sr0, optr->sr1);
-      convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], optr->sr2, optr->sr3);
-      compact(g_bispinor_field[1], g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
-      
-       optr->iterations = cg_her_bi(g_bispinor_field[0], g_bispinor_field[1],
-                optr->maxiter, optr->eps_sq, optr->rel_prec, VOLUME, optr->applyQsqbi);
-
-      optr->applyQsqbi(g_bispinor_field[2], g_bispinor_field[0]);
-      assign_diff_mul((spinor*)g_bispinor_field[2], (spinor*)g_bispinor_field[1], 1.0, 2*VOLUME);
-      double squarenorm = square_norm((spinor*)g_bispinor_field[2], 2*VOLUME, 1);
-      optr->reached_prec = squarenorm;
-      if(g_proc_id==0) {
-        printf("# BSM Dirac inversion ||A*result1-b||^2 = %e\n", squarenorm);
-        fflush(stdout);
-      }
-
-      optr->applyMdagbi(g_bispinor_field[2], g_bispinor_field[0]);
-      optr->applyMbi(g_bispinor_field[0], g_bispinor_field[2]);
-      assign_diff_mul((spinor*)g_bispinor_field[0], (spinor*)g_bispinor_field[1], 1.0, 2*VOLUME);
-      squarenorm = square_norm((spinor*)g_bispinor_field[0], 2*VOLUME, 1);
-      if(g_proc_id==0) {
-        printf("# BSM Dirac inversion || D(D^dag [DD^dag + m_0 ]^-1 b) - b ||^2 = %e\n\n", squarenorm);
-        fflush(stdout);
-      }
-      
-      decompact(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], g_bispinor_field[2]);
-
-      convert_lexic_to_eo(optr->prop0, optr->prop1, g_spinor_field[DUM_DERI]);
-      convert_lexic_to_eo(optr->prop2, optr->prop3, g_spinor_field[DUM_DERI+1]);
-
-      /* write propagator */
-      if(write_prop) optr->write_prop(op_id, index_start, 2*i);
-
-      convert_eo_to_lexic(g_spinor_field[DUM_DERI], optr->sr0, optr->sr1);
-      convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], optr->sr2, optr->sr3);
-      compact(g_bispinor_field[0], g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
-
-      optr->applyMbi(g_bispinor_field[1], g_bispinor_field[0]);
-      
-      // accumulate number of iterations
-      optr->iterations += cg_her_bi(g_bispinor_field[2], g_bispinor_field[1],
-                                    optr->maxiter, optr->eps_sq, optr->rel_prec, VOLUME, optr->applyQsqbi);
-
-      optr->applyQsqbi(g_bispinor_field[0], g_bispinor_field[2]);
-      assign_diff_mul((spinor*)g_bispinor_field[0], (spinor*)g_bispinor_field[1], 1.0, 2*VOLUME);
-      squarenorm = square_norm((spinor*)g_bispinor_field[0], 2*VOLUME, 1);
-      // store the larger of the two residual norms
-      optr->reached_prec = optr->reached_prec > squarenorm ? optr->reached_prec : squarenorm;
-      if(g_proc_id==0) {
-        printf("# BSM Dirac inversion ||A*result1-b||^2 = %e\n", squarenorm);
-        fflush(stdout);
-      }
-
-      compact(g_bispinor_field[0], g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
-      optr->applyMdagbi(g_bispinor_field[1], g_bispinor_field[2]);
-      assign_diff_mul((spinor*)g_bispinor_field[1], (spinor*)g_bispinor_field[0], 1.0, 2*VOLUME);
-      squarenorm = square_norm((spinor*)g_bispinor_field[1], 2*VOLUME, 1);
-      if(g_proc_id==0) {
-        printf("# BSM Dirac inversion || D^dag ([DD^dag + m_0 ]^-1 D b) - b ||^2 = %e\n\n", squarenorm);
-        fflush(stdout);
-      }
-      decompact(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], g_bispinor_field[2]);
-
-      convert_lexic_to_eo(optr->prop0, optr->prop1, g_spinor_field[DUM_DERI]);
-      convert_lexic_to_eo(optr->prop2, optr->prop3, g_spinor_field[DUM_DERI+1]);
-
-      /* write propagator */
-      if(write_prop) optr->write_prop(op_id, index_start, 2*i+1);
-
-      // mirror sources
-      if(i == 0 && SourceInfo.no_flavours == 2 && SourceInfo.type != 1) {
-        spinor * tmp;
-        tmp = optr->sr0;
-        optr->sr0 = optr->sr2;
-        optr->sr2 = tmp;
-        tmp = optr->sr1;
-        optr->sr1 = optr->sr3;
-        optr->sr3 = tmp;
-      }
-      /* volume sources need only one inversion */
-      else if(SourceInfo.type == 1) i++;
+    if ( src == NULL || dest == NULL || temp == NULL || temp2 == NULL ){
+      printf("Error in allocating memory in invert\n");
+      exit(1);
     }
-  }
-  etime = gettime();
-  if (g_cart_id == 0 && g_debug_level > 0) {
-    fprintf(stdout, "# Inversion done in %d iterations, squared residue = %e!\n",
-            optr->iterations, optr->reached_prec);
-    fprintf(stdout, "# Inversion done in %1.2e sec. \n", etime - atime);
-  }
-  return;
-}
-
-void op_invert_save(const int op_id, const int index_start, const int write_prop) {
-  operator * optr = &operator_list[op_id];
-  double atime = 0., etime = 0., nrm1 = 0., nrm2 = 0.;
-  double checknorm;
-  int i;
-  optr->iterations = 0;
-  optr->reached_prec = -1.;
-  g_kappa = optr->kappa;
-  if (g_cart_id == 0) printf("#Kappa value=%e\n", g_kappa);
-  boundary(g_kappa);
-  bispinor *src =(bispinor *)malloc(sizeof(bispinor)*VOLUMEPLUSRAND );
-  bispinor *dest=(bispinor *)malloc(sizeof(bispinor)*VOLUMEPLUSRAND );
-  bispinor *tmp =(bispinor *)malloc(sizeof(bispinor)*VOLUMEPLUSRAND );
-  bispinor *tmp2=(bispinor *)malloc(sizeof(bispinor)*VOLUMEPLUSRAND );
-  if (( src==NULL ) || ( dest==NULL ) || ( tmp == NULL ) || ( tmp2 == NULL ) ) {
-    printf("Error in memory allocation\n");
-    exit(1);
-  }
-  atime = gettime();
-  if( optr->type == BSM || optr->type == BSM2b || optr->type == BSM2m || optr->type == BSM2f ) {
     for(i = 0; i < SourceInfo.no_flavours; i++) {
-     
+
       convert_eo_to_lexic(g_spinor_field[DUM_DERI], optr->sr0, optr->sr1);
       convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], optr->sr2, optr->sr3);
-
       compact(src, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
-
+      
       optr->iterations = cg_her_bi(dest, src,
                 optr->maxiter, optr->eps_sq, optr->rel_prec, VOLUME, optr->applyQsqbi);
 
-      optr->applyQsqbi(tmp, dest);
-      assign_diff_mul((spinor*)tmp, (spinor*)src, 1.0, 2*VOLUME);
-      double squarenorm = square_norm((spinor*)tmp, 2*VOLUME, 1);
+      optr->applyQsqbi(temp, dest);
+      assign_diff_mul((spinor*)temp, (spinor*)src, 1.0, 2*VOLUME);
+      double squarenorm = square_norm((spinor*)temp, 2*VOLUME, 1);
       optr->reached_prec = squarenorm;
       if(g_proc_id==0) {
         printf("# BSM Dirac inversion ||A*result1-b||^2 = %e\n", squarenorm);
         fflush(stdout);
       }
 
-      optr->applyMdagbi(tmp, dest);
-
-      optr->applyMbi(tmp2, tmp);
-      assign_diff_mul((spinor*)tmp2, (spinor*)src, 1.0, 2*VOLUME);
-      squarenorm = square_norm((spinor*)tmp2, 2*VOLUME, 1);
+      optr->applyMdagbi(temp, dest);
+      optr->applyMbi(temp2, temp);
+      assign_diff_mul((spinor*)temp2, (spinor*)src, 1.0, 2*VOLUME);
+      squarenorm = square_norm((spinor*)temp2, 2*VOLUME, 1);
       if(g_proc_id==0) {
         printf("# BSM Dirac inversion || D(D^dag [DD^dag + m_0 ]^-1 b) - b ||^2 = %e\n\n", squarenorm);
         fflush(stdout);
       }
-      /*save*/
-      assign((spinor *)g_bispinor_field[4*SourceInfo.ix+2*(1-i)], (spinor *)tmp,2*VOLUME);
-      checknorm=square_norm((spinor *)g_bispinor_field[4*SourceInfo.ix+2*(1-i)], 2*VOLUME, 1);
-      if (g_cart_id ==0) printf("Checking the norm inside inversion=%e\n", checknorm);
-      if (g_cart_id == 0) printf("Index saved=%d index_start=%d i=%d \n", 4*SourceInfo.ix+2*(1-i), index_start, i);
-
-      decompact(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], tmp);
+      if (propagatorsonthefly_BSM == 1){
+        assign( (spinor *)optr->prop[4*SourceInfo.ix+2*(1-i)], (spinor *)temp, 2*VOLUME);
+      }
+      decompact(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], temp);
 
       convert_lexic_to_eo(optr->prop0, optr->prop1, g_spinor_field[DUM_DERI]);
       convert_lexic_to_eo(optr->prop2, optr->prop3, g_spinor_field[DUM_DERI+1]);
@@ -631,15 +519,15 @@ void op_invert_save(const int op_id, const int index_start, const int write_prop
       convert_eo_to_lexic(g_spinor_field[DUM_DERI+1], optr->sr2, optr->sr3);
       compact(src, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
 
-      optr->applyMbi(tmp, src);
-
+      optr->applyMbi(temp, src);
+      
       // accumulate number of iterations
-      optr->iterations += cg_her_bi(dest, tmp,
+      optr->iterations += cg_her_bi(dest, temp,
                                     optr->maxiter, optr->eps_sq, optr->rel_prec, VOLUME, optr->applyQsqbi);
 
-      optr->applyQsqbi(tmp2, dest);
-      assign_diff_mul((spinor*)tmp2, (spinor*)tmp, 1.0, 2*VOLUME);
-      squarenorm = square_norm((spinor*)tmp2, 2*VOLUME, 1);
+      optr->applyQsqbi(temp2, dest);
+      assign_diff_mul((spinor*)temp2, (spinor*)temp, 1.0, 2*VOLUME);
+      squarenorm = square_norm((spinor*)temp2, 2*VOLUME, 1);
       // store the larger of the two residual norms
       optr->reached_prec = optr->reached_prec > squarenorm ? optr->reached_prec : squarenorm;
       if(g_proc_id==0) {
@@ -648,19 +536,16 @@ void op_invert_save(const int op_id, const int index_start, const int write_prop
       }
 
       compact(src, g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
-      optr->applyMdagbi(tmp, dest);
-      assign_diff_mul((spinor*)tmp, (spinor*)src, 1.0, 2*VOLUME);
-      squarenorm = square_norm((spinor*)tmp, 2*VOLUME, 1);
+      optr->applyMdagbi(temp, dest);
+      assign_diff_mul((spinor*)temp, (spinor*)src, 1.0, 2*VOLUME);
+      squarenorm = square_norm((spinor*)temp, 2*VOLUME, 1);
       if(g_proc_id==0) {
         printf("# BSM Dirac inversion || D^dag ([DD^dag + m_0 ]^-1 D b) - b ||^2 = %e\n\n", squarenorm);
         fflush(stdout);
       }
-
-      /*save*/
-      assign((spinor*)g_bispinor_field[4*SourceInfo.ix+2*(1-i)+1], (spinor *)dest,2*VOLUME);
-      checknorm=square_norm((spinor *)g_bispinor_field[4*SourceInfo.ix+2*(1-i)+1], 2*VOLUME, 1);
-      if (g_cart_id ==0) printf("Checking the norm inside inversion=%e\n", checknorm);
-      if (g_cart_id == 0) printf("Index saved dagger =%d index_start=%d i=%d \n", 4*SourceInfo.ix+2*(1-i)+1, index_start, i);
+      if (propagatorsonthefly_BSM == 1){
+        assign((spinor*)optr->prop[4*SourceInfo.ix+2*(1-i)+1],(spinor *)dest, 2*VOLUME);
+      }
 
       decompact(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], dest);
 
@@ -683,20 +568,19 @@ void op_invert_save(const int op_id, const int index_start, const int write_prop
       /* volume sources need only one inversion */
       else if(SourceInfo.type == 1) i++;
     }
+    free(src  );
+    free(dest );
+    free(temp );
+    free(temp2);
   }
   etime = gettime();
   if (g_cart_id == 0 && g_debug_level > 0) {
     fprintf(stdout, "# Inversion done in %d iterations, squared residue = %e!\n",
             optr->iterations, optr->reached_prec);
     fprintf(stdout, "# Inversion done in %1.2e sec. \n", etime - atime);
-  } 
-  free(src);
-  free(dest);
-  free(tmp);
-  free(tmp2);
+  }
   return;
 }
-
 
 void op_write_prop(const int op_id, const int index_start, const int append_) {
   operator * optr = &operator_list[op_id];
@@ -750,7 +634,7 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
     append = 1;
   /* the 1 is for appending */
   construct_writer(&writer, filename, append);
-  printf("\n\nSourceinfo = %d index_start=%d\n\n",SourceInfo.ix, index_start);
+//  printf("\n\nSourceinfo = %d index_start=%d\n\n",SourceInfo.ix, index_start);
   if (PropInfo.splitted || SourceInfo.ix == index_start) {
     inverterInfo = construct_paramsInverterInfo(optr->reached_prec, optr->iterations, 
             optr->solver, optr->no_flavours);
