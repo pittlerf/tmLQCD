@@ -568,22 +568,22 @@ int main(int argc, char *argv[]){
                }
 
                if (vectorcurrentdensity_BSM == 1){
-                 vector_current_density_1234(operator_list[op_id].prop, TYPE_1,1, 2, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_1,0, 1, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 vector_current_density_1234(operator_list[op_id].prop, TYPE_2,1, 2, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(-1.)*temp[ii];
-                 }
-                 free(temp);
-                 vector_current_density_1234(operator_list[op_id].prop, TYPE_3,1, 2, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_2,0, 1, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
                  free(temp);
-                 vector_current_density_1234(operator_list[op_id].prop, TYPE_4,1, 2, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_3,0, 1, 0, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_4,0, 1, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
@@ -609,22 +609,22 @@ int main(int argc, char *argv[]){
                    current3[ii]=0.0;
                  }
 
-                 vector_current_density_1234(operator_list[op_id].prop, TYPE_1,2, 1, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_1,1, 0, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 vector_current_density_1234(operator_list[op_id].prop, TYPE_2,2, 1, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(-1.)*temp[ii];
-                 }
-                 free(temp);
-                 vector_current_density_1234(operator_list[op_id].prop, TYPE_3,2, 1, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_2,1, 0, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
                  free(temp);
-                 vector_current_density_1234(operator_list[op_id].prop, TYPE_4,2, 1, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_3,1, 0, 0, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_4,1, 0, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
@@ -650,22 +650,22 @@ int main(int argc, char *argv[]){
                    current3[ii]=0.0;
                  }
 
-                 vector_current_density_1234(operator_list[op_id].prop, TYPE_1,3, 3, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_1,2, 2, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 vector_current_density_1234(operator_list[op_id].prop, TYPE_2,3, 3, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(-1.)*temp[ii];
-                 }
-                 free(temp);
-                 vector_current_density_1234(operator_list[op_id].prop, TYPE_3,3, 3, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_2,2, 2, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
                  free(temp);
-                 vector_current_density_1234(operator_list[op_id].prop, TYPE_4,3, 3, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_3,2, 2, 0, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_4,2, 2, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
@@ -694,22 +694,22 @@ int main(int argc, char *argv[]){
                   
                }
                if (axialcurrentdensity_BSM == 1){
-                 axial_current_density_1234(operator_list[op_id].prop, TYPE_1, 1, 1, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_1, 0, 0, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 axial_current_density_1234(operator_list[op_id].prop, TYPE_2, 1, 1, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(-1.)*temp[ii];
-                 }
-                 free(temp);
-                 axial_current_density_1234(operator_list[op_id].prop, TYPE_3, 1, 1, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_2, 0, 0, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
                  free(temp);
-                 axial_current_density_1234(operator_list[op_id].prop, TYPE_4, 1, 1, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_3, 0, 0, 1, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_4, 0, 0, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
@@ -735,28 +735,27 @@ int main(int argc, char *argv[]){
                    current3[ii]=0.0;
                  }
 
-                 axial_current_density_1234(operator_list[op_id].prop, TYPE_1,2, 2, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_1,1, 1, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 axial_current_density_1234(operator_list[op_id].prop, TYPE_2,2, 2, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_2,1, 1, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 axial_current_density_1234(operator_list[op_id].prop, TYPE_3,2, 2, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_3,1, 1, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
                  free(temp);
-                 axial_current_density_1234(operator_list[op_id].prop, TYPE_4,2, 2, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_4,1, 1, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
                  free(temp);
                  if (g_cart_id == 0){
-//                 fprintf(out,"S1S1nontrivialscalar:\n");
                    for (int ii=0; ii<T_global; ++ii){
                      fprintf(out,"JTILDEA2P2NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
                    }
@@ -776,30 +775,29 @@ int main(int argc, char *argv[]){
                    current3[ii]=0.0;
                  }
 
-                 vector_current_density_1234(operator_list[op_id].prop, TYPE_1,3, 3, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_1,2, 2, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 vector_current_density_1234(operator_list[op_id].prop, TYPE_2,3, 3, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_2,2, 2, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 vector_current_density_1234(operator_list[op_id].prop, TYPE_3,3, 3, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_3,2, 2, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
                  free(temp);
-                 vector_current_density_1234(operator_list[op_id].prop, TYPE_4,3, 3, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_4,2, 2, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
                  free(temp);
                  if (g_cart_id == 0){
-//                 fprintf(out,"S1S1nontrivialscalar:\n");
                    for (int ii=0; ii<T_global; ++ii){
-                     fprintf(out,"JTILDEV3P3NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
+                     fprintf(out,"JTILDEA3P3NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
                    }
                  }
                  for (int ii=0;ii<T_global; ++ii){

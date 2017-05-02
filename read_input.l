@@ -742,6 +742,10 @@ inline void rmQuotes(char *str){
     if(myverbose) printf("  BSM density denstiy correlators are computed with nontrivial scalar line %d operator %d\n", line_of_file, current_operator);
     densitydensity_BSM = 1;
   }
+  {SPC}*densitydensity{EQL}no {
+    if(myverbose) printf("  BSM density denstiy correlators are not computed with nontrivial scalar line %d operator %d\n", line_of_file, current_operator);
+    densitydensity_BSM = 0;
+  }
   {SPC}*densitydensitys0s0{EQL}yes {
     densitydensity_s0s0_BSM = 1;
     if(myverbose != 0) printf("  BSM density density s0s0,p0p0 are computed with trivial scalar fields line %d operator %d\n", line_of_file, current_operator);

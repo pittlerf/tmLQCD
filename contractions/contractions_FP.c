@@ -101,6 +101,9 @@
 
 #define TYPE_I 1
 #define TYPE_II 0
+
+#define RIGHT 1
+#define LEFT 0
 /* indexing of propfields;
    
    propagator for  (dagger or nondagger source)
@@ -274,35 +277,37 @@ static void bispinor_timesgamma5( bispinor *dest){
 }
 static void bispinor_taui( bispinor *dest, int tauindex){
    bispinor source_copy;
+
    _spinor_assign(source_copy.sp_up,  dest->sp_up);
    _spinor_assign(source_copy.sp_dn,  dest->sp_dn);
-   if (tauindex == 3){
+
+   if (tauindex == 2){
      _spinor_assign( dest->sp_up, source_copy.sp_up);
      _vector_mul(dest->sp_dn.s0, -1, source_copy.sp_dn.s0);
      _vector_mul(dest->sp_dn.s1, -1, source_copy.sp_dn.s1);
      _vector_mul(dest->sp_dn.s2, -1, source_copy.sp_dn.s2);
      _vector_mul(dest->sp_dn.s3, -1, source_copy.sp_dn.s3);
    }
-   if (tauindex == 2){
-     _vector_mul(dest->sp_up.s0, +1.*I, source_copy.sp_dn.s0);
-     _vector_mul(dest->sp_up.s1, +1.*I, source_copy.sp_dn.s1);
-     _vector_mul(dest->sp_up.s2, +1.*I, source_copy.sp_dn.s2);
-     _vector_mul(dest->sp_up.s3, +1.*I, source_copy.sp_dn.s3);
+   if (tauindex == 1){
+     _vector_mul(dest->sp_up.s0, -1.*I, source_copy.sp_dn.s0);
+     _vector_mul(dest->sp_up.s1, -1.*I, source_copy.sp_dn.s1);
+     _vector_mul(dest->sp_up.s2, -1.*I, source_copy.sp_dn.s2);
+     _vector_mul(dest->sp_up.s3, -1.*I, source_copy.sp_dn.s3);
 
-     _vector_mul(dest->sp_dn.s0, -1.*I, source_copy.sp_up.s0);
-     _vector_mul(dest->sp_dn.s1, -1.*I, source_copy.sp_up.s1);
-     _vector_mul(dest->sp_dn.s2, -1.*I, source_copy.sp_up.s2);
-     _vector_mul(dest->sp_dn.s3, -1.*I, source_copy.sp_up.s3);
+     _vector_mul(dest->sp_dn.s0, +1.*I, source_copy.sp_up.s0);
+     _vector_mul(dest->sp_dn.s1, +1.*I, source_copy.sp_up.s1);
+     _vector_mul(dest->sp_dn.s2, +1.*I, source_copy.sp_up.s2);
+     _vector_mul(dest->sp_dn.s3, +1.*I, source_copy.sp_up.s3);
 
    }
-   if (tauindex == 1){
+   if (tauindex == 0){
      _spinor_assign( dest->sp_up, source_copy.sp_dn);
      _spinor_assign( dest->sp_dn, source_copy.sp_up);
    }
 }
 
 //dest used as a source, an output it is overwritten
-static void taui_scalarfield_flavoronly( _Complex double *dest, int tauindex, int dagger ){
+static void taui_scalarfield_flavoronly( _Complex double *dest, int tauindex, int dagger, int dir ){
    _Complex double *source_copy;
    _Complex double a11=0.0, a12=0.0, a21=0.0, a22=0.0;
    int i;
@@ -310,117 +315,214 @@ static void taui_scalarfield_flavoronly( _Complex double *dest, int tauindex, in
    source_copy=(_Complex double *)malloc(sizeof(_Complex double)*2*T_global);
 
    if (source_copy == NULL) {
-      if (g_cart_id == 0) {printf("memory allocation failed\n"); exit(1);}
+     if (g_cart_id == 0) {printf("memory allocation failed\n"); exit(1);}
    }
    for (i=0; i<2*T_global; ++i)
      source_copy[i]=dest[i];
-   
-   if (dagger == DAGGER){
-     if (tauindex == 0){
-       if (smearedcorrelator_BSM == 1){
-         a11=  -1.*g_smeared_scalar_field[2][0] - I*g_smeared_scalar_field[1][0];
-         a12=  +1.*g_smeared_scalar_field[0][0] - I*g_smeared_scalar_field[3][0];
 
-         a21=  +1.*g_smeared_scalar_field[0][0] + I*g_smeared_scalar_field[3][0];
-         a22=  +1.*g_smeared_scalar_field[2][0] - I*g_smeared_scalar_field[1][0];
+   if (dir == LEFT){   
+     if (dagger == DAGGER){
+       if (tauindex == 0){
+         if (smearedcorrelator_BSM == 1){
+           a11=  -1.*g_smeared_scalar_field[2][0] - I*g_smeared_scalar_field[1][0];
+           a12=  +1.*g_smeared_scalar_field[0][0] - I*g_smeared_scalar_field[3][0];
+
+           a21=  +1.*g_smeared_scalar_field[0][0] + I*g_smeared_scalar_field[3][0];
+           a22=  +1.*g_smeared_scalar_field[2][0] - I*g_smeared_scalar_field[1][0];
+         }
+         else{
+           a11=  -1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
+           a12=  +1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
+
+           a21=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
+           a22=  +1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
+         }
        }
-       else{
-         a11=  -1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
-         a12=  +1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
+       else  if (tauindex == 1){
+         if (smearedcorrelator_BSM == 1) {
+           a11=  +1.*g_smeared_scalar_field[1][0] - I*g_smeared_scalar_field[2][0];
+           a12=  -1.*g_smeared_scalar_field[3][0] - I*g_smeared_scalar_field[0][0];
 
-         a21=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
-         a22=  +1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
+           a21=  -1.*g_smeared_scalar_field[3][0] + I*g_smeared_scalar_field[0][0];
+           a22=  -1.*g_smeared_scalar_field[1][0] - I*g_smeared_scalar_field[2][0];
+         }
+         else{
+           a11=  +1.*g_scalar_field[1][0] - I*g_scalar_field[2][0];
+           a12=  -1.*g_scalar_field[3][0] - I*g_scalar_field[0][0];
+
+           a21=  -1.*g_scalar_field[3][0] + I*g_scalar_field[0][0];
+           a22=  -1.*g_scalar_field[1][0] - I*g_scalar_field[2][0];
+         }
+       }
+       else  if (tauindex == 2){
+         if (smearedcorrelator_BSM == 1){ 
+           a11=  +1.*g_smeared_scalar_field[0][0] - I*g_smeared_scalar_field[3][0];
+           a12=  +1.*g_smeared_scalar_field[2][0] + I*g_smeared_scalar_field[1][0];
+
+           a21=  +1.*g_smeared_scalar_field[2][0] - I*g_smeared_scalar_field[1][0];
+           a22=  -1.*g_smeared_scalar_field[0][0] - I*g_smeared_scalar_field[3][0];
+         }
+         else{
+           a11=  +1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
+           a12=  +1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
+
+           a21=  +1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
+           a22=  -1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
+         }
        }
      }
-     else  if (tauindex == 1){
-       if (smearedcorrelator_BSM == 1) {
-         a11=  +1.*g_smeared_scalar_field[1][0] - I*g_smeared_scalar_field[2][0];
-         a12=  -1.*g_smeared_scalar_field[3][0] - I*g_smeared_scalar_field[0][0];
+     else if (dagger == NO_DAGG){
+       if (tauindex == 0){
+         if (smearedcorrelator_BSM == 1){
+           a11=  -1.*g_smeared_scalar_field[2][0] + I*g_smeared_scalar_field[1][0];
+           a12=  +1.*g_smeared_scalar_field[0][0] - I*g_smeared_scalar_field[3][0];
 
-         a21=  -1.*g_smeared_scalar_field[3][0] + I*g_smeared_scalar_field[0][0];
-         a22=  -1.*g_smeared_scalar_field[1][0] - I*g_smeared_scalar_field[2][0];
+           a21=  +1.*g_smeared_scalar_field[0][0] + I*g_smeared_scalar_field[3][0];
+           a22=  +1.*g_smeared_scalar_field[2][0] + I*g_smeared_scalar_field[1][0];
+         }
+         else{
+           a11=  -1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
+           a12=  +1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
+
+           a21=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
+           a22=  +1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
+         }
        }
-       else{
-         a11=  +1.*g_scalar_field[1][0] - I*g_scalar_field[2][0];
-         a12=  -1.*g_scalar_field[3][0] - I*g_scalar_field[0][0];
+       else if (tauindex == 1){
+         if (smearedcorrelator_BSM == 1){
+           a11=  +1.*g_smeared_scalar_field[1][0] + I*g_smeared_scalar_field[2][0];
+           a12=  -1.*g_smeared_scalar_field[3][0] - I*g_smeared_scalar_field[0][0];
 
-         a21=  -1.*g_scalar_field[3][0] + I*g_scalar_field[0][0];
-         a22=  -1.*g_scalar_field[1][0] - I*g_scalar_field[2][0];
+           a21=  -1.*g_smeared_scalar_field[3][0] + I*g_smeared_scalar_field[0][0];
+           a22=  -1.*g_smeared_scalar_field[1][0] + I*g_smeared_scalar_field[2][0];
+         }
+         else{
+           a11=  +1.*g_scalar_field[1][0] + I*g_scalar_field[2][0];
+           a12=  -1.*g_scalar_field[3][0] - I*g_scalar_field[0][0];
+
+           a21=  -1.*g_scalar_field[3][0] + I*g_scalar_field[0][0];
+           a22=  -1.*g_scalar_field[1][0] + I*g_scalar_field[2][0];
+         }
        }
-     }
-     else  if (tauindex == 2){
-       if (smearedcorrelator_BSM == 1){ 
-         a11=  +1.*g_smeared_scalar_field[0][0] - I*g_smeared_scalar_field[3][0];
-         a12=  +1.*g_smeared_scalar_field[2][0] + I*g_smeared_scalar_field[1][0];
+       else if (tauindex == 2){
+         if (smearedcorrelator_BSM == 1){
+           a11=  +1.*g_smeared_scalar_field[0][0] + I*g_smeared_scalar_field[3][0];
+           a12=  +1.*g_smeared_scalar_field[2][0] + I*g_smeared_scalar_field[1][0];
 
-         a21=  +1.*g_smeared_scalar_field[2][0] - I*g_smeared_scalar_field[1][0];
-         a22=  -1.*g_smeared_scalar_field[0][0] - I*g_smeared_scalar_field[3][0];
-       }
-       else{
-         a11=  +1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
-         a12=  +1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
+           a21=  +1.*g_smeared_scalar_field[2][0] - I*g_smeared_scalar_field[1][0];
+           a22=  -1.*g_smeared_scalar_field[0][0] + I*g_smeared_scalar_field[3][0];
+         }
+         else{
+           a11=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
+           a12=  +1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
 
-         a21=  +1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
-         a22=  -1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
+           a21=  +1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
+           a22=  -1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
+         }
        }
      }
    }
-   else if (dagger == NO_DAGG){
-     if (tauindex == 0){
-       if (smearedcorrelator_BSM == 1){
-         a11=  -1.*g_smeared_scalar_field[2][0] + I*g_smeared_scalar_field[1][0];
-         a12=  +1.*g_smeared_scalar_field[0][0] - I*g_smeared_scalar_field[3][0];
+   else if ( dir == RIGHT){
+     if (dagger == DAGGER){
+       if (tauindex == 0){
+         if (smearedcorrelator_BSM == 1){
+           a11=  +1.*g_smeared_scalar_field[2][0] - I*g_smeared_scalar_field[1][0];
+           a12=  +1.*g_smeared_scalar_field[0][0] + I*g_smeared_scalar_field[3][0];
 
-         a21=  +1.*g_smeared_scalar_field[0][0] + I*g_smeared_scalar_field[3][0];
-         a22=  +1.*g_smeared_scalar_field[2][0] + I*g_smeared_scalar_field[1][0];
+           a21=  +1.*g_smeared_scalar_field[0][0] - I*g_smeared_scalar_field[3][0];
+           a22=  -1.*g_smeared_scalar_field[2][0] - I*g_smeared_scalar_field[1][0];
+         }
+         else{
+           a11=  +1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
+           a12=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
+
+           a21=  +1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
+           a22=  -1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
+         }
        }
-       else{
-         a11=  -1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
-         a12=  +1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
+       else  if (tauindex == 1){
+         if (smearedcorrelator_BSM == 1) {
+           a11=  -1.*g_smeared_scalar_field[1][0] - I*g_smeared_scalar_field[2][0];
+           a12=  +1.*g_smeared_scalar_field[3][0] - I*g_smeared_scalar_field[0][0];
 
-         a21=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
-         a22=  +1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
+           a21=  +1.*g_smeared_scalar_field[3][0] + I*g_smeared_scalar_field[0][0];
+           a22=  +1.*g_smeared_scalar_field[1][0] - I*g_smeared_scalar_field[2][0];
+         }
+         else{
+           a11=  -1.*g_scalar_field[1][0] - I*g_scalar_field[2][0];
+           a12=  +1.*g_scalar_field[3][0] - I*g_scalar_field[0][0];
+
+           a21=  +1.*g_scalar_field[3][0] + I*g_scalar_field[0][0];
+           a22=  +1.*g_scalar_field[1][0] - I*g_scalar_field[2][0];
+         }
+       }
+       else  if (tauindex == 2){
+         if (smearedcorrelator_BSM == 1){
+           a11=  +1.*g_smeared_scalar_field[0][0] - I*g_smeared_scalar_field[3][0];
+           a12=  -1.*g_smeared_scalar_field[2][0] - I*g_smeared_scalar_field[1][0];
+
+           a21=  -1.*g_smeared_scalar_field[2][0] + I*g_smeared_scalar_field[1][0];
+           a22=  -1.*g_smeared_scalar_field[0][0] - I*g_smeared_scalar_field[3][0];
+         }
+         else{
+           a11=  +1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
+           a12=  -1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
+
+           a21=  -1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
+           a22=  -1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
+         }
        }
      }
-     else if (tauindex == 1){
-      if (smearedcorrelator_BSM == 1){
-         a11=  +1.*g_smeared_scalar_field[1][0] + I*g_smeared_scalar_field[2][0];
-         a12=  -1.*g_smeared_scalar_field[3][0] - I*g_smeared_scalar_field[0][0];
+     else if (dagger == NO_DAGG){
+       if (tauindex == 0){
+         if (smearedcorrelator_BSM == 1){
+           a11=  +1.*g_smeared_scalar_field[2][0] + I*g_smeared_scalar_field[1][0];
+           a12=  +1.*g_smeared_scalar_field[0][0] + I*g_smeared_scalar_field[3][0];
 
-         a21=  -1.*g_smeared_scalar_field[3][0] + I*g_smeared_scalar_field[0][0];
-         a22=  -1.*g_smeared_scalar_field[1][0] + I*g_smeared_scalar_field[2][0];
-      }
-      else{
-         a11=  +1.*g_scalar_field[1][0] + I*g_scalar_field[2][0];
-         a12=  -1.*g_scalar_field[3][0] - I*g_scalar_field[0][0];
+           a21=  +1.*g_smeared_scalar_field[0][0] - I*g_smeared_scalar_field[3][0];
+           a22=  -1.*g_smeared_scalar_field[2][0] + I*g_smeared_scalar_field[1][0];
+         }
+         else{
+           a11=  +1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
+           a12=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
 
-         a21=  -1.*g_scalar_field[3][0] + I*g_scalar_field[0][0];
-         a22=  -1.*g_scalar_field[1][0] + I*g_scalar_field[2][0];
-      }
+           a21=  +1.*g_scalar_field[0][0] - I*g_scalar_field[3][0];
+           a22=  -1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
+         }
+       }
+       else if (tauindex == 1){
+         if (smearedcorrelator_BSM == 1){
+           a11=  -1.*g_smeared_scalar_field[1][0] + I*g_smeared_scalar_field[2][0];
+           a12=  +1.*g_smeared_scalar_field[3][0] - I*g_smeared_scalar_field[0][0];
+
+           a21=  +1.*g_smeared_scalar_field[3][0] + I*g_smeared_scalar_field[0][0];
+           a22=  +1.*g_smeared_scalar_field[1][0] + I*g_smeared_scalar_field[2][0];
+         }
+         else{
+           a11=  -1.*g_scalar_field[1][0] + I*g_scalar_field[2][0];
+           a12=  +1.*g_scalar_field[3][0] - I*g_scalar_field[0][0];
+
+           a21=  +1.*g_scalar_field[3][0] + I*g_scalar_field[0][0];
+           a22=  +1.*g_scalar_field[1][0] + I*g_scalar_field[2][0];
+         }
+       }
+       else if (tauindex == 2){
+         if (smearedcorrelator_BSM == 1){
+           a11=  +1.*g_smeared_scalar_field[0][0] + I*g_smeared_scalar_field[3][0];
+           a12=  -1.*g_smeared_scalar_field[2][0] - I*g_smeared_scalar_field[1][0];
+
+           a21=  -1.*g_smeared_scalar_field[2][0] + I*g_smeared_scalar_field[1][0];
+           a22=  -1.*g_smeared_scalar_field[0][0] + I*g_smeared_scalar_field[3][0];
+         }
+         else{
+           a11=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
+           a12=  -1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
+
+           a21=  -1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
+           a22=  -1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
+         }
+       }
      }
-     else if (tauindex == 2){
-      if (smearedcorrelator_BSM == 1){
-         a11=  +1.*g_smeared_scalar_field[0][0] + I*g_smeared_scalar_field[3][0];
-         a12=  +1.*g_smeared_scalar_field[2][0] + I*g_smeared_scalar_field[1][0];
-
-         a21=  +1.*g_smeared_scalar_field[2][0] - I*g_smeared_scalar_field[1][0];
-         a22=  -1.*g_smeared_scalar_field[0][0] + I*g_smeared_scalar_field[3][0];
-      }
-      else{
-         a11=  +1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
-         a12=  +1.*g_scalar_field[2][0] + I*g_scalar_field[1][0];
-
-         a21=  +1.*g_scalar_field[2][0] - I*g_scalar_field[1][0];
-         a22=  -1.*g_scalar_field[0][0] + I*g_scalar_field[3][0];
-      }
-     }
-     else{
-      a11=0.;
-      a12=0.;
-      a21=0.;
-      a22=0.;
-      if (g_cart_id == 0){printf("Wrong Pauli matrix index\n");exit(1);};
-    }
    }
    for (i=0; i<T_global; ++i){
      dest[2*i +0]= a11* source_copy[2*i + 0] + a12* source_copy[2*i + 1];
@@ -489,6 +591,7 @@ static void taui_spinor( bispinor *dest, bispinor *source, int tauindex ){
    _spinor_assign(tmp.sp_up, source->sp_up);
    _spinor_assign(tmp.sp_dn, source->sp_dn);
 
+
    if (tauindex == 0 ){
     _vector_assign(tmp2        , tmp.sp_up.s0);
     _vector_assign(tmp.sp_up.s0, tmp.sp_dn.s0);
@@ -497,6 +600,15 @@ static void taui_spinor( bispinor *dest, bispinor *source, int tauindex ){
     _vector_assign(tmp2        , tmp.sp_up.s1);
     _vector_assign(tmp.sp_up.s1, tmp.sp_dn.s1);
     _vector_assign(tmp.sp_dn.s1, tmp2);
+
+    _vector_assign(tmp2        , tmp.sp_up.s2);
+    _vector_assign(tmp.sp_up.s2, tmp.sp_dn.s2);
+    _vector_assign(tmp.sp_dn.s2, tmp2);
+
+    _vector_assign(tmp2        , tmp.sp_up.s3);
+    _vector_assign(tmp.sp_up.s3, tmp.sp_dn.s3);
+    _vector_assign(tmp.sp_dn.s3, tmp2);
+
  
     _spinor_assign(dest->sp_up, tmp.sp_up);
     _spinor_assign(dest->sp_dn, tmp.sp_dn);
@@ -509,6 +621,14 @@ static void taui_spinor( bispinor *dest, bispinor *source, int tauindex ){
     _vector_assign(tmp2             ,tmp.sp_up.s1);
     _vector_i_mul( tmp.sp_up.s1, -1 ,tmp.sp_dn.s1);
     _vector_i_mul( tmp.sp_dn.s1, +1, tmp2);   
+
+    _vector_assign(tmp2             ,tmp.sp_up.s2);
+    _vector_i_mul( tmp.sp_up.s2, -1 ,tmp.sp_dn.s2);
+    _vector_i_mul( tmp.sp_dn.s2, +1 ,tmp2);
+
+    _vector_assign(tmp2             ,tmp.sp_up.s3);
+    _vector_i_mul( tmp.sp_up.s3, -1 ,tmp.sp_dn.s3);
+    _vector_i_mul( tmp.sp_dn.s3, +1, tmp2);
      
     _spinor_assign(dest->sp_up, tmp.sp_up);
     _spinor_assign(dest->sp_dn, tmp.sp_dn);
@@ -516,6 +636,10 @@ static void taui_spinor( bispinor *dest, bispinor *source, int tauindex ){
    else if (tauindex == 2 ){
     _vector_mul(tmp.sp_dn.s0, -1, tmp.sp_dn.s0);
     _vector_mul(tmp.sp_dn.s1, -1, tmp.sp_dn.s1);
+
+    _vector_mul(tmp.sp_dn.s2, -1, tmp.sp_dn.s2);
+    _vector_mul(tmp.sp_dn.s3, -1, tmp.sp_dn.s3);
+
      
     _spinor_assign(dest->sp_up, tmp.sp_up);
     _spinor_assign(dest->sp_dn, tmp.sp_dn);
@@ -535,7 +659,7 @@ static void phi0_taui_commutator( _Complex double *dest,int tauindex ){
    }
    for (i=0; i<2*T_global; ++i)
      source_copy[i]=dest[i];
-   if (tauindex == 3){
+   if (tauindex == 2){
      if (smearedcorrelator_BSM == 1){
        a11=0.;
        a12=-2.*g_smeared_scalar_field[2][0]-2.*I*g_smeared_scalar_field[1][0];
@@ -549,21 +673,21 @@ static void phi0_taui_commutator( _Complex double *dest,int tauindex ){
        a22=0.;
      }
    }
-   if (tauindex == 2){
+   if (tauindex == 1){
      if (smearedcorrelator_BSM == 1){
-       a11=+2.*g_smeared_scalar_field[1][0];
-       a12=-2.*g_smeared_scalar_field[3][0];
-       a21=-2.*g_smeared_scalar_field[3][0];
-       a22=-2.*g_smeared_scalar_field[1][0];
+       a11=-2.*g_smeared_scalar_field[1][0];
+       a12=+2.*g_smeared_scalar_field[3][0];
+       a21=+2.*g_smeared_scalar_field[3][0];
+       a22=+2.*g_smeared_scalar_field[1][0];
      }
      else{
-       a11=+2.*g_scalar_field[1][0];
-       a12=-2.*g_scalar_field[3][0];
-       a21=-2.*g_scalar_field[3][0];
-       a22=-2.*g_scalar_field[1][0];
+       a11=-2.*g_scalar_field[1][0];
+       a12=+2.*g_scalar_field[3][0];
+       a21=+2.*g_scalar_field[3][0];
+       a22=+2.*g_scalar_field[1][0];
      }
    }
-   if (tauindex == 1){
+   if (tauindex == 0){
      if (smearedcorrelator_BSM == 1){
        a11=+2.*  g_smeared_scalar_field[2][0];
        a12=+2.*I*g_smeared_scalar_field[3][0];
@@ -597,7 +721,7 @@ static void phi0_taui_anticommutator( _Complex double *dest, int tauindex, int d
    }
    for (i=0; i<2*T_global; ++i)
      source_copy[i]=dest[i];
-   if ( tauindex == 3){
+   if ( tauindex == 2){
      if (dagger == NO_DAGG){
        if (smearedcorrelator_BSM == 1){
          a11=2.*(+1.*g_smeared_scalar_field[0][0]+1.*I*g_smeared_scalar_field[3][0]);
@@ -624,43 +748,43 @@ static void phi0_taui_anticommutator( _Complex double *dest, int tauindex, int d
          a12=0.;
          a21=0.;
          a22=2.*(-1.*g_scalar_field[0][0]-1.*I*g_scalar_field[3][0]);
-       }
+       } 
 
      }
    }
-   if ( tauindex == 2){
+   if ( tauindex == 1){
      if (dagger == NO_DAGG){
        if (smearedcorrelator_BSM == 1){
-         a11=-2.*I*g_smeared_scalar_field[2][0];
-         a12= 2.*I*g_smeared_scalar_field[0][0];
-         a21=-2.*I*g_smeared_scalar_field[0][0];
-         a22=-2.*I*g_smeared_scalar_field[2][0];
+         a11=+2.*I*g_smeared_scalar_field[2][0];
+         a12=-2.*I*g_smeared_scalar_field[0][0];
+         a21=+2.*I*g_smeared_scalar_field[0][0];
+         a22=+2.*I*g_smeared_scalar_field[2][0];
        }
        else{
-         a11=-2.*I*g_scalar_field[2][0];
-         a12= 2.*I*g_scalar_field[0][0];
-         a21=-2.*I*g_scalar_field[0][0];
-         a22=-2.*I*g_scalar_field[2][0];
+         a11=+2.*I*g_scalar_field[2][0];
+         a12=-2.*I*g_scalar_field[0][0];
+         a21=+2.*I*g_scalar_field[0][0];
+         a22=+2.*I*g_scalar_field[2][0];
        }
      }
      if (dagger == DAGGER){
        if (smearedcorrelator_BSM == 1){
-         a11= 2.*I*g_smeared_scalar_field[2][0];
-         a12= 2.*I*g_smeared_scalar_field[0][0];
-         a21=-2.*I*g_smeared_scalar_field[0][0];
-         a22= 2.*I*g_smeared_scalar_field[2][0];
+         a11=-2.*I*g_smeared_scalar_field[2][0];
+         a12=-2.*I*g_smeared_scalar_field[0][0];
+         a21=+2.*I*g_smeared_scalar_field[0][0];
+         a22=-2.*I*g_smeared_scalar_field[2][0];
        }
        else{
-         a11= 2.*I*g_scalar_field[2][0];
-         a12= 2.*I*g_scalar_field[0][0];
-         a21=-2.*I*g_scalar_field[0][0];
-         a22= 2.*I*g_scalar_field[2][0];
+         a11=-2.*I*g_scalar_field[2][0];
+         a12=-2.*I*g_scalar_field[0][0];
+         a21=+2.*I*g_scalar_field[0][0];
+         a22=-2.*I*g_scalar_field[2][0];
        }
 
      } 
    }
 
-   if ( tauindex == 1){
+   if ( tauindex == 0){
      if (dagger == NO_DAGG){
        if (smearedcorrelator_BSM == 1){
          a11=2.*I*g_smeared_scalar_field[1][0];
@@ -1168,6 +1292,7 @@ void density_density_1234_s0s0( bispinor ** propfields, int type_1234, _Complex 
    for (i=0; i<T_global; ++i){
       if (g_cart_id == 0){
         printf("DDS0S0 %d %.3d %10.10e %10.10e\n", type, i, creal(flavortrace[i])/4.,cimag(flavortrace[i])/4.);
+        fflush(stdout);
       }
       (*results)[i]=flavortrace[i]/4.;
    }
@@ -1322,10 +1447,10 @@ void density_density_1234( bispinor ** propfields, int type_1234, _Complex doubl
        TYPE  4      phi(ytilde)^dagger*tau_i*(1-gamma5)/2*S(ytilde, x)*tau_i*phi(x)          (1+g5)/2*S(x  ,ytilde)
 */
          if ( (type_1234 == TYPE_1) || (type_1234 == TYPE_3) ){
-           taui_scalarfield_flavoronly( spinortrace, tauindex, NO_DAGG );
+           taui_scalarfield_flavoronly( spinortrace, tauindex, NO_DAGG, LEFT );
          }
          else if ( (type_1234 == TYPE_4) || ( type_1234 == TYPE_2) ){
-           taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER  );
+           taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER, LEFT  );
          }
          //delta(flavor component in spinortrace, f1) for all time slices
          trace_in_flavor( flavortrace, spinortrace, f1 );
@@ -1335,6 +1460,7 @@ void density_density_1234( bispinor ** propfields, int type_1234, _Complex doubl
       for (i=0; i<T_global; ++i){
         if (g_cart_id == 0){
          printf( "DDTAU%dTAU%d %d %.3d %10.10e %10.10e\n", tauindex,tauindex,type, i, creal(flavortrace[i])/4.,cimag(flavortrace[i])/4.);
+         fflush(stdout);
         }
         (*results)[i+T_global*tauindex]=flavortrace[i]/4.;
       }
@@ -1348,6 +1474,7 @@ void density_density_1234( bispinor ** propfields, int type_1234, _Complex doubl
    for (i=0; i<T_global; ++i){
       if (g_cart_id == 0){
         printf("DD %d %.3d %10.10e %10.10e\n", type, i, creal(paulitrace[i])/4.,cimag(paulitrace[i])/4.);
+        fflush(stdout);
       }
       (*results)[i+3*T_global]=paulitrace[i]/4.;
    }
@@ -1384,8 +1511,8 @@ void density_density_1234_sxsx( bispinor ** propfields, int type_1234, _Complex 
    }
    *results=(_Complex double *)malloc(sizeof(_Complex double)*4*T_global);
    if (*results == NULL){
-      printf("Error in sxsx\n");
-      exit(1);
+     printf("Error in sxsx\n");
+     exit(1);
    }
    if ( ( type_1234 == TYPE_1 )|| ( type_1234 == TYPE_3 ) ) {
      spinorstart=0;
@@ -1495,10 +1622,10 @@ void density_density_1234_sxsx( bispinor ** propfields, int type_1234, _Complex 
        TYPE  4      phi(ytilde)^dagger*tau_i*(1-gamma5)/2*S(ytilde, x)*tau_i*phi(x)          (1+g5)/2*S(x  ,ytilde)
 */
        if ( (type_1234 == TYPE_1) || (type_1234 == TYPE_3) ){
-         taui_scalarfield_flavoronly( spinortrace, tauindex, NO_DAGG );
+         taui_scalarfield_flavoronly( spinortrace, tauindex, NO_DAGG, LEFT );
        }
        else if ( (type_1234 == TYPE_4) || ( type_1234 == TYPE_2) ){
-         taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER  );
+         taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER, LEFT  );
        }
          //delta(flavor component in spinortrace, f1) for all time slices
        trace_in_flavor( flavortrace, spinortrace, f1 );
@@ -1508,6 +1635,7 @@ void density_density_1234_sxsx( bispinor ** propfields, int type_1234, _Complex 
       for (i=0; i<T_global; ++i){
         if (g_cart_id == 0){
           printf("DDS%dS%d %d %.3d %10.10e %10.10e\n", tauindex+1, tauindex+1, type, i, creal(flavortrace[i])/4.,cimag(flavortrace[i])/4.);
+          fflush(stdout);
         }
       }
       //sum for all Pauli matrices
@@ -1523,6 +1651,7 @@ void density_density_1234_sxsx( bispinor ** propfields, int type_1234, _Complex 
    for (i=0; i<T_global; ++i){
       if (g_cart_id == 0){
         printf("DD %d %.3d %10.10e %10.10e\n", type, i, creal(paulitrace[i])/4.,cimag(paulitrace[i])/4.);
+        fflush(stdout);
       }
       (*results)[i+3*T_global]=paulitrace[i]/4.;
    }
@@ -1536,7 +1665,7 @@ void density_density_1234_sxsx( bispinor ** propfields, int type_1234, _Complex 
 
 
 
-void vector_current_density_1234( bispinor ** propfields, int type_1234,int taudensity, int taucurrent, _Complex double **results ){
+void vector_axial_current_density_1234( bispinor ** propfields, int type_1234,int taudensity, int taucurrent, int vectororaxial, _Complex double **results ){
    int ix,i;
    int f1,c1,s1;
    int spinorstart=0, spinorend=4;
@@ -1547,6 +1676,7 @@ void vector_current_density_1234( bispinor ** propfields, int type_1234,int taud
    _Complex double *spinortrace;
    _Complex double *flavortrace;
    int type;
+   su3 * restrict upm;
 
 #if defined MPI
    int count;
@@ -1573,11 +1703,11 @@ void vector_current_density_1234( bispinor ** propfields, int type_1234,int taud
    }
 
 
-   if ( ( type_1234 == TYPE_1 )|| ( type_1234 == TYPE_2 ) ) {
+   if ( ( type_1234 == TYPE_1 )|| ( type_1234 == TYPE_3 ) ) {
      spinorstart=0;
      spinorend  =2;
    }
-   else if ( ( type_1234 == TYPE_3) || (type_1234 == TYPE_4) ){
+   else if ( ( type_1234 == TYPE_2) || (type_1234 == TYPE_4) ){
      spinorstart=2;
      spinorend  =4;
    }
@@ -1620,23 +1750,27 @@ void vector_current_density_1234( bispinor ** propfields, int type_1234,int taud
          for (i=0; i<8; ++i)
            colortrace[i]=0.;
          for (c1=0; c1<3; ++c1){
-//for the up and down quark gauge field multiplication
-           if ( (type_1234 == TYPE_2) || (type_1234 == TYPE_4) ){
-            bispinor_mult_su3matrix( &running, &propfields[12*s1+4*c1+2*f1][g_idn[ix][TUP]], &g_gauge_field[g_idn[ix][TUP]][TUP], DAGGER);
+           if ( (type_1234 == TYPE_1) || (type_1234 == TYPE_2) ){
+            bispinor_mult_su3matrix( &running, &propfields[12*s1+4*c1+2*f1][ix], &g_gauge_field[g_idn[ix][TUP]][TUP], NO_DAGG);
            }
-           else if ((type_1234 == TYPE_1) || ( type_1234 == TYPE_3)){
-            bispinor_mult_su3matrix( &running, &propfields[12*s1+4*c1+2*f1][ix],  &g_gauge_field[g_idn[ix][TUP]][TUP], NO_DAGG);
+           else if ((type_1234 == TYPE_3) || ( type_1234 == TYPE_4)){
+            bispinor_mult_su3matrix( &running, &propfields[12*s1+4*c1+2*f1][g_idn[ix][TUP]],  &g_gauge_field[g_idn[ix][TUP]][TUP], DAGGER);
            }
 
+           if (vectororaxial == 1){
+            bispinor_timesgamma5(&running);
+           }
 //Multiplication with gamma0
            bispinor_timesgamma0(&running);
+
 //Multiplication with tau_i input parameter for the current
            bispinor_taui(&running, taucurrent);
+
 //Backward propagator multiplication
-           if (type_1234 == TYPE_1 || type_1234 == TYPE_3){
+           if (type_1234 == TYPE_1 || type_1234 == TYPE_2){
               multiply_backward_propagator(&running, propfields, &running, ix, TDOWN );
            }
-           else if (type_1234 == TYPE_2 || type_1234 == TYPE_4){
+           else if (type_1234 == TYPE_3 || type_1234 == TYPE_4){
               multiply_backward_propagator(&running, propfields, &running, ix, NODIR );
            }
            trace_in_color(colortrace,&running,c1);
@@ -1654,155 +1788,36 @@ void vector_current_density_1234( bispinor ** propfields, int type_1234,int taud
            // delta (spinor components of spacetrace, s1) for all time slices and flavor indices
        trace_in_spinor(spinortrace, spacetrace, s1);
      }//End of trace in spinor space
-     phi0_taui_commutator( spinortrace, taudensity );
-     //delta(flavor component in spinortrace, f1) for all time slices
-     trace_in_flavor( flavortrace, spinortrace, f1 );
-   } //End of trace in flavor space
-   type = type_1234 == TYPE_1 ? 1 : type_1234 == TYPE_2 ? 2 : type_1234 == TYPE_3 ? 3 : 4 ;
-   if (g_cart_id == 0){printf("Vector current Density correlator type (%s) for tau matrix 3 results\n", type_1234 == TYPE_1 ? "1" : type_1234 == TYPE_2 ? "2" : type_1234 == TYPE_3 ? "3" : "4");}
-   for (i=0; i<T_global; ++i){
-     if (g_cart_id == 0){
-      printf("VECTORCURRENT%dDENSITY%d %d %.3d %10.10e %10.10e\n", taucurrent,taudensity, type, i, creal(flavortrace[i])/4.,cimag(flavortrace[i])/4.);
+/*
+     if ( type_1234 == TYPE_1 || type_1234 == TYPE_3 ){
+       taui_scalarfield_flavoronly( spinortrace, taudensity, NO_DAGG, RIGHT );
      }
-     (*results)[i]=flavortrace[i]/4.;
-   }
-   free(flavortrace);
-   free(spacetrace);
-   free(spinortrace);
-   free(colortrace);
-}
-
-
-void axial_current_density_1234( bispinor ** propfields, int type_1234, int taudensity, int taucurrent, _Complex double **results ){
-   int ix,i;
-   int f1,c1,s1;
-   int spinorstart=0, spinorend=4;
-   bispinor running;
-
-   _Complex double *colortrace;
-   _Complex double *spacetrace;
-   _Complex double *spinortrace;
-   _Complex double *flavortrace;
-   int type;
-
-#if defined MPI
-   int count;
-   MPI_Status  statuses[8];
-   MPI_Request *request;
-   request=( MPI_Request *) malloc(sizeof(MPI_Request)*8);
-#endif
-
-   colortrace=(_Complex double *)malloc(sizeof(_Complex double) *8);
-   spacetrace=(_Complex double *)malloc(sizeof(_Complex double) *8*T_global);
-   spinortrace=(_Complex double *)malloc(sizeof(_Complex double)*2*T_global);
-   flavortrace=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
-
-   if ( (colortrace == NULL) || (spacetrace == NULL) || (spinortrace == NULL) || (flavortrace == NULL)  )
-   {
-     printf("Error in mem allocation in axialvector_current_density_1234\n");
-     exit(1);
-   }
-   *results=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
-   if (*results == NULL){
-     printf("Error in mem allocation axial current density\n");
-     exit(1);
-   }
-   if ( ( type_1234 == TYPE_1 )|| ( type_1234 == TYPE_2 ) ) {
-     spinorstart=0;
-     spinorend  =2;
-   }
-   else if ( ( type_1234 == TYPE_3) || (type_1234 == TYPE_4) ){
-     spinorstart=2;
-     spinorend  =4;
-   }
-   else{
-     if (g_cart_id ==0) fprintf(stdout, "Wrong arument for type_1234, it can only be TYPE_1, TYPE_2, TYPE_3, TYPE_4\n");
-     exit(1);
-   }
-
-//Doing the neccessary communication
-#if defined MPI
-   for (s1=spinorstart; s1<spinorend; ++s1)
-      for (c1=0; c1<3; ++c1)
-         for (f1=0; f1<2; ++f1){
-            count=0;
-            generic_exchange_direction_nonblocking( propfields[12*s1 + 4*c1 + 2*f1 + 0], sizeof(bispinor), TDOWN, request, &count );
-            MPI_Waitall( count, request, statuses);
-            count=0;
-            generic_exchange_direction_nonblocking( propfields[12*s1 + 4*c1 + 2*f1 + 1], sizeof(bispinor), TDOWN, request, &count);
-            MPI_Waitall( count, request, statuses);
-         }
-   free(request);
-#endif
-
-
-//Trace over up and down flavors
-   for (i=0; i<T_global; ++i)
-     flavortrace[i]=0.;
-   for (f1=0; f1<2; ++f1){
-//Trace over the spinor indices you have to trace only over those two spinor 
-//component that appear in the final spinor
-     for (i=0; i<2*T_global; ++i)
-       spinortrace[i]=0.;
-
-     for (s1= spinorstart; s1<spinorend; ++s1){
-//Trace over the spatial indices
-       for (i=0; i<8*T_global; ++i)
-         spacetrace[i]=0.;
-       for (ix = 0; ix< VOLUME; ++ix){
-//Trace over the color indices for each sites
-         for (i=0; i<8; ++i)
-           colortrace[i]=0.;
-         for (c1=0; c1<3; ++c1){
-//for the up and down quark gauge field multiplication
-           if ( (type_1234 == TYPE_2) || (type_1234 == TYPE_4) ){
-            bispinor_mult_su3matrix( &running, &propfields[12*s1+4*c1+2*f1][g_idn[ix][TUP]], &g_gauge_field[g_idn[ix][TUP]][TUP], DAGGER);
-           }
-           else if ((type_1234 == TYPE_1) || ( type_1234 == TYPE_3)){
-            bispinor_mult_su3matrix( &running, &propfields[12*s1+4*c1+2*f1][ix], &g_gauge_field[g_idn[ix][TUP]][TUP], NO_DAGG);
-           }
-//Multiplication with gamma5
-           bispinor_timesgamma5(&running);
-//Multiplication with gamma0
-           bispinor_timesgamma0(&running);
-//Multiplication with tauindex
-           bispinor_taui(&running, taucurrent);
-//Backward propagator multiplication
-           if (type_1234 == TYPE_1 || type_1234 == TYPE_3){
-              multiply_backward_propagator(&running, propfields, &running, ix, TDOWN );
-           }
-           else if (type_1234 == TYPE_2 || type_1234 == TYPE_4){
-              multiply_backward_propagator(&running, propfields, &running, ix, NODIR );
-           }
-           trace_in_color(colortrace,&running,c1);
-         }  //End of trace color
-         trace_in_space(spacetrace,colortrace,ix);
-       } //End of trace space
-//Gather the results from all nodes to complete the trace in space
-#if defined MPI
-       for (i=0; i<8*T_global; ++i){
-         _Complex double tmp;
-        MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
-        spacetrace[i]= tmp;
-       }
-#endif
-           // delta (spinor components of spacetrace, s1) for all time slices and flavor indices
-       trace_in_spinor(spinortrace, spacetrace, s1);
-     }//End of trace in spinor space    
-     if ( type_1234 == TYPE_1 || type_1234 == TYPE_2 ){
+     else if ( type_1234 == TYPE_2 || type_1234 == TYPE_4 ){
+       taui_scalarfield_flavoronly( spinortrace, taudensity, DAGGER, RIGHT  );
+     }*/
+     if (vectororaxial == 0){
+       phi0_taui_commutator( spinortrace, taudensity );
+     }
+     else if (vectororaxial == 1){
+      if ( type_1234 == TYPE_1 || type_1234 == TYPE_3 ){
        phi0_taui_anticommutator( spinortrace, taudensity, NO_DAGG );
-     }
-     else if ( type_1234 == TYPE_3 || type_1234 == TYPE_4 ){
+      }
+      else if ( type_1234 == TYPE_2 || type_1234 == TYPE_4 ){
        phi0_taui_anticommutator( spinortrace, taudensity, DAGGER );
+      }      
      }
      //delta(flavor component in spinortrace, f1) for all time slices
      trace_in_flavor( flavortrace, spinortrace, f1 );
    } //End of trace in flavor space
    type = type_1234 == TYPE_1 ? 1 : type_1234 == TYPE_2 ? 2 : type_1234 == TYPE_3 ? 3 : 4 ;
-   if (g_cart_id == 0){printf( "axial current Density correlator type (%s) for tau matrix 3 results\n", type_1234 == TYPE_1 ? "1" : type_1234 == TYPE_2 ? "2" : type_1234 == TYPE_3 ? "3" : "4");}
+   if (g_cart_id == 0){printf("Vector current Density correlator type (%s) for tau matrix current %d density %d results\n", type_1234 == TYPE_1 ? "1" : type_1234 == TYPE_2 ? "2" : type_1234 == TYPE_3 ? "3" : "4", taucurrent, taudensity);}
    for (i=0; i<T_global; ++i){
      if (g_cart_id == 0){
-      printf("AXIALCURRENT%dDENSITY%d %d %.3d %10.10e %10.10e\n", taucurrent, taudensity, type, i, creal(flavortrace[i])/4.,cimag(flavortrace[i])/4.);
+      if (vectororaxial == 0) 
+        printf("VECTORCURRENT%dDENSITY%d %d %.3d %10.10e %10.10e\n", taucurrent,taudensity, type, i, creal(flavortrace[i])/4.,cimag(flavortrace[i])/4.);
+      else 
+       printf("AXIALCURRENT%dDENSITY%d %d %.3d %10.10e %10.10e\n", taucurrent,taudensity, type, i, creal(flavortrace[i])/4.,cimag(flavortrace[i])/4.);
+      fflush(stdout);
      }
      (*results)[i]=flavortrace[i]/4.;
    }
@@ -1811,8 +1826,6 @@ void axial_current_density_1234( bispinor ** propfields, int type_1234, int taud
    free(spinortrace);
    free(colortrace);
 }
-
-
 
 
 void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int type_ab, _Complex double **results ){
@@ -1859,7 +1872,7 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
    }
    else{
     if (g_cart_id == 0){
-      fprintf(stdout, "Wrong argument for type_ab, it can only be TYPE_A or TYPE_B\n");exit(1);}                                                                                                                                                                  
+      fprintf(stdout, "Wrong argument for type_ab, it can only be TYPE_A or TYPE_B\n");exit(1);}
    }
 
 
@@ -1870,14 +1883,14 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
          for (f1=0; f1<2; ++f1){
             count=0;
             generic_exchange_direction_nonblocking( propfields[12*s1 + 4*c1 + 2*f1 + 0], sizeof(bispinor), TDOWN, request, &count );
-            MPI_Waitall( count, request, statuses); 
-            count=0; 
+            MPI_Waitall( count, request, statuses);
+            count=0;
             generic_exchange_direction_nonblocking( propfields[12*s1 + 4*c1 + 2*f1 + 1], sizeof(bispinor), TDOWN, request, &count);
             MPI_Waitall( count, request, statuses);
          }
    free(request);
 #endif
-   
+
 //Trace over the Pauli matrices
    for (i=0; i<T_global; ++i)
       paulitrace[i]=0.;
@@ -1901,9 +1914,9 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
 
 //Trace over the color indices for each sites
 
-               for (i=0; i<8; ++i) 
+               for (i=0; i<8; ++i)
                   colortrace[i]=0.;
-               for (c1=0; c1<3; ++c1){    
+               for (c1=0; c1<3; ++c1){
 /*   
        TYPE  IA OR  IB     U0(x-0)*       (1-g5)/2*S(x  ,ytilde) fixed indices (c1, s1, f1)
        TYPE IIA OR IIB     U0^dagger(x-0)*(1-g5)/2*S(x-0,ytilde) running indices bispinor
@@ -1911,20 +1924,20 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
                   upm = &g_gauge_field[g_idn[ix][TUP]][TUP];
 
 //for the up quark
-                  _vector_null( running.sp_up.s0 ); 
-                  _vector_null( running.sp_up.s1 ); 
-             
+                  _vector_null( running.sp_up.s0 );
+                  _vector_null( running.sp_up.s1 );
+
                   if  ( type_12 == TYPE_I ){
-                    _su3_multiply( running.sp_up.s2, (*upm), propfields[12*s1+4*c1+2*f1][ix].sp_up.s2 ); 
-                    _su3_multiply( running.sp_up.s3, (*upm), propfields[12*s1+4*c1+2*f1][ix].sp_up.s3 ); 
+                    _su3_multiply( running.sp_up.s2, (*upm), propfields[12*s1+4*c1+2*f1][ix].sp_up.s2 );
+                    _su3_multiply( running.sp_up.s3, (*upm), propfields[12*s1+4*c1+2*f1][ix].sp_up.s3 );
 
 
                     _complex_times_vector(running.sp_up.s2,phase_0,running.sp_up.s2);
                     _complex_times_vector(running.sp_up.s3,phase_0,running.sp_up.s3);
                   }
                   else if ( type_12 == TYPE_II ){
-                    _su3_inverse_multiply( running.sp_up.s2, (*upm), propfields[12*s1+4*c1+2*f1][g_idn[ix][TUP]].sp_up.s2 ); 
-                    _su3_inverse_multiply( running.sp_up.s3, (*upm), propfields[12*s1+4*c1+2*f1][g_idn[ix][TUP]].sp_up.s3 ); 
+                    _su3_inverse_multiply( running.sp_up.s2, (*upm), propfields[12*s1+4*c1+2*f1][g_idn[ix][TUP]].sp_up.s2 );
+                    _su3_inverse_multiply( running.sp_up.s3, (*upm), propfields[12*s1+4*c1+2*f1][g_idn[ix][TUP]].sp_up.s3 );
 
                     _complexcjg_times_vector(running.sp_up.s2,phase_0,running.sp_up.s2);
                     _complexcjg_times_vector(running.sp_up.s3,phase_0,running.sp_up.s3);
@@ -1933,15 +1946,15 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
 
 
 //for the dn quark
-                  _vector_null( running.sp_dn.s0 ); 
-                  _vector_null( running.sp_dn.s1 ); 
+                  _vector_null( running.sp_dn.s0 );
+                  _vector_null( running.sp_dn.s1 );
                   if  ( type_12 == TYPE_I ){
-                    _su3_multiply( running.sp_dn.s2, (*upm), propfields[12*s1+4*c1+2*f1][ix].sp_dn.s2 ); 
+                    _su3_multiply( running.sp_dn.s2, (*upm), propfields[12*s1+4*c1+2*f1][ix].sp_dn.s2 );
                     _su3_multiply( running.sp_dn.s3, (*upm), propfields[12*s1+4*c1+2*f1][ix].sp_dn.s3 );
 
                     _complex_times_vector(running.sp_dn.s2,phase_0,running.sp_dn.s2);
                     _complex_times_vector(running.sp_dn.s3,phase_0,running.sp_dn.s3);
- 
+
                   }
                   else if ( type_12 == TYPE_II ){
                     _su3_inverse_multiply( running.sp_dn.s2, (*upm), propfields[12*s1+4*c1+2*f1][g_idn[ix][TUP]].sp_dn.s2 );
@@ -1977,8 +1990,8 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
 /*   
        TYPE  IA OR  IB     S(ytilde, x-0)* tau_i*gamma0*U0(x-0)*       (1-g5)/2*S(x  ,ytilde)
        TYPE IIA OR IIB     S(ytilde, x  )* tau_i*gamma0*U0^dagger(x-0)*(1-g5)/2*S(x-0,ytilde)
-*/ 
-                  if ( type_12 == TYPE_I ){ 
+*/
+                  if ( type_12 == TYPE_I ){
                     multiply_backward_propagator(&running, propfields, &running, ix, TDOWN);
                   }
                   else if ( type_12 == TYPE_II ){
@@ -2005,7 +2018,7 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
             trace_in_spinor(spinortrace, spacetrace, s1);
 
          }//End of trace in spinor space
-   
+
 /*   
        TYPE  IA tau_i*phi(ytilde)        *  (1+gamma5)/2  *   S(ytilde, x-0)*   tau_i*gamma0*U0(x-0)*       (1-g5)/2*   S(x  ,ytilde)
        TYPE  IB phi ^dagger(ytilde)*tau_i *  (1-gamma5)/2  *   S(ytilde, x-0)*   tau_i*gamma0*U0(x-0)*       (1-g5)/2*   S(x  ,ytilde)
@@ -2015,10 +2028,10 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
 
 */
          if ( type_ab == TYPE_A ){
-           taui_scalarfield_flavoronly( spinortrace, tauindex, NO_DAGG );
+           taui_scalarfield_flavoronly( spinortrace, tauindex, NO_DAGG, LEFT );
          }
          else if ( type_ab == TYPE_B){
-           taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER  );
+           taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER, LEFT  );
          }
          //delta(flavor component in spinortrace, f1) for all time slices 
          trace_in_flavor( flavortrace, spinortrace, f1 );
@@ -2034,7 +2047,7 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
       for (i=0;i<T_global; ++i)
          paulitrace[i]+=flavortrace[i];
    } //End of trace for Pauli matrices
-   
+
    if (g_cart_id == 0){printf( "NaiveDirac Current Density correlator type (%s %s) results\n", type_12 == TYPE_I ? "I" : "II",type_ab == TYPE_A ? "a" :"b");}
    for (i=0; i<T_global; ++i){
       if (g_cart_id == 0){
@@ -2046,9 +2059,10 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
    free(paulitrace);
    free(spacetrace);
    free(spinortrace);
-   free(colortrace); 
+   free(colortrace);
 
 }
+
 void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int type_ab, _Complex double **results ){
    int ix,i;
    int f1,c1,s1,tauindex;
@@ -2236,10 +2250,10 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
 
 */ 
          if ( type_ab == TYPE_A ){
-           taui_scalarfield_flavoronly( spinortrace, tauindex, NO_DAGG );
+           taui_scalarfield_flavoronly( spinortrace, tauindex, NO_DAGG, LEFT );
          }
          else if ( type_ab == TYPE_B){
-           taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER  );
+           taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER, LEFT  );
          }
          //delta(flavor component in spinortrace, f1) for all time slices
          trace_in_flavor( flavortrace, spinortrace, f1 );
@@ -2368,10 +2382,10 @@ void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int 
            trace_in_spinor(spinortrace, spacetrace, s1);
          }//End of trace in spinor space
          if ( type_ab == TYPE_A ){
-           taui_scalarfield_flavoronly( spinortrace, tauindex, NO_DAGG );
+           taui_scalarfield_flavoronly( spinortrace, tauindex, NO_DAGG, LEFT);
          }
          else if ( type_ab == TYPE_B ){
-           taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER  );
+           taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER, LEFT  );
          }
          trace_in_flavor( flavortrace, spinortrace, f1 );
        } //End of trace in flavor space
@@ -2487,10 +2501,10 @@ void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int 
             trace_in_spinor(spinortrace, spacetrace, s1);
           }//End of trace in spinor space
           if ( type_ab == TYPE_A ){
-            taui_scalarfield_flavoronly( spinortrace, tauindex, NO_DAGG );
+            taui_scalarfield_flavoronly( spinortrace, tauindex, NO_DAGG, LEFT );
           }
           else if ( type_ab == TYPE_B ){
-            taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER  );
+            taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER, LEFT  );
           }
           trace_in_flavor( flavortrace, spinortrace, f1 );
         } //End of trace in flavor space
@@ -2720,10 +2734,10 @@ void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int 
          } //End of trace in spinor space
 
          if ( type_ab == TYPE_A ){
-           taui_scalarfield_flavoronly( spinortrace, tauindex, NO_DAGG );
+           taui_scalarfield_flavoronly( spinortrace, tauindex, NO_DAGG, LEFT );
          }
          else if ( type_ab == TYPE_B){
-           taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER  );
+           taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER, LEFT  );
          }
          //delta(flavor component in spinortrace, f1) for all time slices
          trace_in_flavor( flavortrace, spinortrace, f1 );
@@ -2848,10 +2862,10 @@ void wilsonterm_current_density_612ab( bispinor ** propfields, int type_12, int 
            trace_in_spinor(spinortrace, spacetrace, s1);
          }//End of trace in spinor space
          if ( type_ab == TYPE_A ){
-           taui_scalarfield_flavoronly( spinortrace, tauindex, NO_DAGG );
+           taui_scalarfield_flavoronly( spinortrace, tauindex, NO_DAGG, LEFT );
          }
          else if ( type_ab == TYPE_B ){
-           taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER  );
+           taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER, LEFT  );
          }
          trace_in_flavor( flavortrace, spinortrace, f1 );
        } //End of trace in flavor space
@@ -2968,10 +2982,10 @@ void wilsonterm_current_density_612ab( bispinor ** propfields, int type_12, int 
             trace_in_spinor(spinortrace, spacetrace, s1);
           }//End of trace in spinor space
           if ( type_ab == TYPE_A ){
-            taui_scalarfield_flavoronly( spinortrace, tauindex, NO_DAGG );
+            taui_scalarfield_flavoronly( spinortrace, tauindex, NO_DAGG, LEFT );
           }
           else if ( type_ab == TYPE_B ){
-            taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER  );
+            taui_scalarfield_flavoronly( spinortrace, tauindex, DAGGER, LEFT  );
           }
           trace_in_flavor( flavortrace, spinortrace, f1 );
         } //End of trace in flavor space
