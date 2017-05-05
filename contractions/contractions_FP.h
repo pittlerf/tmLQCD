@@ -30,4 +30,5 @@ void wilsonterm_current_density_412ab( bispinor ** propagators, int type_12, int
 void wilsonterm_current_density_512ab( bispinor ** propagators, int type_12, int type_ab, _Complex double **res );
 void wilsonterm_current_density_612ab( bispinor ** propagators, int type_12, int type_ab, _Complex double **res );
 void vector_axial_current_density_1234( bispinor ** propfields, int type_1234,int taudensity, int taucurrent, int vectororaxial, _Complex double **results );
+void giancarlodensity( bispinor ** propfields, int tau3, _Complex double  **results );
 #endif

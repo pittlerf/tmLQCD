@@ -566,7 +566,56 @@ int main(int argc, char *argv[]){
                     exit(1);
                   }
                }
-
+               if (giancarlo_BSM == 1){
+                 giancarlodensity( operator_list[op_id].prop, 0, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 if (g_cart_id == 0){
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"GIANCARLOUNITYNONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
+                   }
+                 }
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
+                 giancarlodensity( operator_list[op_id].prop, 1, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 if (g_cart_id == 0){
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"GIANCARLOTAU3NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
+                   }
+                 }
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
+               }
                if (vectorcurrentdensity_BSM == 1){
                  vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_1,0, 1, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){

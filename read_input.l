@@ -818,6 +818,14 @@ inline void rmQuotes(char *str){
     axialcurrentdensity_BSM = 0;
     if(myverbose != 0) printf("  BSM extended axial current times density correlators are not computed (this is the default) line %d operator %d\n", line_of_file, current_operator);
   }
+  {SPC}*giancarlocontraction{EQL}yes {
+    giancarlo_BSM = 1;
+    if(myverbose != 0) printf("  Contractions proposed by Giancarlo are computed line %d operator %d\n", line_of_file, current_operator);
+  }
+  {SPC}*giancarlocontraction{EQL}no {
+    giancarlo_BSM = 0;
+    if(myverbose != 0) printf("  Contractions proposed by Giancarlo are not computed line %d operator %d\n", line_of_file, current_operator);
+  }
 
   {SPC}*nscalarstep{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
@@ -2348,6 +2356,7 @@ int read_input(char * conf_file){
   wilsoncurrentdensitypl2_BSM = _default_wilsoncurrentdensitypl2_BSM;
   vectorcurrentdensity_BSM = _default_vectorcurrentdensity_BSM;
   axialcurrentdensity_BSM = _default_axialcurrentdensity_BSM;
+  giancarlo_BSM = _default_giancarlo_BSM;
   g_rgi_C1 = _default_g_rgi_C1;
   read_source_flag= _default_read_source_flag;
   if(SourceInfo.basename == NULL) SourceInfo.basename = (char*)malloc(100*sizeof(char));

@@ -422,7 +422,7 @@ static void taui_scalarfield_flavoronly( _Complex double *dest, int tauindex, in
        }
      }
    }
-   else if ( dir == RIGHT){
+   else if ( dir == RIGHT ){
      if (dagger == DAGGER){
        if (tauindex == 0){
          if (smearedcorrelator_BSM == 1){
@@ -583,6 +583,168 @@ static void taui_scalarfield_flavoronly_s0s0( _Complex double *dest, int dagger 
      dest[2*i +1]= a21* source_copy[2*i + 0] + a22* source_copy[2*i + 1];
    }
    free(source_copy);
+}
+static void mult_phi_flavoronly( _Complex double *dest, int dagg){
+   _Complex double *source_copy;
+   _Complex double a11=0.0, a12=0.0, a21=0.0, a22=0.0;
+   int i;
+   source_copy=(_Complex double *)malloc(sizeof(_Complex double)*2*T_global);
+   if (source_copy == NULL){
+     printf("Error in mem allcoation in phi0 tau3 commutator\n");
+     exit(1);
+   }
+   for (i=0; i<2*T_global; ++i)
+     source_copy[i]=dest[i];
+   if ( dagg == NO_DAGG ){
+     if ( smearedcorrelator_BSM == 1 ){
+       a11=+1.*g_smeared_scalar_field[0][0]+1.*I*g_smeared_scalar_field[3][0];
+       a12=+1.*g_smeared_scalar_field[2][0]+1.*I*g_smeared_scalar_field[1][0];
+       a21=-1.*g_smeared_scalar_field[2][0]+1.*I*g_smeared_scalar_field[1][0];
+       a22=+1.*g_smeared_scalar_field[0][0]-1.*I*g_smeared_scalar_field[3][0];
+     }
+     else{
+       a11=+1.*g_scalar_field[0][0]+1.*I*g_scalar_field[3][0];
+       a12=+1.*g_scalar_field[2][0]+1.*I*g_scalar_field[1][0];
+       a21=-1.*g_scalar_field[2][0]+1.*I*g_scalar_field[1][0];
+       a22=+1.*g_scalar_field[0][0]-1.*I*g_scalar_field[3][0];
+     }
+   }
+   else if (dagg == DAGGER){
+     if ( smearedcorrelator_BSM == 1 ){
+       a11=+1.*g_smeared_scalar_field[0][0]-1.*I*g_smeared_scalar_field[3][0];
+       a12=-1.*g_smeared_scalar_field[2][0]-1.*I*g_smeared_scalar_field[1][0];
+       a21=+1.*g_smeared_scalar_field[2][0]-1.*I*g_smeared_scalar_field[1][0];
+       a22=+1.*g_smeared_scalar_field[0][0]+1.*I*g_smeared_scalar_field[3][0];
+     }
+     else{
+       a11=+1.*g_scalar_field[0][0]-1.*I*g_scalar_field[3][0];
+       a12=-1.*g_scalar_field[2][0]-1.*I*g_scalar_field[1][0];
+       a21=+1.*g_scalar_field[2][0]-1.*I*g_scalar_field[1][0];
+       a22=+1.*g_scalar_field[0][0]+1.*I*g_scalar_field[3][0];
+     }
+   }
+   else{
+     if (g_cart_id == 0) {printf("Error in giving the index in mult_phi_flavoronly\n");
+                          exit(1);
+                         }
+   }
+   for (i=0; i<T_global; ++i){
+     dest[2*i +0]= a11* source_copy[2*i + 0] + a12* source_copy[2*i + 1];
+     dest[2*i +1]= a21* source_copy[2*i + 0] + a22* source_copy[2*i + 1];
+   }
+   free(source_copy);
+}
+static void mult_taui_flavoronly( _Complex double *dest, int tauindex){
+   _Complex double *source_copy;
+   _Complex double a11=0.0, a12=0.0, a21=0.0, a22=0.0;
+   int i;
+   source_copy=(_Complex double *)malloc(sizeof(_Complex double)*2*T_global);
+   if (source_copy == NULL){
+     printf("Error in mem allcoation in phi0 tau3 commutator\n");
+     exit(1);
+   }
+   for (i=0; i<2*T_global; ++i)
+     source_copy[i]=dest[i];
+   if ( tauindex == 2 ){
+     a11=+1.;
+     a12= 0.;
+     a21= 0.;
+     a22=-1.;
+   }
+   else if ( tauindex == 1 ){
+     a11=    0.;
+     a12= -1.*I;
+     a21=     I;
+     a22=     0;
+   }
+   else if ( tauindex == 0 ){
+     a11= 0.;
+     a12=+1.;
+     a21=+1.;
+     a22= 0.;
+   }
+   else{
+     if (g_cart_id == 0) {printf("Error in giving the tauindex in mult_taui_flavoronly\n");
+                          exit(1);
+                         }
+   }
+   for (i=0; i<T_global; ++i){
+     dest[2*i +0]= a11* source_copy[2*i + 0] + a12* source_copy[2*i + 1];
+     dest[2*i +1]= a21* source_copy[2*i + 0] + a22* source_copy[2*i + 1];
+   }
+   free(source_copy);
+}
+static void mult_phi( bispinor *dest, bispinor *source, int ix, int dagg){
+   bispinor tmp;
+   _spinor_assign(tmp.sp_up, source->sp_up);
+   _spinor_assign(tmp.sp_dn, source->sp_dn);
+   _Complex double a11, a12, a21, a22;
+
+   if ( dagg == NO_DAGG ){
+     if ( smearedcorrelator_BSM == 1 ){
+       a11=+1.*g_smeared_scalar_field[0][ix]+1.*I*g_smeared_scalar_field[3][ix];
+       a12=+1.*g_smeared_scalar_field[2][ix]+1.*I*g_smeared_scalar_field[1][ix];
+       a21=-1.*g_smeared_scalar_field[2][ix]+1.*I*g_smeared_scalar_field[1][ix];
+       a22=+1.*g_smeared_scalar_field[0][ix]-1.*I*g_smeared_scalar_field[3][ix];
+     }
+     else{
+       a11=+1.*g_scalar_field[0][ix]+1.*I*g_scalar_field[3][ix];
+       a12=+1.*g_scalar_field[2][ix]+1.*I*g_scalar_field[1][ix];
+       a21=-1.*g_scalar_field[2][ix]+1.*I*g_scalar_field[1][ix];
+       a22=+1.*g_scalar_field[0][ix]-1.*I*g_scalar_field[3][ix];
+     }
+   }
+   else if (dagg == DAGGER){
+     if ( smearedcorrelator_BSM == 1 ){
+       a11=+1.*g_smeared_scalar_field[0][ix]-1.*I*g_smeared_scalar_field[3][ix];
+       a12=-1.*g_smeared_scalar_field[2][ix]-1.*I*g_smeared_scalar_field[1][ix];
+       a21=+1.*g_smeared_scalar_field[2][ix]-1.*I*g_smeared_scalar_field[1][ix];
+       a22=+1.*g_smeared_scalar_field[0][ix]+1.*I*g_smeared_scalar_field[3][ix];
+     }
+     else{
+       a11=+1.*g_scalar_field[0][ix]-1.*I*g_scalar_field[3][ix];
+       a12=-1.*g_scalar_field[2][ix]-1.*I*g_scalar_field[1][ix];
+       a21=+1.*g_scalar_field[2][ix]-1.*I*g_scalar_field[1][ix];
+       a22=+1.*g_scalar_field[0][ix]+1.*I*g_scalar_field[3][ix];
+     }
+   }
+   else{
+     if (g_cart_id == 0) {printf("Error in giving the index in mult_phi_flavoronly\n");
+                          exit(1);
+                         }
+   }
+   dest->sp_up.s0.c0 = a11 * tmp.sp_up.s0.c0 + a12 * tmp.sp_dn.s0.c0;
+   dest->sp_up.s0.c1 = a11 * tmp.sp_up.s0.c1 + a12 * tmp.sp_dn.s0.c1;
+   dest->sp_up.s0.c2 = a11 * tmp.sp_up.s0.c2 + a12 * tmp.sp_dn.s0.c2;
+
+   dest->sp_up.s1.c0 = a11 * tmp.sp_up.s1.c0 + a12 * tmp.sp_dn.s1.c0;
+   dest->sp_up.s1.c1 = a11 * tmp.sp_up.s1.c1 + a12 * tmp.sp_dn.s1.c1;
+   dest->sp_up.s1.c2 = a11 * tmp.sp_up.s1.c2 + a12 * tmp.sp_dn.s1.c2;
+
+   dest->sp_up.s2.c0 = a11 * tmp.sp_up.s2.c0 + a12 * tmp.sp_dn.s2.c0;
+   dest->sp_up.s2.c1 = a11 * tmp.sp_up.s2.c1 + a12 * tmp.sp_dn.s2.c1;
+   dest->sp_up.s2.c2 = a11 * tmp.sp_up.s2.c2 + a12 * tmp.sp_dn.s2.c2;
+
+   dest->sp_up.s3.c0 = a11 * tmp.sp_up.s3.c0 + a12 * tmp.sp_dn.s3.c0;
+   dest->sp_up.s3.c1 = a11 * tmp.sp_up.s3.c1 + a12 * tmp.sp_dn.s3.c1;
+   dest->sp_up.s3.c2 = a11 * tmp.sp_up.s3.c2 + a12 * tmp.sp_dn.s3.c2;
+
+   dest->sp_dn.s0.c0 = a21 * tmp.sp_up.s0.c0 + a22 * tmp.sp_dn.s0.c0;
+   dest->sp_dn.s0.c1 = a21 * tmp.sp_up.s0.c1 + a22 * tmp.sp_dn.s0.c1;
+   dest->sp_dn.s0.c2 = a21 * tmp.sp_up.s0.c2 + a22 * tmp.sp_dn.s0.c2;
+
+   dest->sp_dn.s1.c0 = a21 * tmp.sp_up.s1.c0 + a22 * tmp.sp_dn.s1.c0;
+   dest->sp_dn.s1.c1 = a21 * tmp.sp_up.s1.c1 + a22 * tmp.sp_dn.s1.c1;
+   dest->sp_dn.s1.c2 = a21 * tmp.sp_up.s1.c2 + a22 * tmp.sp_dn.s1.c2;
+
+   dest->sp_dn.s2.c0 = a21 * tmp.sp_up.s2.c0 + a22 * tmp.sp_dn.s2.c0;
+   dest->sp_dn.s2.c1 = a21 * tmp.sp_up.s2.c1 + a22 * tmp.sp_dn.s2.c1;
+   dest->sp_dn.s2.c2 = a21 * tmp.sp_up.s2.c2 + a22 * tmp.sp_dn.s2.c2;
+
+   dest->sp_dn.s3.c0 = a21 * tmp.sp_up.s3.c0 + a22 * tmp.sp_dn.s3.c0;
+   dest->sp_dn.s3.c1 = a21 * tmp.sp_up.s3.c1 + a22 * tmp.sp_dn.s3.c1;
+   dest->sp_dn.s3.c2 = a21 * tmp.sp_up.s3.c2 + a22 * tmp.sp_dn.s3.c2;
+
 }
 static void taui_spinor( bispinor *dest, bispinor *source, int tauindex ){
 
@@ -1485,6 +1647,118 @@ void density_density_1234( bispinor ** propfields, int type_1234, _Complex doubl
    free(colortrace);
 
 }
+void giancarlodensity( bispinor ** propfields, int tau3, _Complex double  **results ){
+   int ix,i;
+   int f1,c1,s1;
+   int spinorstart=0, spinorend=4;
+   bispinor running;
+
+   _Complex double *colortrace;
+   _Complex double *spacetrace;
+   _Complex double *spinortrace;
+   _Complex double *flavortrace;
+   int type;
+
+   colortrace= (_Complex double *)malloc(sizeof(_Complex double) *8);
+   spacetrace= (_Complex double *)malloc(sizeof(_Complex double) *8*T_global);
+   spinortrace=(_Complex double *)malloc(sizeof(_Complex double)*2*T_global);
+   flavortrace=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
+
+   if ( (colortrace == NULL) || (spacetrace == NULL) || (spinortrace == NULL) || (flavortrace == NULL) )
+   {
+     printf("Error in mem allocation in giancarlo\n");
+     exit(1);
+   }
+   *results=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
+   if (*results == NULL){
+     printf("Not enough memory for the results\n");
+     exit(1);
+   }
+   spinorstart=2;
+   spinorend  =4;
+   
+//Trace over up and down flavors
+   for (i=0; i<T_global; ++i)
+     flavortrace[i]=0.;
+   for (f1=0; f1<2; ++f1){
+//Trace over the spinor indices you have to trace only over those two spinor 
+//component that appear in the final spinor
+     for (i=0; i<2*T_global; ++i)
+       spinortrace[i]=0.;
+     for (s1= spinorstart; s1<spinorend; ++s1){
+//Trace over the spatial indices
+       for (i=0; i<8*T_global; ++i)
+          spacetrace[i]=0.;
+       for (ix = 0; ix< VOLUME; ++ix){
+//Trace over the color indices for each sites
+         for (i=0; i<8; ++i)
+           colortrace[i]=0.;
+         for (c1=0; c1<3; ++c1){
+//for the up quark
+           _vector_null( running.sp_up.s2 );
+           _vector_null( running.sp_up.s3 );
+           _vector_assign( running.sp_up.s0, propfields[12*s1+4*c1+2*f1][ix].sp_up.s0 );
+           _vector_assign( running.sp_up.s1, propfields[12*s1+4*c1+2*f1][ix].sp_up.s1 );
+           _vector_null( running.sp_dn.s2 );
+           _vector_null( running.sp_dn.s3 );
+           _vector_assign( running.sp_dn.s0, propfields[12*s1+4*c1+2*f1][ix].sp_dn.s0 );
+           _vector_assign( running.sp_dn.s1, propfields[12*s1+4*c1+2*f1][ix].sp_dn.s1 );
+
+           if (tau3 == 1){
+             taui_spinor( &running, &running, 2);              
+           }
+
+           mult_phi(&running, &running, ix, NO_DAGG);
+
+           if (tau3 == 1){
+             taui_spinor( &running, &running, 2);
+           }
+
+           multiply_backward_propagator(&running, propfields, &running, ix, NODIR );
+
+            //delta( color component of bispinor running, c1) for all spinor and flavor indices
+           trace_in_color(colortrace,&running,c1);
+
+         }  //End of trace color
+         //sum over all lattice sites the result of the color trace
+         trace_in_space(spacetrace,colortrace,ix);
+       } //End of trace space
+//Gather the results from all nodes to complete the trace in space
+#if defined MPI
+       for (i=0; i<8*T_global; ++i){
+          _Complex double tmp;
+          MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
+          spacetrace[i]= tmp;
+       }
+#endif
+       // delta (spinor components of spacetrace, s1) for all time slices and flavor indices
+       trace_in_spinor(spinortrace, spacetrace, s1);
+     }//End of trace in spinor space
+
+     if (tau3 == 1){
+       mult_taui_flavoronly(spinortrace, 2);
+     }
+     mult_phi_flavoronly(spinortrace, DAGGER);
+     if (tau3 == 1){
+       mult_taui_flavoronly(spinortrace, 2);
+     }
+     trace_in_flavor( flavortrace, spinortrace, f1 );
+   }
+   if (g_cart_id == 0){printf("Giancarlo correlator  (%s) for tau3 results\n", tau3 == 1 ? "with" : "without" );fflush(stdout);}
+   for (i=0; i<T_global; ++i){
+     if (g_cart_id == 0){
+       printf( "GIANCARLO %.3d %10.10e %10.10e\n", i, creal(flavortrace[i])/4.,cimag(flavortrace[i])/4.);
+       fflush(stdout);
+     }
+     (*results)[i]=flavortrace[i]/4.;
+   }
+   free(flavortrace);
+   free(spacetrace);
+   free(spinortrace);
+   free(colortrace);
+
+}
+
 void density_density_1234_sxsx( bispinor ** propfields, int type_1234, _Complex double **results ){
    int ix,i;
    int f1,c1,s1,tauindex;
