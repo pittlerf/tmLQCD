@@ -802,6 +802,14 @@ inline void rmQuotes(char *str){
     wilsoncurrentdensitypl2_BSM = 0;
     if(myverbose != 0) printf("  BSM wilson (pl second line) current times density correlators are not computed (this is the default) line %d operator %d\n", line_of_file, current_operator);
   }
+  {SPC}*currentV3currentV3{EQL}yes {
+    vectorcurrentcurrent_BSM = 1;
+    if(myverbose != 0) printf("  BSM extended vector current current V3 correlators are computed line %d operator %d\n", line_of_file, current_operator);
+  }
+  {SPC}*currentV3currentV3{EQL}no {
+    vectorcurrentcurrent_BSM = 0;
+    if(myverbose != 0) printf("  BSM extended vector current current V3 correlators are not computed (this is the default) line %d operator %d\n", line_of_file, current_operator);
+  }
   {SPC}*vectorcurrentdensity{EQL}yes {
     vectorcurrentdensity_BSM = 1;
     if(myverbose != 0) printf("  BSM extended vector current times density correlators are computed line %d operator %d\n", line_of_file, current_operator);
@@ -2354,6 +2362,7 @@ int read_input(char * conf_file){
   wilsoncurrentdensitypr2_BSM = _default_wilsoncurrentdensitypr2_BSM;
   wilsoncurrentdensitypl1_BSM = _default_wilsoncurrentdensitypl1_BSM;
   wilsoncurrentdensitypl2_BSM = _default_wilsoncurrentdensitypl2_BSM;
+  vectorcurrentcurrent_BSM = _default_vectorcurrentcurrent_BSM;
   vectorcurrentdensity_BSM = _default_vectorcurrentdensity_BSM;
   axialcurrentdensity_BSM = _default_axialcurrentdensity_BSM;
   giancarlo_BSM = _default_giancarlo_BSM;

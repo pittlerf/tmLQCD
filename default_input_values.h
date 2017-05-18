@@ -94,6 +94,7 @@
 #define _default_axialcurrentdensity_BSM 0
 #define _default_vectorcurrentdensity_BSM 0
 #define _default_wilsoncurrentdensitypl2_BSM 0
+#define _default_vectorcurrentcurrent_BSM 0
 #define _default_giancarlo_BSM 0
 #define _default_max_solver_iterations 5000
 #define _default_solver_precision 1.e-15

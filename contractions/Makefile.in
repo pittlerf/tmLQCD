@@ -30,7 +30,7 @@ LDADD =
 COMPILE = ${CC} $(DEFS) ${INCLUDES} ${CFLAGS}
 
 LIBRARIES = libcontractions
-libcontractions_TARGETS = contractions_FP contractions_checks 
+libcontractions_TARGETS = contractions_helper contractions_FP contractions_checks contractions_currentdensityextended 
 
 libcontractions_OBJECTS = $(addsuffix .o, ${libcontractions_TARGETS})
 

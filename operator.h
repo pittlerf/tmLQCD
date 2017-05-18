@@ -91,7 +91,8 @@ typedef struct {
   /* generic place for propagators */
   spinor *prop0, *prop1, *prop2, *prop3;
   /* generic place for all propagators for a point source */
-  bispinor **prop;
+  bispinor **prop_zero;
+  bispinor **prop_ntmone;
 
   /*solver parameters struct*/
   solver_params_t solver_params;

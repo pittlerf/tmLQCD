@@ -505,7 +505,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
         fflush(stdout);
       }
       if (propagatorsonthefly_BSM == 1){
-        assign( (spinor *)optr->prop[4*SourceInfo.ix+2*(1-i)], (spinor *)temp, 2*VOLUME);
+        assign( (spinor *)optr->prop_zero[4*SourceInfo.ix+2*(1-i)], (spinor *)temp, 2*VOLUME);
       }
       decompact(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], temp);
 
@@ -544,7 +544,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
         fflush(stdout);
       }
       if (propagatorsonthefly_BSM == 1){
-        assign((spinor*)optr->prop[4*SourceInfo.ix+2*(1-i)+1],(spinor *)dest, 2*VOLUME);
+        assign((spinor*)optr->prop_zero[4*SourceInfo.ix+2*(1-i)+1],(spinor *)dest, 2*VOLUME);
       }
 
       decompact(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], dest);

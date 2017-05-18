@@ -18,18 +18,10 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _CONTRACTIONS_FP_H
-#define _CONTRACTIONS_FP_H
-void density_density_1234(bispinor **propagators, int type, _Complex double **res);
-void density_density_1234_s0s0( bispinor ** propagators, int type, _Complex double **res );
-void density_density_1234_sxsx( bispinor ** propagators, int type, _Complex double **res );
-void naivedirac_current_density_12ab( bispinor ** propagators, int type_12, int type_ab,  _Complex double **tes );
-void naivedirac_current_density_12ab_lr( bispinor ** propagators, int type_12, int type_ab,  _Complex double **tes );
+#ifndef _CONTRACTIONS_CURRENTDENSITYEXTENDED_H
+#define _CONTRACTIONS_CURRENTDENSITYEXTENDED_H
 void wilsonterm_current_density_312ab( bispinor ** propagators, int type_12, int type_ab, _Complex double **res );
 void wilsonterm_current_density_412ab( bispinor ** propagators, int type_12, int type_ab, _Complex double **res );
 void wilsonterm_current_density_512ab( bispinor ** propagators, int type_12, int type_ab, _Complex double **res );
 void wilsonterm_current_density_612ab( bispinor ** propagators, int type_12, int type_ab, _Complex double **res );
-void vector_axial_current_density_1234( bispinor ** propfields, int type_1234,int taudensity, int taucurrent, int vectororaxial, _Complex double **results );
-void vector_axial_current_current_1234( bispinor ** propfields_source_zero, bispinor ** propfields_source_ntmone, int type_1234, int taucurrent, int vectororaxial, _Complex double **results );
-void giancarlodensity( bispinor ** propfields, int tau3, _Complex double  **results );
 #endif

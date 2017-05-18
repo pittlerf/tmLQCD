@@ -75,6 +75,7 @@ EXTERN int wilsoncurrentdensitypr1_BSM;
 EXTERN int wilsoncurrentdensitypr2_BSM;
 EXTERN int wilsoncurrentdensitypl1_BSM;
 EXTERN int wilsoncurrentdensitypl2_BSM;
+EXTERN int vectorcurrentcurrent_BSM;
 EXTERN int vectorcurrentdensity_BSM;
 EXTERN int axialcurrentdensity_BSM;
 EXTERN int giancarlo_BSM;

@@ -84,16 +84,32 @@
 #include "solver/solver_field.h"
 #include "source_generation.h"
 #include "ranlxd.h"
-#define TYPE_A 1
-#define TYPE_B 0
 
-#define TYPE_1 1
-#define TYPE_2 0
-#define TYPE_3 2
-#define TYPE_4 3
+int DAGGER;
+int NO_DAGG;
 
-#define TYPE_I 1
-#define TYPE_II 0
+int GAMMA_UP;
+int GAMMA_DN;
+int NO_GAMMA;
+
+int WITH_SCALAR;
+int NO_SCALAR;
+
+int TYPE_A;
+int TYPE_B;
+
+int TYPE_1;
+int TYPE_2;
+int TYPE_3;
+int TYPE_4;
+
+int TYPE_I;
+int TYPE_II;
+
+int RIGHT;
+int LEFT;
+
+
 static void usage()
 {
   fprintf(stdout, "Options: [-f input-filename]\n");
@@ -168,9 +184,6 @@ int main(int argc, char *argv[]){
   _Complex double *pscalar1,*pscalar2,*pscalar3;
   _Complex double *scalar1, *scalar2, *scalar3 ;
 #if defined MPI
-  MPI_Status  statuses[8];
-  MPI_Request *request;
-  request=( MPI_Request *) malloc(sizeof(MPI_Request)*8);
 
   MPI_Init(&argc, &argv);
 
@@ -178,6 +191,31 @@ int main(int argc, char *argv[]){
 #endif
   process_args(argc, argv, &input_filename,&filename);
   set_default_filenames(&input_filename, &filename);
+//Setting default constants
+
+  DAGGER=1;
+  NO_DAGG=0; 
+
+  GAMMA_UP=1;
+  GAMMA_DN=-1;
+  NO_GAMMA=0;
+
+  WITH_SCALAR=1;
+  NO_SCALAR=0;
+
+  TYPE_A=1;
+  TYPE_B=0;
+
+  TYPE_1=1;
+  TYPE_2=0;
+  TYPE_3=2;
+  TYPE_4=3;
+
+  TYPE_I=1;
+  TYPE_II=0;
+  
+  RIGHT=1;
+  LEFT=0;
 
   /* Read the input file */
   if ( (i = read_input(input_filename)) != 0)
@@ -366,16 +404,30 @@ int main(int argc, char *argv[]){
       for (op_id =0; op_id < no_operators; op_id++){
           if (operator_list[op_id].type== BSM2f){
               init_D_psi_BSM2f();
-              operator_list[op_id].prop=(bispinor  **)malloc(sizeof(bispinor*)*48);
-              if (operator_list[op_id].prop == NULL){
+              operator_list[op_id].prop_zero=(bispinor  **)malloc(sizeof(bispinor*)*48);
+              if (operator_list[op_id].prop_zero == NULL){
                 printf("Error in memory allocation for storing the propagators\n");
                 exit(1);
               }
               for (int ii=0; ii<48; ++ii){
-                operator_list[op_id].prop[ii]=(bispinor *)malloc(sizeof(bispinor)*VOLUMEPLUSRAND);
-                if ( operator_list[op_id].prop[ii] == NULL ){
+                operator_list[op_id].prop_zero[ii]=(bispinor *)malloc(sizeof(bispinor)*VOLUMEPLUSRAND);
+                if ( operator_list[op_id].prop_zero[ii] == NULL ){
                   printf("Error in allocating memory for propagators\n");
                   exit(1);
+                }
+              }
+              if (vectorcurrentcurrent_BSM == 1){
+                operator_list[op_id].prop_ntmone=(bispinor  **)malloc(sizeof(bispinor*)*48);
+                if (operator_list[op_id].prop_ntmone == NULL){
+                  printf("Error in memory allocation for storing the propagators\n");
+                  exit(1);
+                }
+                for (int ii=0; ii<48; ++ii){
+                  operator_list[op_id].prop_ntmone[ii]=(bispinor *)malloc(sizeof(bispinor)*VOLUMEPLUSRAND);
+                  if ( operator_list[op_id].prop_ntmone[ii] == NULL ){
+                    printf("Error in allocating memory for propagators\n");
+                    exit(1);
+                  }
                 }
               }
           }
@@ -480,10 +532,33 @@ int main(int argc, char *argv[]){
 
 //create a bispinor first insert sink u then sink d
 //Store them in such a way that the u-ones should come first
-                       compact(operator_list[op_id].prop[pos > 4 ? src_idx*4+pos/2-3 : src_idx*4+pos/2+ 1], temp_field[1], temp_field[0]);
+                       compact(operator_list[op_id].prop_zero[pos > 4 ? src_idx*4+pos/2-3 : src_idx*4+pos/2+ 1], temp_field[1], temp_field[0]);
                     }
 
                  }//end of loop for spinor and color source degrees of freedom
+
+                 if (vectorcurrentcurrent_BSM == 1){
+                   for(src_idx = 0; src_idx < 12; src_idx++ )
+                   {
+                      snprintf(prop_fname,200,"bsm2prop.%.4d.%.2d.%02d.%.8d.inverted",nstore, T_global-1, src_idx, iscalar);
+                      for(pos = 0; pos < 8; ){
+                        printf("READCHECK: Propagator in pos %02d from file %s\n", pos/2,prop_fname);
+//read the propagator from source d to sink d 
+                        read_spinor(g_spinor_field[0], g_spinor_field[1], prop_fname, pos);
+                        convert_eo_to_lexic(temp_field[0], g_spinor_field[0], g_spinor_field[1]);
+                        pos+=1;
+
+//read the propagator from source d to sink u
+                        read_spinor(g_spinor_field[0], g_spinor_field[1], prop_fname, pos);
+                        convert_eo_to_lexic(temp_field[1], g_spinor_field[0], g_spinor_field[1]);
+                        pos+=1;
+//create a bispinor first insert sink u then sink d
+//Store them in such a way that the u-ones should come first
+                        compact(operator_list[op_id].prop_ntmone[pos > 4 ? src_idx*4+pos/2-3 : src_idx*4+pos/2+ 1], temp_field[1], temp_field[0]);
+                     }
+
+                   }//end of loop for spinor and color source degrees of freedom
+                 }
                }
                if (g_cart_id == 0){
                     snprintf(contractions_fname,200,"bsmcontractions.%.4d.%d.%.8d",nstore, isample, iscalar);
@@ -497,6 +572,7 @@ int main(int argc, char *argv[]){
                }
                if (g_cart_id == 0) {
                  printf("Following measurements will be done\n");
+                 if (vectorcurrentcurrent_BSM == 1) printf("#Vectorcurrentcurrent3 correlation function\n");
                  if (densitydensity_BSM == 1) printf("#Density Density correlation function\n");
                  if (densitydensity_s0s0_BSM == 1) printf("#Density Density s0s0-p0p0 using trivial scalar field\n");
                  if (densitydensity_sxsx_BSM == 1) printf("#Density Density sxsx-pxpx using trivial scalar field\n");
@@ -566,8 +642,50 @@ int main(int argc, char *argv[]){
                     exit(1);
                   }
                }
+               if (vectorcurrentcurrent_BSM == 1){
+                 vector_axial_current_current_1234(operator_list[op_id].prop_zero, operator_list[op_id].prop_ntmone, TYPE_1, 3, 0, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_axial_current_current_1234(operator_list[op_id].prop_zero, operator_list[op_id].prop_ntmone, TYPE_2, 3, 0, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_axial_current_current_1234(operator_list[op_id].prop_zero, operator_list[op_id].prop_ntmone, TYPE_3, 3, 0, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_axial_current_current_1234(operator_list[op_id].prop_zero, operator_list[op_id].prop_ntmone, TYPE_4, 3, 0, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+
+                 if (g_cart_id == 0){
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JTILDEV3JTILDEV3NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
+                   }
+                 }
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }                 
+               }
                if (giancarlo_BSM == 1){
-                 giancarlodensity( operator_list[op_id].prop, 0, &temp );
+                 giancarlodensity( operator_list[op_id].prop_zero, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
@@ -591,7 +709,7 @@ int main(int argc, char *argv[]){
                    current2[ii]=0.0;
                    current3[ii]=0.0;
                  }
-                 giancarlodensity( operator_list[op_id].prop, 1, &temp );
+                 giancarlodensity( operator_list[op_id].prop_zero, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
@@ -617,22 +735,22 @@ int main(int argc, char *argv[]){
                  }
                }
                if (vectorcurrentdensity_BSM == 1){
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_1,0, 1, 0, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_1,0, 1, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_2,0, 1, 0, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_2,0, 1, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_3,0, 1, 0, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_3,0, 1, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_4,0, 1, 0, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_4,0, 1, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
@@ -658,22 +776,22 @@ int main(int argc, char *argv[]){
                    current3[ii]=0.0;
                  }
 
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_1,1, 0, 0, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_1,1, 0, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_2,1, 0, 0, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_2,1, 0, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_3,1, 0, 0, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_3,1, 0, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_4,1, 0, 0, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_4,1, 0, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
@@ -699,22 +817,22 @@ int main(int argc, char *argv[]){
                    current3[ii]=0.0;
                  }
 
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_1,2, 2, 0, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_1,2, 2, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_2,2, 2, 0, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_2,2, 2, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_3,2, 2, 0, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_3,2, 2, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_4,2, 2, 0, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_4,2, 2, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
@@ -751,22 +869,22 @@ int main(int argc, char *argv[]){
                    for ( int s=0; s<4; s++ )
                     generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
                  }
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_1, 0, 0, 1, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_1, 0, 0, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_2, 0, 0, 1, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_2, 0, 0, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_3, 0, 0, 1, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_3, 0, 0, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_4, 0, 0, 1, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_4, 0, 0, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
@@ -817,22 +935,22 @@ int main(int argc, char *argv[]){
 
 
 
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_1, 0, 0, 1, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_1, 0, 0, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_2, 0, 0, 1, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_2, 0, 0, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_3, 0, 0, 1, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_3, 0, 0, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_4, 0, 0, 1, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_4, 0, 0, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
@@ -858,22 +976,22 @@ int main(int argc, char *argv[]){
                    current3[ii]=0.0;
                  }
 
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_1,1, 1, 1, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_1,1, 1, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_2,1, 1, 1, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_2,1, 1, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_3,1, 1, 1, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_3,1, 1, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_4,1, 1, 1, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_4,1, 1, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
@@ -898,22 +1016,22 @@ int main(int argc, char *argv[]){
                    current3[ii]=0.0;
                  }
 
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_1,2, 2, 1, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_1,2, 2, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_2,2, 2, 1, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_2,2, 2, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_3,2, 2, 1, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_3,2, 2, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop, TYPE_4,2, 2, 1, &temp );
+                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_4,2, 2, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(+1.)*temp[ii];
                  }
@@ -943,7 +1061,7 @@ int main(int argc, char *argv[]){
 
 
                if (densitydensity_BSM == 1){
-                 density_density_1234(operator_list[op_id].prop, TYPE_1, &temp);
+                 density_density_1234(operator_list[op_id].prop_zero, TYPE_1, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    pscalar1[ii]+=(-1.)*temp[ii           ];
                    pscalar2[ii]+=(-1.)*temp[ii+1*T_global];
@@ -957,7 +1075,7 @@ int main(int argc, char *argv[]){
                  }
                  free(temp);
 //                 density_density_1234_petros(operator_list[op_id].prop);
-                 density_density_1234(operator_list[op_id].prop, TYPE_2, &temp);
+                 density_density_1234(operator_list[op_id].prop_zero, TYPE_2, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    pscalar1[ii]+=temp[ii           ];
                    pscalar2[ii]+=temp[ii+1*T_global];
@@ -971,7 +1089,7 @@ int main(int argc, char *argv[]){
                  }
                  free(temp);
 
-                 density_density_1234(operator_list[op_id].prop, TYPE_3, &temp);
+                 density_density_1234(operator_list[op_id].prop_zero, TYPE_3, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    pscalar1[ii]+=temp[ii           ];
                    pscalar2[ii]+=temp[ii+1*T_global];
@@ -985,7 +1103,7 @@ int main(int argc, char *argv[]){
                  }
                  free(temp);
 
-                 density_density_1234(operator_list[op_id].prop, TYPE_4, &temp);
+                 density_density_1234(operator_list[op_id].prop_zero, TYPE_4, &temp);
                  for (int ii=0; ii<T_global; ++ii){      
                    pscalar1[ii]+=(-1.)*temp[ii           ];
                    pscalar2[ii]+=(-1.)*temp[ii+1*T_global];
@@ -1059,25 +1177,25 @@ int main(int argc, char *argv[]){
                    for ( int s=0; s<4; s++ )
                     generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
                  }
-                 density_density_1234_s0s0(operator_list[op_id].prop, TYPE_1, &temp);
+                 density_density_1234_s0s0(operator_list[op_id].prop_zero, TYPE_1, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    pseudoscalar[ii] +=(-1.0)*temp[ii];
                    scalar[ii] +=(-1.)*temp[ii];
                  }
                  free(temp);                  
-                 density_density_1234_s0s0(operator_list[op_id].prop, TYPE_2, &temp);
+                 density_density_1234_s0s0(operator_list[op_id].prop_zero, TYPE_2, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    pseudoscalar[ii] +=temp[ii];
                    scalar[ii] +=(-1.)*temp[ii];
                  }
                  free(temp);
-                 density_density_1234_s0s0(operator_list[op_id].prop, TYPE_3, &temp);
+                 density_density_1234_s0s0(operator_list[op_id].prop_zero, TYPE_3, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    pseudoscalar[ii] +=temp[ii];
                    scalar[ii] +=(-1.)*temp[ii];
                  }
                  free(temp);
-                 density_density_1234_s0s0(operator_list[op_id].prop, TYPE_4, &temp);
+                 density_density_1234_s0s0(operator_list[op_id].prop_zero, TYPE_4, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    pseudoscalar[ii] +=(-1.)*temp[ii];
                    scalar[ii] +=(-1.)*temp[ii];
@@ -1136,7 +1254,7 @@ int main(int argc, char *argv[]){
                    for ( int s=0; s<4; s++ )
                     generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
                  }
-                 density_density_1234_sxsx(operator_list[op_id].prop, TYPE_1, &temp);
+                 density_density_1234_sxsx(operator_list[op_id].prop_zero, TYPE_1, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    pscalar1[ii]+=(-1.)*temp[ii           ];
                    pscalar2[ii]+=(-1.)*temp[ii+1*T_global];
@@ -1150,7 +1268,7 @@ int main(int argc, char *argv[]){
                  }
                  free(temp);
 
-                 density_density_1234_sxsx(operator_list[op_id].prop, TYPE_2, &temp);
+                 density_density_1234_sxsx(operator_list[op_id].prop_zero, TYPE_2, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    pscalar1[ii]+=temp[ii           ];
                    pscalar2[ii]+=temp[ii+1*T_global];
@@ -1164,7 +1282,7 @@ int main(int argc, char *argv[]){
                  }
                  free(temp);
 
-                 density_density_1234_sxsx(operator_list[op_id].prop, TYPE_3, &temp);
+                 density_density_1234_sxsx(operator_list[op_id].prop_zero, TYPE_3, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    pscalar1[ii]+=temp[ii           ];
                    pscalar2[ii]+=temp[ii+1*T_global];
@@ -1178,7 +1296,7 @@ int main(int argc, char *argv[]){
                  }
                  free(temp);
 
-                 density_density_1234_sxsx(operator_list[op_id].prop, TYPE_4, &temp);
+                 density_density_1234_sxsx(operator_list[op_id].prop_zero, TYPE_4, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    pscalar1[ii]+=(-1.)*temp[ii           ];
                    pscalar2[ii]+=(-1.)*temp[ii+1*T_global];
@@ -1261,7 +1379,7 @@ int main(int argc, char *argv[]){
                  }
                }
                if (diraccurrentdensity_BSM == 1){
-                 naivedirac_current_density_12ab( operator_list[op_id].prop, TYPE_I , TYPE_A, &temp);
+                 naivedirac_current_density_12ab( operator_list[op_id].prop_zero, TYPE_I , TYPE_A, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    current1[ii]+=(-1.)*temp[ii           ];
                    current2[ii]+=(-1.)*temp[ii+1*T_global];
@@ -1271,7 +1389,7 @@ int main(int argc, char *argv[]){
                  free(temp);
 
 //                 diraccurrent1a_petros( operator_list[op_id].prop );
-                 naivedirac_current_density_12ab( operator_list[op_id].prop, TYPE_I , TYPE_B, &temp);
+                 naivedirac_current_density_12ab( operator_list[op_id].prop_zero, TYPE_I , TYPE_B, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    current1[ii]+=(+1.)*temp[ii           ];
                    current2[ii]+=(+1.)*temp[ii+1*T_global];
@@ -1280,7 +1398,7 @@ int main(int argc, char *argv[]){
                  }
                  free(temp);
 
-                 naivedirac_current_density_12ab( operator_list[op_id].prop, TYPE_II, TYPE_A, &temp);
+                 naivedirac_current_density_12ab( operator_list[op_id].prop_zero, TYPE_II, TYPE_A, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    current1[ii]+=(-1.)*temp[ii           ];
                    current2[ii]+=(-1.)*temp[ii+1*T_global];
@@ -1289,7 +1407,7 @@ int main(int argc, char *argv[]){
                  }
                  free(temp);
 
-                 naivedirac_current_density_12ab( operator_list[op_id].prop, TYPE_II, TYPE_B, &temp);
+                 naivedirac_current_density_12ab( operator_list[op_id].prop_zero, TYPE_II, TYPE_B, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    current1[ii]+=(+1.)*temp[ii           ];
                    current2[ii]+=(+1.)*temp[ii+1*T_global];
@@ -1331,7 +1449,7 @@ int main(int argc, char *argv[]){
                  }
                }
                if (wilsoncurrentdensitypr1_BSM == 1){
-                 wilsonterm_current_density_312ab( operator_list[op_id].prop, TYPE_1, TYPE_A, &temp);
+                 wilsonterm_current_density_312ab( operator_list[op_id].prop_zero, TYPE_1, TYPE_A, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    current1[ii]+=(-1.)*temp[ii           ];
                    current2[ii]+=(-1.)*temp[ii+1*T_global];
@@ -1340,7 +1458,7 @@ int main(int argc, char *argv[]){
                  }
                  free(temp);
 //                 wilsoncurrent_density_3_petros( operator_list[op_id].prop );
-                 wilsonterm_current_density_312ab( operator_list[op_id].prop, TYPE_1, TYPE_B, &temp);
+                 wilsonterm_current_density_312ab( operator_list[op_id].prop_zero, TYPE_1, TYPE_B, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    current1[ii]+=(+1.)*temp[ii           ];
                    current2[ii]+=(+1.)*temp[ii+1*T_global];
@@ -1348,7 +1466,7 @@ int main(int argc, char *argv[]){
                    current[ii] +=(+1.)*temp[ii+3*T_global];
                  }
                  free(temp);
-                 wilsonterm_current_density_312ab( operator_list[op_id].prop, TYPE_2, TYPE_A, &temp);
+                 wilsonterm_current_density_312ab( operator_list[op_id].prop_zero, TYPE_2, TYPE_A, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    current1[ii]+=(+1.)*temp[ii           ];
                    current2[ii]+=(+1.)*temp[ii+1*T_global];
@@ -1358,7 +1476,7 @@ int main(int argc, char *argv[]){
                  free(temp);
 
 
-                 wilsonterm_current_density_312ab( operator_list[op_id].prop, TYPE_2, TYPE_B, &temp);
+                 wilsonterm_current_density_312ab( operator_list[op_id].prop_zero, TYPE_2, TYPE_B, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    current1[ii]+=(-1.)*temp[ii           ];
                    current2[ii]+=(-1.)*temp[ii+1*T_global];
@@ -1400,7 +1518,7 @@ int main(int argc, char *argv[]){
                  }
                }
                if (wilsoncurrentdensitypr2_BSM == 1){
-                 wilsonterm_current_density_412ab( operator_list[op_id].prop, TYPE_1, TYPE_A, &temp);
+                 wilsonterm_current_density_412ab( operator_list[op_id].prop_zero, TYPE_1, TYPE_A, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    current1[ii]+=(-1.)*temp[ii           ];
                    current2[ii]+=(-1.)*temp[ii+1*T_global];
@@ -1408,7 +1526,7 @@ int main(int argc, char *argv[]){
                    current[ii] +=(-1.)*temp[ii+3*T_global];
                  }
                  free(temp);
-                 wilsonterm_current_density_412ab( operator_list[op_id].prop, TYPE_1, TYPE_B, &temp);
+                 wilsonterm_current_density_412ab( operator_list[op_id].prop_zero, TYPE_1, TYPE_B, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    current1[ii]+=(+1.)*temp[ii           ];
                    current2[ii]+=(+1.)*temp[ii+1*T_global];
@@ -1416,7 +1534,7 @@ int main(int argc, char *argv[]){
                    current[ii] +=(+1.)*temp[ii+3*T_global];
                  }
                  free(temp);
-                 wilsonterm_current_density_412ab( operator_list[op_id].prop, TYPE_2, TYPE_A, &temp);
+                 wilsonterm_current_density_412ab( operator_list[op_id].prop_zero, TYPE_2, TYPE_A, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    current1[ii]+=(+1.)*temp[ii           ];
                    current2[ii]+=(+1.)*temp[ii+1*T_global];
@@ -1424,7 +1542,7 @@ int main(int argc, char *argv[]){
                    current[ii] +=(+1.)*temp[ii+3*T_global];
                  }
                  free(temp);
-                 wilsonterm_current_density_412ab( operator_list[op_id].prop, TYPE_2, TYPE_B, &temp);
+                 wilsonterm_current_density_412ab( operator_list[op_id].prop_zero, TYPE_2, TYPE_B, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    current1[ii]+=(-1.)*temp[ii           ];
                    current2[ii]+=(-1.)*temp[ii+1*T_global];
@@ -1467,7 +1585,7 @@ int main(int argc, char *argv[]){
 
                }
                if (wilsoncurrentdensitypl1_BSM == 1){
-                 wilsonterm_current_density_512ab( operator_list[op_id].prop, TYPE_1, TYPE_A, &temp);
+                 wilsonterm_current_density_512ab( operator_list[op_id].prop_zero, TYPE_1, TYPE_A, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    current1[ii]+=(-1.)*temp[ii           ];
                    current2[ii]+=(-1.)*temp[ii+1*T_global];
@@ -1476,7 +1594,7 @@ int main(int argc, char *argv[]){
                  }
                  free(temp);
 
-                 wilsonterm_current_density_512ab( operator_list[op_id].prop, TYPE_1, TYPE_B, &temp);
+                 wilsonterm_current_density_512ab( operator_list[op_id].prop_zero, TYPE_1, TYPE_B, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    current1[ii]+=(+1.)*temp[ii           ];
                    current2[ii]+=(+1.)*temp[ii+1*T_global];
@@ -1485,7 +1603,7 @@ int main(int argc, char *argv[]){
                  }
                  free(temp);
 
-                 wilsonterm_current_density_512ab( operator_list[op_id].prop, TYPE_2, TYPE_A, &temp);
+                 wilsonterm_current_density_512ab( operator_list[op_id].prop_zero, TYPE_2, TYPE_A, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    current1[ii]+=(+1.)*temp[ii           ];
                    current2[ii]+=(+1.)*temp[ii+1*T_global];
@@ -1494,7 +1612,7 @@ int main(int argc, char *argv[]){
                  }
                  free(temp);
 
-                 wilsonterm_current_density_512ab( operator_list[op_id].prop, TYPE_2, TYPE_B, &temp);
+                 wilsonterm_current_density_512ab( operator_list[op_id].prop_zero, TYPE_2, TYPE_B, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    current1[ii]+=(-1.)*temp[ii           ];
                    current2[ii]+=(-1.)*temp[ii+1*T_global];
@@ -1537,7 +1655,7 @@ int main(int argc, char *argv[]){
                }
                if (wilsoncurrentdensitypl2_BSM == 1){
                //wilsoncurrent61a_petros( operator_list[op_id].prop );
-                 wilsonterm_current_density_612ab( operator_list[op_id].prop, TYPE_1, TYPE_A, &temp);
+                 wilsonterm_current_density_612ab( operator_list[op_id].prop_zero, TYPE_1, TYPE_A, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    current1[ii]+=(-1.)*temp[ii           ];
                    current2[ii]+=(-1.)*temp[ii+1*T_global];
@@ -1546,7 +1664,7 @@ int main(int argc, char *argv[]){
                  }
                  free(temp);
 
-                 wilsonterm_current_density_612ab( operator_list[op_id].prop, TYPE_1, TYPE_B, &temp);
+                 wilsonterm_current_density_612ab( operator_list[op_id].prop_zero, TYPE_1, TYPE_B, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    current1[ii]+=(+1.)*temp[ii           ];
                    current2[ii]+=(+1.)*temp[ii+1*T_global];
@@ -1557,7 +1675,7 @@ int main(int argc, char *argv[]){
          
 
                //wilsoncurrent62a_petros( operator_list[op_id].prop );
-                 wilsonterm_current_density_612ab( operator_list[op_id].prop, TYPE_2, TYPE_A, &temp);
+                 wilsonterm_current_density_612ab( operator_list[op_id].prop_zero, TYPE_2, TYPE_A, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    current1[ii]+=(+1.)*temp[ii           ];
                    current2[ii]+=(+1.)*temp[ii+1*T_global];
@@ -1566,7 +1684,7 @@ int main(int argc, char *argv[]){
                  }
                  free(temp);
 
-                 wilsonterm_current_density_612ab( operator_list[op_id].prop, TYPE_2, TYPE_B, &temp);
+                 wilsonterm_current_density_612ab( operator_list[op_id].prop_zero, TYPE_2, TYPE_B, &temp);
                  for (int ii=0; ii<T_global; ++ii){
                    current1[ii]+=(-1.)*temp[ii           ];
                    current2[ii]+=(-1.)*temp[ii+1*T_global];
@@ -1631,8 +1749,13 @@ int main(int argc, char *argv[]){
           if (operator_list[op_id].type == BSM2f ){
              free_D_psi_BSM2f();
              for (int ii=0; ii<48; ++ii)
-               free(operator_list[op_id].prop[ii]);
-             free(operator_list[op_id].prop);
+               free(operator_list[op_id].prop_zero[ii]);
+             free(operator_list[op_id].prop_zero);
+             if ( vectorcurrentcurrent_BSM == 1 ){
+               for (int ii=0; ii<48; ++ii)
+                 free(operator_list[op_id].prop_ntmone[ii]);
+               free(operator_list[op_id].prop_ntmone);
+             }
           }
 
       }//End loop over operators
@@ -1641,9 +1764,6 @@ int main(int argc, char *argv[]){
   }//End of loop over gauges
 
   finalize_solver(temp_field,2);
-#if defined MPI
-  free(request);
-#endif
   free_gauge_field();
   free_geometry_indices();
   free_bispinor_field();
