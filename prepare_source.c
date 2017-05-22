@@ -195,6 +195,8 @@ void prepare_source(const int nstore, const int isample, const int ix, const int
   }
   else { /* for the ND 2 flavour twisted operator and BSM(2) */
     SourceInfo.no_flavours = 2;
+    int tindex=source_location/(LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z);
+    SourceInfo.t = tindex;
     zero_spinor_field(g_spinor_field[0], VOLUME/2);
     zero_spinor_field(g_spinor_field[1], VOLUME/2);
     if(source_type != 1) {

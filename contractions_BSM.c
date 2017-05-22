@@ -511,6 +511,35 @@ int main(int argc, char *argv[]){
 		    operator_list[op_id].inverter(op_id, index_start, 1);
 
                  }//end of loop for spinor and color source degrees of freedom
+
+                 if (vectorcurrentcurrent_BSM == 1){
+                    int tindex=source_location/(LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z);
+                    int tnewindex=(tindex-1+T_global)%T_global;
+                    int spatialindex=source_location % (LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z);
+                    int backsource=tnewindex*(LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z)+spatialindex;
+
+                    for(ix = index_start; ix < index_end; ix++) {
+                      if (g_cart_id == 0) {
+                        fprintf(stdout, "#\n"); /*Indicate starting of new index*/
+                      }
+
+                      /* we use g_spinor_field[0-7] for sources and props for the moment */
+                      /* 0-3 in case of 1 flavour  */
+                      /* 0-7 in case of 2 flavours */
+
+                      prepare_source(nstore, isample, ix, op_id, read_source_flag, backsource);
+
+                      //randmize initial guess for eigcg if needed-----experimental
+                      if( (operator_list[op_id].solver == INCREIGCG) && (operator_list[op_id].solver_params.eigcg_rand_guess_opt) )
+                      { //randomize the initial guess
+                        gaussian_volume_source( operator_list[op_id].prop0, operator_list[op_id].prop1,isample,ix,0); //need to check this
+                      }
+
+                      operator_list[op_id].inverter(op_id, index_start, 1);
+                    }//end of loop for spinor and color source degrees of freedom
+
+                 }//end of vectorcurrentcurrent_BSM == 1
+
                }
                else{
                  for(src_idx = 0; src_idx < 12; src_idx++ )

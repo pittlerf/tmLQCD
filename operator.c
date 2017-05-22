@@ -505,7 +505,13 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
         fflush(stdout);
       }
       if (propagatorsonthefly_BSM == 1){
-        assign( (spinor *)optr->prop_zero[4*SourceInfo.ix+2*(1-i)], (spinor *)temp, 2*VOLUME);
+        if (g_cart_id == 0){printf("#SourceInfo.t=%d, ix=%d\n", SourceInfo.t, SourceInfo.ix);fflush(stdout);};
+        if (vectorcurrentcurrent_BSM == 1 && SourceInfo.t != 0){
+           assign( (spinor *)optr->prop_ntmone[4*SourceInfo.ix+2*(1-i)], (spinor *)temp, 2*VOLUME);
+        }
+        else{
+           assign( (spinor *)optr->prop_zero[4*SourceInfo.ix+2*(1-i)], (spinor *)temp, 2*VOLUME);
+        }
       }
       decompact(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], temp);
 
@@ -544,8 +550,18 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
         fflush(stdout);
       }
       if (propagatorsonthefly_BSM == 1){
-        assign((spinor*)optr->prop_zero[4*SourceInfo.ix+2*(1-i)+1],(spinor *)dest, 2*VOLUME);
+        if (g_cart_id == 0){printf("#SourceInfo.t=%d, ix=%d\n", SourceInfo.t, SourceInfo.ix);fflush(stdout);};
+        if (vectorcurrentcurrent_BSM == 1 && SourceInfo.t != 0){
+           assign( (spinor *)optr->prop_ntmone[4*SourceInfo.ix+2*(1-i)+1], (spinor *)dest, 2*VOLUME);
+        }
+        else{
+           assign( (spinor *)optr->prop_zero[4*SourceInfo.ix+2*(1-i)+1], (spinor *)dest, 2*VOLUME);
+        }
       }
+
+/*      if (propagatorsonthefly_BSM == 1){
+        assign((spinor*)optr->prop_zero[4*SourceInfo.ix+2*(1-i)+1],(spinor *)dest, 2*VOLUME);
+      }*/
 
       decompact(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], dest);
 
