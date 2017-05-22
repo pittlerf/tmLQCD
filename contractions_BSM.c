@@ -672,22 +672,22 @@ int main(int argc, char *argv[]){
                   }
                }
                if (vectorcurrentcurrent_BSM == 1){
-                 vector_axial_current_current_1234(operator_list[op_id].prop_zero, operator_list[op_id].prop_ntmone, TYPE_1, 3, 0, &temp );
+                 vector_axial_current_current_1234(operator_list[op_id].prop_zero, operator_list[op_id].prop_ntmone, TYPE_1, 2, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_current_1234(operator_list[op_id].prop_zero, operator_list[op_id].prop_ntmone, TYPE_2, 3, 0, &temp );
+                 vector_axial_current_current_1234(operator_list[op_id].prop_zero, operator_list[op_id].prop_ntmone, TYPE_2, 2, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_current_1234(operator_list[op_id].prop_zero, operator_list[op_id].prop_ntmone, TYPE_3, 3, 0, &temp );
+                 vector_axial_current_current_1234(operator_list[op_id].prop_zero, operator_list[op_id].prop_ntmone, TYPE_3, 2, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
                  free(temp);
-                 vector_axial_current_current_1234(operator_list[op_id].prop_zero, operator_list[op_id].prop_ntmone, TYPE_4, 3, 0, &temp );
+                 vector_axial_current_current_1234(operator_list[op_id].prop_zero, operator_list[op_id].prop_ntmone, TYPE_4, 2, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
                  }
