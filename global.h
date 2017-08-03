@@ -78,7 +78,9 @@ EXTERN int wilsoncurrentdensitypl2_BSM;
 EXTERN int vectorcurrentcurrent_BSM;
 EXTERN int vectorcurrentdensity_BSM;
 EXTERN int axialcurrentdensity_BSM;
+EXTERN int vectordensitydensity_BSM;
 EXTERN int giancarlo_BSM;
+EXTERN int timesmearcorrelator_BSM;
 #define TUP 0
 #define XUP 1
 #define YUP 2

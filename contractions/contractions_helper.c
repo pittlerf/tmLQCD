@@ -949,6 +949,108 @@ void phi0_taui_commutator( _Complex double *dest,int tauindex ){
    }
    free(source_copy);
 }
+
+void phix_taui_commutator_bispinor( bispinor *dest,int tauindex, int gamma5, int ix ){
+
+   bispinor source_copy;
+   bispinor tmpbi2;
+   _Complex double a11=0.0, a12=0.0, a21=0.0, a22=0.0;
+   int i;
+
+   _spinor_assign(source_copy.sp_up, dest->sp_up);
+   _spinor_assign(source_copy.sp_dn, dest->sp_dn);
+
+   if (tauindex == 2){
+     if (smearedcorrelator_BSM == 1){
+       a11=0.;
+       a12=-2.*g_smeared_scalar_field[2][ix]-2.*I*g_smeared_scalar_field[1][ix];
+       a21=-2.*g_smeared_scalar_field[2][ix]+2.*I*g_smeared_scalar_field[1][ix];
+       a22=0.;
+     }
+     else{
+       a11=0.;
+       a12=-2.*g_scalar_field[2][ix]-2.*I*g_scalar_field[1][ix];
+       a21=-2.*g_scalar_field[2][ix]+2.*I*g_scalar_field[1][ix];
+       a22=0.;
+     }
+   }
+   else if (tauindex == 1){
+     if (smearedcorrelator_BSM == 1){
+       a11=-2.*g_smeared_scalar_field[1][ix];
+       a12=+2.*g_smeared_scalar_field[3][ix];
+       a21=+2.*g_smeared_scalar_field[3][ix];
+       a22=+2.*g_smeared_scalar_field[1][ix];
+     }
+     else{
+       a11=-2.*g_scalar_field[1][ix];
+       a12=+2.*g_scalar_field[3][ix];
+       a21=+2.*g_scalar_field[3][ix];
+       a22=+2.*g_scalar_field[1][ix];
+     }
+   }
+   else if (tauindex == 0){
+     if (smearedcorrelator_BSM == 1){
+       a11=+2.*  g_smeared_scalar_field[2][ix];
+       a12=+2.*I*g_smeared_scalar_field[3][ix];
+       a21=-2.*I*g_smeared_scalar_field[3][ix];
+       a22=-2.*  g_smeared_scalar_field[2][ix];
+     }
+     else{
+       a11=+2.*  g_scalar_field[2][ix];
+       a12=+2.*I*g_scalar_field[3][ix];
+       a21=-2.*I*g_scalar_field[3][ix];
+       a22=-2.*  g_scalar_field[2][ix];
+     }
+   }
+   else {
+     if (g_cart_id == 0){ 
+       printf("Wrong Pauli matrix index\n");
+       exit(1);
+     }    
+   }
+   _spinor_null(tmpbi2.sp_up);
+   _spinor_null(tmpbi2.sp_dn);
+
+   if ( gamma5 == GAMMA_UP){
+     _vector_mul_complex(    tmpbi2.sp_up.s0, a11, source_copy.sp_up.s0);
+     _vector_add_mul_complex(tmpbi2.sp_up.s0, a12, source_copy.sp_dn.s0);
+
+     _vector_mul_complex    (tmpbi2.sp_dn.s0, a21, source_copy.sp_up.s0);
+     _vector_add_mul_complex(tmpbi2.sp_dn.s0, a22, source_copy.sp_dn.s0);
+
+     _vector_mul_complex(    tmpbi2.sp_up.s1, a11, source_copy.sp_up.s1);
+     _vector_add_mul_complex(tmpbi2.sp_up.s1, a12, source_copy.sp_dn.s1);
+
+     _vector_mul_complex    (tmpbi2.sp_dn.s1, a21, source_copy.sp_up.s1);
+     _vector_add_mul_complex(tmpbi2.sp_dn.s1, a22, source_copy.sp_dn.s1);
+   }
+   else if  ( gamma5 == GAMMA_DN ){
+     _vector_mul_complex(    tmpbi2.sp_up.s2, a11, source_copy.sp_up.s2);
+     _vector_add_mul_complex(tmpbi2.sp_up.s2, a12, source_copy.sp_dn.s2);
+
+     _vector_mul_complex    (tmpbi2.sp_dn.s2, a21, source_copy.sp_up.s2);
+     _vector_add_mul_complex(tmpbi2.sp_dn.s2, a22, source_copy.sp_dn.s2);
+
+     _vector_mul_complex(    tmpbi2.sp_up.s3, a11, source_copy.sp_up.s3);
+     _vector_add_mul_complex(tmpbi2.sp_up.s3, a12, source_copy.sp_dn.s3);
+
+     _vector_mul_complex    (tmpbi2.sp_dn.s3, a21, source_copy.sp_up.s3);
+     _vector_add_mul_complex(tmpbi2.sp_dn.s3, a22, source_copy.sp_dn.s3);
+   }
+   else if ( gamma5 == NO_GAMMA ){
+     _spinor_mul_complex    (tmpbi2.sp_up,    a11, source_copy.sp_up);
+     _spinor_add_mul_complex(tmpbi2.sp_up,    a12, source_copy.sp_dn);
+
+     _spinor_mul_complex    (tmpbi2.sp_dn,    a21, source_copy.sp_up);
+     _spinor_add_mul_complex(tmpbi2.sp_dn,    a22, source_copy.sp_dn);
+   }
+
+   _spinor_assign(dest->sp_up, tmpbi2.sp_up);
+   _spinor_assign(dest->sp_dn, tmpbi2.sp_dn);
+
+}
+
+
 void phi0_taui_anticommutator( _Complex double *dest, int tauindex, int dagger ){
 
    _Complex double *source_copy;

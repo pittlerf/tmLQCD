@@ -594,7 +594,7 @@ int main(int argc, char *argv[]){
                }
 
                if (smearedcorrelator_BSM == 1){
-                smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field);
+                smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field, timesmearcorrelator_BSM );
                 if (g_cart_id == 0) printf("Smeared : %e\t Non smeared %e\n", g_smeared_scalar_field[0][0],g_scalar_field[0][0]);
                  for ( int s=0; s<4; s++ )
                    generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
@@ -889,12 +889,72 @@ int main(int argc, char *argv[]){
                  }
                   
                }
+               if (vectordensitydensity_BSM == 1){
+
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
+
+                 vector_density_density_1234(operator_list[op_id].prop_zero, TYPE_1,2, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   scalar[ii]+=(+1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_density_density_1234(operator_list[op_id].prop_zero, TYPE_2,2, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   scalar[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_density_density_1234(operator_list[op_id].prop_zero, TYPE_3,2, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   scalar[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_density_density_1234(operator_list[op_id].prop_zero, TYPE_4,2, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   scalar[ii]+=(+1.)*temp[ii];
+                 }
+                 free(temp);
+                 temp= NULL;
+                 if (g_cart_id == 0){
+//                 fprintf(out,"S1S1nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"VECTORDENSITY3DENSITY3NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(scalar[ii]), cimag(scalar[ii]));
+                   }
+                 }
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
+
+               }
                if (axialcurrentdensity_BSM == 1){
                  unit_scalar_field(g_scalar_field);
                  for( int s=0; s<4; s++ )
                    generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
                  if (smearedcorrelator_BSM == 1){
-                   smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field);
+                   smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field, timesmearcorrelator_BSM );
                    for ( int s=0; s<4; s++ )
                     generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
                  }
@@ -956,7 +1016,7 @@ int main(int argc, char *argv[]){
                  for( int s=0; s<4; s++ )
                    generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
                  if (smearedcorrelator_BSM == 1){
-                   smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field);
+                   smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field, timesmearcorrelator_BSM );
                    for ( int s=0; s<4; s++ )
                     generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
                  }
@@ -1202,7 +1262,7 @@ int main(int argc, char *argv[]){
                  for( int s=0; s<4; s++ )
                    generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
                  if (smearedcorrelator_BSM == 1){
-                   smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field);
+                   smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field, timesmearcorrelator_BSM);
                    for ( int s=0; s<4; s++ )
                     generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
                  }
@@ -1268,7 +1328,7 @@ int main(int argc, char *argv[]){
                  for( int s=0; s<4; s++ )
                    generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
                  if (smearedcorrelator_BSM == 1){
-                   smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field);
+                   smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field, timesmearcorrelator_BSM );
                    for ( int s=0; s<4; s++ )
                     generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
                  }
@@ -1279,7 +1339,7 @@ int main(int argc, char *argv[]){
                  for( int s=0; s<4; s++ )
                    generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
                  if (smearedcorrelator_BSM == 1){
-                   smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field);
+                   smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field, timesmearcorrelator_BSM );
                    for ( int s=0; s<4; s++ )
                     generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
                  }
@@ -1402,7 +1462,7 @@ int main(int argc, char *argv[]){
                  for( int s=0; s<4; s++ )
                    generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
                  if (smearedcorrelator_BSM == 1){
-                   smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field);
+                   smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field, timesmearcorrelator_BSM );
                    for ( int s=0; s<4; s++ )
                     generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
                  }

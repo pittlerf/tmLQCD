@@ -36,6 +36,7 @@ void mult_taui_flavoronly( _Complex double *dest, int tauindex);
 void mult_phi( bispinor *dest, bispinor *source, int ix, int dagg);
 void taui_spinor( bispinor *dest, bispinor *source, int tauindex );
 void phi0_taui_commutator( _Complex double *dest,int tauindex );
+void phix_taui_commutator_bispinor( bispinor *dest,int tauindex, int gamma5, int ix );
 void phi0_taui_anticommutator( _Complex double *dest, int tauindex, int dagger );
 void taui_scalarfield_spinor_s0s0( bispinor *dest, bispinor *source, int gamma5, int idx, int direction, int dagger);
 void taui_scalarfield_spinor( bispinor *dest, bispinor *source, int gamma5, int tauindex, int idx, int direction, int dagger);

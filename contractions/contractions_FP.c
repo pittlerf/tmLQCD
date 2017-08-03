@@ -899,6 +899,136 @@ void vector_axial_current_density_1234( bispinor ** propfields, int type_1234,in
    free(spinortrace);
    free(colortrace);
 }
+void vector_density_density_1234( bispinor ** propfields, int type_1234,int taudensity, _Complex double **results ){
+   int ix,i;
+   int f1,c1,s1;
+   int spinorstart=0, spinorend=4;
+   bispinor running;
+
+   _Complex double *colortrace;
+   _Complex double *spacetrace;
+   _Complex double *spinortrace;
+   _Complex double *flavortrace;
+   int type;
+
+
+
+   colortrace=(_Complex double *)malloc(sizeof(_Complex double) *8);
+   spacetrace=(_Complex double *)malloc(sizeof(_Complex double) *8*T_global);
+   spinortrace=(_Complex double *)malloc(sizeof(_Complex double)*2*T_global);
+   flavortrace=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
+
+   if ( (colortrace == NULL) || (spacetrace == NULL) || (spinortrace == NULL) || (flavortrace == NULL) )
+   {
+     printf("Error in mem allocation in density_density_1234\n");
+     exit(1);
+   }
+   *results=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
+   if (*results == NULL){
+     printf("Error in vector current density\n");
+     exit(1);
+   }
+
+
+   if ( ( type_1234 == TYPE_1 )|| ( type_1234 == TYPE_3 ) ) {
+     spinorstart=0;
+     spinorend  =2;
+   }
+   else if ( ( type_1234 == TYPE_2) || (type_1234 == TYPE_4) ){
+     spinorstart=2;
+     spinorend  =4;
+   }
+   else{
+     if (g_cart_id ==0) fprintf(stdout, "Wrong arument for type_1234, it can only be TYPE_1, TYPE_2, TYPE_3, TYPE_4\n");
+     exit(1);
+   }
+
+
+//Trace over up and down flavors
+   for (i=0; i<T_global; ++i)
+     flavortrace[i]=0.;
+   for (f1=0; f1<2; ++f1){
+//Trace over the spinor indices you have to trace only over those two spinor 
+//component that appear in the final spinor
+     for (i=0; i<2*T_global; ++i)
+       spinortrace[i]=0.;
+
+     for (s1= spinorstart; s1<spinorend; ++s1){
+//Trace over the spatial indices
+       for (i=0; i<8*T_global; ++i)
+         spacetrace[i]=0.;
+       for (ix = 0; ix< VOLUME; ++ix){
+//Trace over the color indices for each sites
+         for (i=0; i<8; ++i)
+           colortrace[i]=0.;
+         for (c1=0; c1<3; ++c1){
+
+           _bispinor_null(running);
+
+           if ( (type_1234 == TYPE_1) || (type_1234 == TYPE_2) ){
+
+             _vector_assign(running.sp_up.s0, propfields[12*s1+4*c1+2*f1][ix].sp_up.s0);
+             _vector_assign(running.sp_up.s1, propfields[12*s1+4*c1+2*f1][ix].sp_up.s1);
+
+             _vector_assign(running.sp_dn.s0, propfields[12*s1+4*c1+2*f1][ix].sp_dn.s0);
+             _vector_assign(running.sp_dn.s1, propfields[12*s1+4*c1+2*f1][ix].sp_dn.s1);
+
+
+              phix_taui_commutator_bispinor( &running, taudensity, GAMMA_UP, ix );
+
+           }
+           else if ((type_1234 == TYPE_3) || ( type_1234 == TYPE_4)){
+
+             _vector_assign(running.sp_up.s2, propfields[12*s1+4*c1+2*f1][ix].sp_up.s2);
+             _vector_assign(running.sp_up.s3, propfields[12*s1+4*c1+2*f1][ix].sp_up.s3);
+
+             _vector_assign(running.sp_dn.s2, propfields[12*s1+4*c1+2*f1][ix].sp_dn.s2);
+             _vector_assign(running.sp_dn.s3, propfields[12*s1+4*c1+2*f1][ix].sp_dn.s3);
+              
+              phix_taui_commutator_bispinor( &running, taudensity, GAMMA_DN, ix );
+
+           }
+
+           multiply_backward_propagator(&running, propfields, &running, ix, NODIR );
+
+           trace_in_color(colortrace,&running,c1);
+
+         }  
+       
+         trace_in_space(spacetrace,colortrace,ix);
+
+       } 
+//Gather the results from all nodes to complete the trace in space
+#if defined MPI
+       for (i=0; i<8*T_global; ++i){
+         _Complex double tmp;
+        MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
+        spacetrace[i]= tmp;
+       }
+#endif
+           // delta (spinor components of spacetrace, s1) for all time slices and flavor indices
+       trace_in_spinor(spinortrace, spacetrace, s1);
+     }//End of trace in spinor space
+
+     phi0_taui_commutator( spinortrace, taudensity );
+     
+     //delta(flavor component in spinortrace, f1) for all time slices
+     trace_in_flavor( flavortrace, spinortrace, f1 );
+   } //End of trace in flavor space
+   type = type_1234 == TYPE_1 ? 1 : type_1234 == TYPE_2 ? 2 : type_1234 == TYPE_3 ? 3 : 4 ;
+   if (g_cart_id == 0){printf("Vector Density Density correlator type (%s) for tau matrix density %d results\n", type_1234 == TYPE_1 ? "1" : type_1234 == TYPE_2 ? "2" : type_1234 == TYPE_3 ? "3" : "4", taudensity);}
+   for (i=0; i<T_global; ++i){
+     if (g_cart_id == 0){
+      printf("VECTORDENSITY%dDENSITY%d %d %.3d %10.10e %10.10e\n", taudensity,taudensity, type, i, creal(flavortrace[i])/4.,cimag(flavortrace[i])/4.);
+      fflush(stdout);
+     }
+     (*results)[i]=flavortrace[i]/4.;
+   }
+   free(flavortrace);
+   free(spacetrace);
+   free(spinortrace);
+   free(colortrace);
+}
 
 
 
@@ -1323,4 +1453,3 @@ void vector_axial_current_current_1234( bispinor ** propfields_source_zero, bisp
    free(spinortrace);
    free(colortrace);
 }
-

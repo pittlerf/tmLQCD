@@ -291,14 +291,19 @@ void smear_scalar_fields( scalar ** smearedfield, scalar ** const sf ) {
    free(request);
 #endif
 }
-void smear_scalar_fields_correlator( scalar **smearedfield, scalar ** const sf ) {
+void smear_scalar_fields_correlator( scalar **smearedfield, scalar ** const sf, int timeaverage) {
 
    int x0,y0,z0,t0;
    double **timeslicesum;
+   double **timeslicesumnew;
 #if defined MPI
    double mpi_res;
 #endif
    int j;
+   double upneighbour[4];
+   double upsecneighbour[4];
+   double dnneighbour[4];
+   double dnsecneighbour[4];
    for (j = 0; j<4 ; ++j ){
       for (x0=0; x0<VOLUME; ++x0){
          smearedfield[j][x0]=0.0;
@@ -306,12 +311,19 @@ void smear_scalar_fields_correlator( scalar **smearedfield, scalar ** const sf )
    }
    timeslicesum=(double **)malloc(sizeof(double *)*T);
    for (j=0; j<T; ++j)
-      timeslicesum[j] = (double *)malloc(sizeof(double)*4);
+      timeslicesum[j]= (double *)malloc(sizeof(double)*4);
+   timeslicesumnew=(double **)malloc(sizeof(double *)*T);
+   for (j=0; j<T; ++j)
+      timeslicesumnew[j] = (double *)malloc(sizeof(double)*4);
    for (j=0; j<T; ++j){
       timeslicesum[j][0]=0.;
       timeslicesum[j][1]=0.;
       timeslicesum[j][2]=0.;
       timeslicesum[j][3]=0.;
+      timeslicesumnew[j][0]=0.;
+      timeslicesumnew[j][1]=0.;
+      timeslicesumnew[j][2]=0.;
+      timeslicesumnew[j][3]=0.;
    }
    for (j=0; j<VOLUME; ++j){
           /* get (t,x,y,z) from j */
@@ -336,12 +348,293 @@ void smear_scalar_fields_correlator( scalar **smearedfield, scalar ** const sf )
       timeslicesum[j][3]=mpi_res;
    }
 #endif
-   for (j=0; j<T; ++j){
+/*   if (g_cart_id == 0){
+     for (j=0; j<T; ++j)
+       printf("%03d\t%10.10e\n", j, timeslicesum[j][0]);
+   }*/
+/*   for (j=0; j<T; ++j){
       timeslicesum[j][0]/=(double)LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
       timeslicesum[j][1]/=(double)LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
       timeslicesum[j][2]/=(double)LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
       timeslicesum[j][3]/=(double)LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
    }
+*/
+   if (timeaverage == 0){
+     for (j=0; j<T; ++j){
+       timeslicesumnew[j][0]= timeslicesum[j][0] ;
+       timeslicesumnew[j][1]= timeslicesum[j][1] ;
+       timeslicesumnew[j][2]= timeslicesum[j][2] ;
+       timeslicesumnew[j][3]= timeslicesum[j][3] ;
+     }
+   }
+   if (timeaverage == 1){
+#if defined MPI
+     MPI_Status status[108];
+     int cntr=0;
+     MPI_Request request[108];
+
+     if (g_nproc_t > 1){
+       for (j=0; j<4;++j){
+
+         cntr=0;
+
+         MPI_Isend(&timeslicesum[0  ][j], 1, MPI_DOUBLE, g_nb_t_dn, 87, g_cart_grid, &request[cntr]);
+         MPI_Irecv(&upneighbour[j], 1, MPI_DOUBLE, g_nb_t_up, 87,g_cart_grid, &request[cntr+1]);
+
+         cntr=cntr+2;
+         MPI_Waitall(cntr, request, status);
+
+         cntr=0;
+
+         MPI_Isend(&timeslicesum[T-1][j], 1, MPI_DOUBLE, g_nb_t_up, 88, g_cart_grid, &request[cntr]);
+         MPI_Irecv(&dnneighbour[j], 1, MPI_DOUBLE, g_nb_t_dn, 88,g_cart_grid, &request[cntr+1]);
+
+         cntr=cntr+2;
+         MPI_Waitall(cntr, request, status);
+
+       }
+       if ( T > 1){
+         timeslicesumnew[0][0]= dnneighbour[0] + timeslicesum[0][0] + timeslicesum[1][0];
+         timeslicesumnew[0][1]= dnneighbour[1] + timeslicesum[0][1] + timeslicesum[1][1];
+         timeslicesumnew[0][2]= dnneighbour[2] + timeslicesum[0][2] + timeslicesum[1][2];
+         timeslicesumnew[0][3]= dnneighbour[3] + timeslicesum[0][3] + timeslicesum[1][3];
+
+         timeslicesumnew[T-1][0]= timeslicesum[T-2][0] + timeslicesum[T-1][0] + upneighbour[0];
+         timeslicesumnew[T-1][1]= timeslicesum[T-2][1] + timeslicesum[T-1][1] + upneighbour[1];
+         timeslicesumnew[T-1][2]= timeslicesum[T-2][2] + timeslicesum[T-1][2] + upneighbour[2];
+         timeslicesumnew[T-1][3]= timeslicesum[T-2][3] + timeslicesum[T-1][3] + upneighbour[3];
+
+         for (j=1;j<T-1;++j){
+           timeslicesumnew[j][0]= timeslicesum[j-1][0] + timeslicesum[j][0] + timeslicesum[j+1][0];
+           timeslicesumnew[j][1]= timeslicesum[j-1][1] + timeslicesum[j][1] + timeslicesum[j+1][1];
+           timeslicesumnew[j][2]= timeslicesum[j-1][2] + timeslicesum[j][2] + timeslicesum[j+1][2];
+           timeslicesumnew[j][3]= timeslicesum[j-1][3] + timeslicesum[j][3] + timeslicesum[j+1][3];
+         }
+       }
+       else{
+
+         timeslicesumnew[0][0]= dnneighbour[0] + timeslicesum[0][0] + upneighbour[0];
+         timeslicesumnew[0][1]= dnneighbour[1] + timeslicesum[0][1] + upneighbour[1];
+         timeslicesumnew[0][2]= dnneighbour[2] + timeslicesum[0][2] + upneighbour[2];
+         timeslicesumnew[0][3]= dnneighbour[3] + timeslicesum[0][3] + upneighbour[3];
+
+       }
+     
+     }
+     else{
+       for (j=0;j<T;++j){
+         timeslicesumnew[j][0]= timeslicesum[(j-1+T)%T][0] + timeslicesum[j][0] + timeslicesum[(j+1)%T][0];
+         timeslicesumnew[j][1]= timeslicesum[(j-1+T)%T][1] + timeslicesum[j][1] + timeslicesum[(j+1)%T][1];
+         timeslicesumnew[j][2]= timeslicesum[(j-1+T)%T][2] + timeslicesum[j][2] + timeslicesum[(j+1)%T][2];
+         timeslicesumnew[j][3]= timeslicesum[(j-1+T)%T][3] + timeslicesum[j][3] + timeslicesum[(j+1)%T][3];
+       }
+     }
+#else
+     for (j=0;j<T;++j){
+       timeslicesumnew[j][0]= timeslicesum[(j-1+T)%T][0] + timeslicesum[j][0] + timeslicesum[(j+1)%T][0];
+       timeslicesumnew[j][1]= timeslicesum[(j-1+T)%T][1] + timeslicesum[j][1] + timeslicesum[(j+1)%T][1];
+       timeslicesumnew[j][2]= timeslicesum[(j-1+T)%T][2] + timeslicesum[j][2] + timeslicesum[(j+1)%T][2];
+       timeslicesumnew[j][3]= timeslicesum[(j-1+T)%T][3] + timeslicesum[j][3] + timeslicesum[(j+1)%T][3];
+     }
+#endif
+   }
+   else if (timeaverage == 2){
+#if defined MPI
+     MPI_Status status[108];
+     int cntr=0;
+     MPI_Request request[108];
+
+     if (g_nproc_t > 1){
+
+       for (j=0; j<4;++j){
+
+         cntr=0;
+
+         MPI_Isend(&timeslicesum[0  ][j], 1, MPI_DOUBLE, g_nb_t_dn, 87, g_cart_grid, &request[cntr]);
+         MPI_Irecv(&upneighbour[j], 1, MPI_DOUBLE, g_nb_t_up, 87,g_cart_grid, &request[cntr+1]);
+
+         cntr=cntr+2;
+         MPI_Waitall(cntr, request, status);
+
+         cntr=0;
+
+         MPI_Isend(&timeslicesum[T-1][j], 1, MPI_DOUBLE, g_nb_t_up, 88, g_cart_grid, &request[cntr]);
+         MPI_Irecv(&dnneighbour[j], 1, MPI_DOUBLE, g_nb_t_dn, 88,g_cart_grid, &request[cntr+1]);
+
+         cntr=cntr+2;
+         MPI_Waitall(cntr, request, status);
+
+       }
+       if (T > 1){
+
+         for (j=0; j<4;++j){
+
+           cntr=0;
+
+           MPI_Isend(&timeslicesum[1  ][j], 1, MPI_DOUBLE, g_nb_t_dn, 87, g_cart_grid, &request[cntr]);
+           MPI_Irecv(&upsecneighbour[j], 1, MPI_DOUBLE, g_nb_t_up, 87,g_cart_grid, &request[cntr+1]);
+
+           cntr=cntr+2;
+           MPI_Waitall(cntr, request, status);
+
+           cntr=0;
+
+           MPI_Isend(&timeslicesum[T-2][j], 1, MPI_DOUBLE, g_nb_t_up, 88, g_cart_grid, &request[cntr]);
+           MPI_Irecv(&dnsecneighbour[j], 1, MPI_DOUBLE, g_nb_t_dn, 88,g_cart_grid, &request[cntr+1]);
+
+           cntr=cntr+2;
+           MPI_Waitall(cntr, request, status);
+
+         }
+         if ( T > 3){
+           timeslicesumnew[0][0]= dnsecneighbour[0] + dnneighbour[0] + timeslicesum[0][0] + timeslicesum[1][0] + timeslicesum[2][0];
+           timeslicesumnew[0][1]= dnsecneighbour[1] + dnneighbour[1] + timeslicesum[0][1] + timeslicesum[1][1] + timeslicesum[2][1];
+           timeslicesumnew[0][2]= dnsecneighbour[2] + dnneighbour[2] + timeslicesum[0][2] + timeslicesum[1][2] + timeslicesum[2][2];
+           timeslicesumnew[0][3]= dnsecneighbour[3] + dnneighbour[3] + timeslicesum[0][3] + timeslicesum[1][3] + timeslicesum[2][3];
+
+           timeslicesumnew[1][0]= dnneighbour[0] + timeslicesum[0][0] + timeslicesum[1][0] + timeslicesum[2][0] + timeslicesum[3][0];
+           timeslicesumnew[1][1]= dnneighbour[1] + timeslicesum[0][1] + timeslicesum[1][1] + timeslicesum[2][1] + timeslicesum[3][1];
+           timeslicesumnew[1][2]= dnneighbour[2] + timeslicesum[0][2] + timeslicesum[1][2] + timeslicesum[2][2] + timeslicesum[3][2];
+           timeslicesumnew[1][3]= dnneighbour[3] + timeslicesum[0][3] + timeslicesum[1][3] + timeslicesum[2][3] + timeslicesum[3][3];
+
+           for (j=2; j<T-2; ++j){
+             timeslicesumnew[j][0]= timeslicesum[j-2][0] + timeslicesum[j-1][0] + timeslicesum[j][0] + timeslicesum[j+1][0] + timeslicesum[j+2][0];
+             timeslicesumnew[j][1]= timeslicesum[j-2][1] + timeslicesum[j-1][1] + timeslicesum[j][1] + timeslicesum[j+1][1] + timeslicesum[j+2][1];
+             timeslicesumnew[j][2]= timeslicesum[j-2][2] + timeslicesum[j-1][2] + timeslicesum[j][2] + timeslicesum[j+1][2] + timeslicesum[j+2][2];
+             timeslicesumnew[j][3]= timeslicesum[j-2][3] + timeslicesum[j-1][3] + timeslicesum[j][3] + timeslicesum[j+1][3] + timeslicesum[j+2][3];
+           }
+
+           timeslicesumnew[T-1][0]= upsecneighbour[0] + upneighbour[0] + timeslicesum[T-1][0] + timeslicesum[T-2][0] + timeslicesum[T-3][0];
+           timeslicesumnew[T-1][1]= upsecneighbour[1] + upneighbour[1] + timeslicesum[T-1][1] + timeslicesum[T-2][1] + timeslicesum[T-3][1];
+           timeslicesumnew[T-1][2]= upsecneighbour[2] + upneighbour[2] + timeslicesum[T-1][2] + timeslicesum[T-2][2] + timeslicesum[T-3][2];
+           timeslicesumnew[T-1][3]= upsecneighbour[3] + upneighbour[3] + timeslicesum[T-1][3] + timeslicesum[T-2][3] + timeslicesum[T-3][3];
+
+           timeslicesumnew[T-2][0]= upneighbour[0] + timeslicesum[T-1][0] + timeslicesum[T-2][0] + timeslicesum[T-3][0] + timeslicesum[T-4][0];
+           timeslicesumnew[T-2][1]= upneighbour[1] + timeslicesum[T-1][1] + timeslicesum[T-2][1] + timeslicesum[T-3][1] + timeslicesum[T-4][1];
+           timeslicesumnew[T-2][2]= upneighbour[2] + timeslicesum[T-1][2] + timeslicesum[T-2][2] + timeslicesum[T-3][2] + timeslicesum[T-4][2];
+           timeslicesumnew[T-2][3]= upneighbour[3] + timeslicesum[T-1][3] + timeslicesum[T-2][3] + timeslicesum[T-3][3] + timeslicesum[T-4][3];
+
+         }
+         else{
+
+           timeslicesumnew[0][0]= dnsecneighbour[0] + dnneighbour[0] + timeslicesum[0][0] + timeslicesum[1][0] + upneighbour[0];
+           timeslicesumnew[0][1]= dnsecneighbour[1] + dnneighbour[1] + timeslicesum[0][1] + timeslicesum[1][1] + upneighbour[1];
+           timeslicesumnew[0][2]= dnsecneighbour[2] + dnneighbour[2] + timeslicesum[0][2] + timeslicesum[1][2] + upneighbour[2];
+           timeslicesumnew[0][3]= dnsecneighbour[3] + dnneighbour[3] + timeslicesum[0][3] + timeslicesum[1][3] + upneighbour[3];
+
+           timeslicesumnew[1][0]= dnneighbour[0] + timeslicesum[0][0] + timeslicesum[1][0] + upneighbour[0] + upsecneighbour[0];
+           timeslicesumnew[1][1]= dnneighbour[1] + timeslicesum[0][1] + timeslicesum[1][1] + upneighbour[1] + upsecneighbour[1];
+           timeslicesumnew[1][2]= dnneighbour[2] + timeslicesum[0][2] + timeslicesum[1][2] + upneighbour[2] + upsecneighbour[2];
+           timeslicesumnew[1][3]= dnneighbour[3] + timeslicesum[0][3] + timeslicesum[1][3] + upneighbour[3] + upsecneighbour[3];
+
+         }
+       }
+       else{
+         for (j=0; j<4;++j){
+
+           cntr=0;
+
+           MPI_Isend(&dnneighbour[j], 1, MPI_DOUBLE, g_nb_t_up, 87, g_cart_grid, &request[cntr]);
+           MPI_Irecv(&dnsecneighbour[j], 1, MPI_DOUBLE, g_nb_t_dn, 87,g_cart_grid, &request[cntr+1]);
+
+           cntr=cntr+2;
+           MPI_Waitall(cntr, request, status);
+
+           cntr=0;
+
+           MPI_Isend(&upneighbour[j], 1, MPI_DOUBLE, g_nb_t_dn, 88, g_cart_grid, &request[cntr]);
+           MPI_Irecv(&upsecneighbour[j], 1, MPI_DOUBLE, g_nb_t_up, 88,g_cart_grid, &request[cntr+1]);
+
+           cntr=cntr+2;
+           MPI_Waitall(cntr, request, status);
+
+         }
+
+         timeslicesumnew[0][0]= dnsecneighbour[0] + dnneighbour[0] + timeslicesum[0][0] + upneighbour[0] + upsecneighbour[0];
+         timeslicesumnew[0][1]= dnsecneighbour[1] + dnneighbour[1] + timeslicesum[0][1] + upneighbour[1] + upsecneighbour[1];
+         timeslicesumnew[0][2]= dnsecneighbour[2] + dnneighbour[2] + timeslicesum[0][2] + upneighbour[2] + upsecneighbour[2];
+         timeslicesumnew[0][3]= dnsecneighbour[3] + dnneighbour[3] + timeslicesum[0][3] + upneighbour[3] + upsecneighbour[3];
+
+       }
+
+     }
+     else{
+
+       for (j=0;j<T;++j){
+         timeslicesumnew[j][0]= timeslicesum[(j-2+T)%T][0] + timeslicesum[(j-1+T)%T][0] + timeslicesum[j][0] + timeslicesum[(j+1)%T][0] + timeslicesum[(j+2)%T][0];
+         timeslicesumnew[j][1]= timeslicesum[(j-2+T)%T][1] + timeslicesum[(j-1+T)%T][1] + timeslicesum[j][1] + timeslicesum[(j+1)%T][1] + timeslicesum[(j+2)%T][1];
+         timeslicesumnew[j][2]= timeslicesum[(j-2+T)%T][2] + timeslicesum[(j-1+T)%T][2] + timeslicesum[j][2] + timeslicesum[(j+1)%T][2] + timeslicesum[(j+2)%T][2];
+         timeslicesumnew[j][3]= timeslicesum[(j-2+T)%T][3] + timeslicesum[(j-1+T)%T][3] + timeslicesum[j][3] + timeslicesum[(j+1)%T][3] + timeslicesum[(j+2)%T][3];
+       }
+
+     }
+#else
+     for (j=0;j<T;++j){
+       timeslicesumnew[j][0]= timeslicesum[(j-2+T)%T][0] + timeslicesum[(j-1+T)%T][0] + timeslicesum[j][0] + timeslicesum[(j+1)%T][0] + timeslicesum[(j+2)%T][0];
+       timeslicesumnew[j][1]= timeslicesum[(j-2+T)%T][1] + timeslicesum[(j-1+T)%T][1] + timeslicesum[j][1] + timeslicesum[(j+1)%T][1] + timeslicesum[(j+2)%T][1];
+       timeslicesumnew[j][2]= timeslicesum[(j-2+T)%T][2] + timeslicesum[(j-1+T)%T][2] + timeslicesum[j][2] + timeslicesum[(j+1)%T][2] + timeslicesum[(j+2)%T][2];
+       timeslicesumnew[j][3]= timeslicesum[(j-2+T)%T][3] + timeslicesum[(j-1+T)%T][3] + timeslicesum[j][3] + timeslicesum[(j+1)%T][3] + timeslicesum[(j+2)%T][3];
+     }
+#endif
+   }
+
+/*   if (g_cart_id == 1){
+     for (j=0; j<T; ++j){
+       printf("AFTER\t%03d\t%10.10e\n", j, timeslicesumnew[j][0]);
+       fflush(stdout);
+     }
+     exit(1);
+   }
+*/
+
+   if (timeaverage == 0){
+
+     for (j=0; j<T; ++j){
+
+       timeslicesum[j][0]/=(double)1.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+       timeslicesum[j][1]/=(double)1.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+       timeslicesum[j][2]/=(double)1.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+       timeslicesum[j][3]/=(double)1.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+
+       timeslicesumnew[j][0]/=(double)1.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+       timeslicesumnew[j][1]/=(double)1.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+       timeslicesumnew[j][2]/=(double)1.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+       timeslicesumnew[j][3]/=(double)1.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+     }
+
+   }
+   else if (timeaverage == 1) {
+
+     for (j=0; j<T; ++j){
+
+       timeslicesum[j][0]/=(double)1.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+       timeslicesum[j][1]/=(double)1.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+       timeslicesum[j][2]/=(double)1.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+       timeslicesum[j][3]/=(double)1.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+
+       timeslicesumnew[j][0]/=(double)3.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+       timeslicesumnew[j][1]/=(double)3.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+       timeslicesumnew[j][2]/=(double)3.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+       timeslicesumnew[j][3]/=(double)3.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+     }
+
+   }
+   else if (timeaverage == 2) {
+     for (j=0; j<T; ++j){
+
+       timeslicesum[j][0]/=(double)1.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+       timeslicesum[j][1]/=(double)1.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+       timeslicesum[j][2]/=(double)1.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+       timeslicesum[j][3]/=(double)1.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+
+       timeslicesumnew[j][0]/=(double)5.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+       timeslicesumnew[j][1]/=(double)5.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+       timeslicesumnew[j][2]/=(double)5.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+       timeslicesumnew[j][3]/=(double)5.*LX*LY*LZ*N_PROC_X*N_PROC_Y*N_PROC_Z;
+     }
+
+   }
+      
    for (j=0; j<VOLUME; ++j){
           /* get (t,x,y,z) from j */
       t0 = j/(LX*LY*LZ);
@@ -349,14 +642,46 @@ void smear_scalar_fields_correlator( scalar **smearedfield, scalar ** const sf )
       y0 = (j-t0*(LX*LY*LZ)-x0*(LY*LZ))/(LZ);
       z0 = (j-t0*(LX*LY*LZ)-x0*(LY*LZ) - y0*LZ);
 
-      smearedfield[0][j]=timeslicesum[t0][0];
-      smearedfield[1][j]=timeslicesum[t0][1];
-      smearedfield[2][j]=timeslicesum[t0][2];
-      smearedfield[3][j]=timeslicesum[t0][3];
-   }
+      if (( timeaverage == 1 ) && ( ( g_coord[j][TUP] == 0 )  ||   ( g_coord[j][TUP] == ( T_global -1 ) ) )){
 
-   for (j=0; j<T; ++j)
-      free(timeslicesum[j]);
+         smearedfield[0][j]=timeslicesum[t0][0];
+         smearedfield[1][j]=timeslicesum[t0][1];
+         smearedfield[2][j]=timeslicesum[t0][2];
+         smearedfield[3][j]=timeslicesum[t0][3];
+
+      }
+
+      else if (( timeaverage == 2 ) && ( ( g_coord[j][TUP] == 0 ) || ( g_coord[j][TUP] == 1 ) || ( g_coord[j][TUP] == 2 ) ||( g_coord[j][TUP] == ( T_global -3 ) ) ||  ( g_coord[j][TUP] == ( T_global -2 ) ) ||  ( g_coord[j][TUP] == ( T_global -1 ) ) )){
+
+         smearedfield[0][j]=timeslicesum[t0][0];
+         smearedfield[1][j]=timeslicesum[t0][1];
+         smearedfield[2][j]=timeslicesum[t0][2];
+         smearedfield[3][j]=timeslicesum[t0][3];
+
+      }
+      else{
+
+         smearedfield[0][j]=timeslicesumnew[t0][0];
+         smearedfield[1][j]=timeslicesumnew[t0][1];
+         smearedfield[2][j]=timeslicesumnew[t0][2];
+         smearedfield[3][j]=timeslicesumnew[t0][3];
+
+      }
+   }
+/*
+   if (g_cart_id == 0){
+     for (j=0; j<T; ++j){
+       printf("AFTER\t%03d\t%10.10e\n", j, timeslicesumnew[j][0]);
+       fflush(stdout);
+     }
+     exit(1);
+   }
+*/
+   for (j=0; j<T; ++j){
+     free(timeslicesumnew[j]);
+     free(timeslicesum[j]);
+   }
+   free(timeslicesumnew);
    free(timeslicesum);
 
 }

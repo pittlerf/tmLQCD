@@ -826,6 +826,14 @@ inline void rmQuotes(char *str){
     axialcurrentdensity_BSM = 0;
     if(myverbose != 0) printf("  BSM extended axial current times density correlators are not computed (this is the default) line %d operator %d\n", line_of_file, current_operator);
   }
+  {SPC}*vectordensitydensity{EQL}yes {
+    vectordensitydensity_BSM = 1;
+    if(myverbose != 0) printf("  BSM extended vector density times density correlators are computed line %d operator %d\n", line_of_file, current_operator);
+  }
+  {SPC}*vectordensitydensity{EQL}no {
+    vectordensitydensity_BSM = 0;
+    if(myverbose != 0) printf("  BSM extended vector density times density correlators are not computed (this is the default) line %d operator %d\n", line_of_file, current_operator);
+  }
   {SPC}*giancarlocontraction{EQL}yes {
     giancarlo_BSM = 1;
     if(myverbose != 0) printf("  Contractions proposed by Giancarlo are computed line %d operator %d\n", line_of_file, current_operator);
@@ -834,7 +842,11 @@ inline void rmQuotes(char *str){
     giancarlo_BSM = 0;
     if(myverbose != 0) printf("  Contractions proposed by Giancarlo are not computed line %d operator %d\n", line_of_file, current_operator);
   }
-
+  {SPC}*timesmearcorrelator{EQL}{DIGIT}+ {
+    sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
+    timesmearcorrelator_BSM = a;
+    if(myverbose) printf("  timesmearcorrelator is  set to %d line %d operator %d\n", a, line_of_file, current_operator);
+  }
   {SPC}*nscalarstep{EQL}{DIGIT}+ {
     sscanf(yytext, " %[a-zA-Z] = %d", name, &a);
     optr->nscalarstep = a;
@@ -2365,7 +2377,9 @@ int read_input(char * conf_file){
   vectorcurrentcurrent_BSM = _default_vectorcurrentcurrent_BSM;
   vectorcurrentdensity_BSM = _default_vectorcurrentdensity_BSM;
   axialcurrentdensity_BSM = _default_axialcurrentdensity_BSM;
+  vectordensitydensity_BSM = _default_vectordensitydensity_BSM;
   giancarlo_BSM = _default_giancarlo_BSM;
+  timesmearcorrelator_BSM = _default_timesmearcorrelator_BSM;
   g_rgi_C1 = _default_g_rgi_C1;
   read_source_flag= _default_read_source_flag;
   if(SourceInfo.basename == NULL) SourceInfo.basename = (char*)malloc(100*sizeof(char));
