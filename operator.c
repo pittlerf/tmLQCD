@@ -506,7 +506,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       }
       if (propagatorsonthefly_BSM == 1){
         if (g_cart_id == 0){printf("#SourceInfo.t=%d, ix=%d\n", SourceInfo.t, SourceInfo.ix);fflush(stdout);};
-        if (vectorcurrentcurrent_BSM == 1 && SourceInfo.t != 0){
+        if ( ( ( vectorcurrentcurrent_BSM == 1 ) || ( axialcurrentcurrent_BSM == 1 ) ) && ( SourceInfo.t != 0 ) ){
            assign( (spinor *)optr->prop_ntmone[4*SourceInfo.ix+2*(1-i)], (spinor *)temp, 2*VOLUME);
         }
         else{
@@ -551,7 +551,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
       }
       if (propagatorsonthefly_BSM == 1){
         if (g_cart_id == 0){printf("#SourceInfo.t=%d, ix=%d\n", SourceInfo.t, SourceInfo.ix);fflush(stdout);};
-        if (vectorcurrentcurrent_BSM == 1 && SourceInfo.t != 0){
+        if ( ( ( vectorcurrentcurrent_BSM == 1 ) || ( axialcurrentcurrent_BSM == 1 ) ) && ( SourceInfo.t != 0 ) ){
            assign( (spinor *)optr->prop_ntmone[4*SourceInfo.ix+2*(1-i)+1], (spinor *)dest, 2*VOLUME);
         }
         else{

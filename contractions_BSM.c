@@ -416,7 +416,7 @@ int main(int argc, char *argv[]){
                   exit(1);
                 }
               }
-              if (vectorcurrentcurrent_BSM == 1){
+              if ( ( vectorcurrentcurrent_BSM == 1 ) || ( axialcurrentcurrent_BSM == 1 )){
                 operator_list[op_id].prop_ntmone=(bispinor  **)malloc(sizeof(bispinor*)*48);
                 if (operator_list[op_id].prop_ntmone == NULL){
                   printf("Error in memory allocation for storing the propagators\n");
@@ -512,7 +512,7 @@ int main(int argc, char *argv[]){
 
                  }//end of loop for spinor and color source degrees of freedom
 
-                 if (vectorcurrentcurrent_BSM == 1){
+                 if ( ( vectorcurrentcurrent_BSM == 1 ) || ( axialcurrentcurrent_BSM == 1 )){
                     int tindex=source_location/(LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z);
                     int tnewindex=(tindex-1+T_global)%T_global;
                     int spatialindex=source_location % (LX*g_nproc_x*LY*g_nproc_y*LZ*g_nproc_z);
@@ -566,7 +566,7 @@ int main(int argc, char *argv[]){
 
                  }//end of loop for spinor and color source degrees of freedom
 
-                 if (vectorcurrentcurrent_BSM == 1){
+                 if ( (vectorcurrentcurrent_BSM == 1 ) || ( axialcurrentcurrent_BSM == 1 )){
                    for(src_idx = 0; src_idx < 12; src_idx++ )
                    {
                       snprintf(prop_fname,200,"bsm2prop.%.4d.%.2d.%02d.%.8d.inverted",nstore, T_global-1, src_idx, iscalar);
@@ -602,6 +602,7 @@ int main(int argc, char *argv[]){
                if (g_cart_id == 0) {
                  printf("Following measurements will be done\n");
                  if (vectorcurrentcurrent_BSM == 1) printf("#Vectorcurrentcurrent3 correlation function\n");
+                 if (axialcurrentcurrent_BSM == 1) printf("#Axialcurrentcurrent1 correlation function trivial scalar\n");
                  if (densitydensity_BSM == 1) printf("#Density Density correlation function\n");
                  if (densitydensity_s0s0_BSM == 1) printf("#Density Density s0s0-p0p0 using trivial scalar field\n");
                  if (densitydensity_sxsx_BSM == 1) printf("#Density Density sxsx-pxpx using trivial scalar field\n");
@@ -610,8 +611,8 @@ int main(int argc, char *argv[]){
                  if (wilsoncurrentdensitypr2_BSM == 1) printf("#Wilson  current density PR2 correlation function\n");
                  if (wilsoncurrentdensitypl1_BSM == 1) printf("#Wilson  current density PL1 correlation function\n");
                  if (wilsoncurrentdensitypl2_BSM == 1) printf("#Wilson  current density PL2 correlation function\n");
-                 if (vectorcurrentdensity_BSM == 1) printf("JtildeV3 D3, JtildeV1 P2, JtildeV2 P1 to be calculated\n");
-                 if (axialcurrentdensity_BSM == 1) printf("JtildeA1 P1, JtildeA2 P2 to be calculated\n");
+                 if (vectorcurrentdensity_BSM == 1) printf("#JtildeV3 D3, JtildeV1 P2, JtildeV2 P1 to be calculated\n");
+                 if (axialcurrentdensity_BSM == 1) printf("#JtildeA1 P1, JtildeA2 P2 to be calculated\n");
 
                }
                scalar=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
@@ -671,7 +672,7 @@ int main(int argc, char *argv[]){
                     exit(1);
                   }
                }
-               if (vectorcurrentcurrent_BSM == 1){
+               if ( vectorcurrentcurrent_BSM == 1){
                  vector_axial_current_current_1234(operator_list[op_id].prop_zero, operator_list[op_id].prop_ntmone, TYPE_1, 2, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
@@ -711,7 +712,80 @@ int main(int argc, char *argv[]){
                    current1[ii]=0.0;
                    current2[ii]=0.0;
                    current3[ii]=0.0;
-                 }                 
+                 }
+               }
+               if ( axialcurrentcurrent_BSM == 1 ){
+
+                 unit_scalar_field(g_scalar_field);
+                 for( int s=0; s<4; s++ )
+                   generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
+                 if (smearedcorrelator_BSM == 1){
+                   smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field, timesmearcorrelator_BSM );
+                   for ( int s=0; s<4; s++ )
+                    generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
+                 }
+
+
+                 vector_axial_current_current_1234(operator_list[op_id].prop_zero, operator_list[op_id].prop_ntmone, TYPE_1, 0, 1, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_axial_current_current_1234(operator_list[op_id].prop_zero, operator_list[op_id].prop_ntmone, TYPE_2, 0, 1, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_axial_current_current_1234(operator_list[op_id].prop_zero, operator_list[op_id].prop_ntmone, TYPE_3, 0, 1, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_axial_current_current_1234(operator_list[op_id].prop_zero, operator_list[op_id].prop_ntmone, TYPE_4, 0, 1, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+
+                 if (g_cart_id == 0){
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"JTILDEA1JTILDEA1TRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
+                   }
+                 }
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
+
+                 double read_end, read_begin=gettime();
+                 if( (i = read_scalar_field_parallel(scalar_filename,g_scalar_field)) !=0 )
+                 {
+                    fprintf(stderr, "Error %d while reading scalar field from %s\n Aborting...\n", i, scalar_filename);
+                    exit(-2);
+                 }
+                 read_end=gettime();
+                 if (g_cart_id == 0) {
+                   printf("# Finished reading scalar field in %.4e seconds.\n",read_end-read_begin);
+                   fflush(stdout);
+                 }
+                 for( int s=0; s<4; s++ )
+                   generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
+                 if (smearedcorrelator_BSM == 1){
+                   smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field, timesmearcorrelator_BSM );
+                   for ( int s=0; s<4; s++ )
+                    generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
+                 }
+                 
                }
                if (giancarlo_BSM == 1){
                  giancarlodensity( operator_list[op_id].prop_zero, 0, &temp );
@@ -1840,7 +1914,7 @@ int main(int argc, char *argv[]){
              for (int ii=0; ii<48; ++ii)
                free(operator_list[op_id].prop_zero[ii]);
              free(operator_list[op_id].prop_zero);
-             if ( vectorcurrentcurrent_BSM == 1 ){
+             if ( ( vectorcurrentcurrent_BSM == 1 ) || ( axialcurrentcurrent_BSM == 1 ) ){
                for (int ii=0; ii<48; ++ii)
                  free(operator_list[op_id].prop_ntmone[ii]);
                free(operator_list[op_id].prop_ntmone);

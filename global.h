@@ -1,5 +1,6 @@
 /***********************************************************************
  *
+ *
  * Copyright (C) 2002,2003,2004,2005,2006,2007,2008 Carsten Urbach
  *
  * Modified by Jenifer Gonzalez Lopez 31.03.2009
@@ -76,9 +77,10 @@ EXTERN int wilsoncurrentdensitypr2_BSM;
 EXTERN int wilsoncurrentdensitypl1_BSM;
 EXTERN int wilsoncurrentdensitypl2_BSM;
 EXTERN int vectorcurrentcurrent_BSM;
+EXTERN int axialcurrentcurrent_BSM;
+EXTERN int vectordensitydensity_BSM;
 EXTERN int vectorcurrentdensity_BSM;
 EXTERN int axialcurrentdensity_BSM;
-EXTERN int vectordensitydensity_BSM;
 EXTERN int giancarlo_BSM;
 EXTERN int timesmearcorrelator_BSM;
 #define TUP 0
