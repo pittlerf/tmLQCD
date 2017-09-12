@@ -739,7 +739,7 @@ void density_density_1234_sxsx( bispinor ** propfields, int type_1234, _Complex 
 
 
 
-void vector_axial_current_density_1234( bispinor ** propfields, int type_1234,int taudensity, int taucurrent, int vectororaxial, _Complex double **results ){
+void vector_axial_current_density_1234( bispinor ** propfields, int type_1234,int taudensity, int taucurrent, int vectororaxial, int scalarorpseudoscalar, _Complex double **results ){
    int ix,i;
    int f1,c1,s1;
    int spinorstart=0, spinorend=4;
@@ -860,6 +860,7 @@ void vector_axial_current_density_1234( bispinor ** propfields, int type_1234,in
 #endif
            // delta (spinor components of spacetrace, s1) for all time slices and flavor indices
        trace_in_spinor(spinortrace, spacetrace, s1);
+
      }//End of trace in spinor space
 /*
      if ( type_1234 == TYPE_1 || type_1234 == TYPE_3 ){
@@ -868,10 +869,10 @@ void vector_axial_current_density_1234( bispinor ** propfields, int type_1234,in
      else if ( type_1234 == TYPE_2 || type_1234 == TYPE_4 ){
        taui_scalarfield_flavoronly( spinortrace, taudensity, DAGGER, RIGHT  );
      }*/
-     if (vectororaxial == 0){
+     if (scalarorpseudoscalar == 0){
        phi0_taui_commutator( spinortrace, taudensity );
      }
-     else if (vectororaxial == 1){
+     else if (scalarorpseudoscalar == 1){
       if ( type_1234 == TYPE_1 || type_1234 == TYPE_3 ){
        phi0_taui_anticommutator( spinortrace, taudensity, NO_DAGG );
       }
