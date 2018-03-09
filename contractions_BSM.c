@@ -613,6 +613,7 @@ int main(int argc, char *argv[]){
                  if (wilsoncurrentdensitypl2_BSM == 1) printf("#Wilson  current density PL2 correlation function\n");
                  if (vectorcurrentdensity_BSM == 1) printf("#JtildeV3 D3, JtildeV1 P2, JtildeV2 P1 to be (JtildeV1 P2 nad JtildeV2 P1 with trivial scalar calculated\n");
                  if (axialcurrentdensity_BSM == 1) printf("#JtildeA1 P1, JtildeA2 P2 to be calculated\n");
+                 if (pdensityvectordensity_BSM == 1) printf("#P density times vector density (nontrivial scalar) to be calculated\n");
 
                }
                scalar=(_Complex double *)malloc(sizeof(_Complex double)*T_global);
@@ -1040,6 +1041,38 @@ int main(int argc, char *argv[]){
                      fprintf(out,"JTILDEV1P2TRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
                    }
                  }
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
+
+                 vector_2_psueodoscalar_1_12( operator_list[op_id].prop_zero, TYPE_1, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 vector_2_psueodoscalar_1_12( operator_list[op_id].prop_zero, TYPE_2, &temp );
+                 for (int ii=0; ii<T_global; ++ii){
+                   current[ii]+=(-1.)*temp[ii];
+                 }
+                 free(temp);
+                 if (g_cart_id == 0){
+//                 fprintf(out,"S1S1nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"TESTTTTTJTILDEV2P1TRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii])*2, cimag(current[ii])*2);
+                   }
+                 }
+
 
                  for (int ii=0;ii<T_global; ++ii){
                    scalar[ii]=0.0;
@@ -1442,6 +1475,73 @@ int main(int argc, char *argv[]){
                    current3[ii]=0.0;
                  }
                }
+
+               if (pdensityvectordensity_BSM == 1){
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
+                 density_ptau_density_vector( operator_list[op_id].prop_zero, TYPE_1,&temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   pscalar1[ii]+=(-1.)*temp[ii           ];
+                   pscalar2[ii]+=(-1.)*temp[ii+1*T_global];
+                   pscalar3[ii]+=(-1.)*temp[ii+2*T_global];
+                   pseudoscalar[ii] +=(-1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+                 density_ptau_density_vector( operator_list[op_id].prop_zero, TYPE_2,&temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   pscalar1[ii]+=(+1.)*temp[ii           ];
+                   pscalar2[ii]+=(+1.)*temp[ii+1*T_global];
+                   pscalar3[ii]+=(+1.)*temp[ii+2*T_global];
+                   pseudoscalar[ii] +=(+1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+                 if (g_cart_id == 0){
+//                 fprintf(out,"S1S1nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"P1DP1NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(pscalar1[ii]), cimag(pscalar1[ii]));
+                   }
+//                 fprintf(out,"S2S2nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"P2DP2NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(pscalar2[ii]), cimag(pscalar2[ii]));
+                   }
+//                 fprintf(out,"PS3PS3nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"P3DP3NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(pscalar3[ii]), cimag(pscalar3[ii]));
+                   }
+//                 fprintf(out,"SSnontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"PDPNONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(pseudoscalar[ii]), cimag(pseudoscalar[ii]));
+                   }
+
+                 }
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
+               }
+
 
                if (densitydensity_s0s0_BSM == 1){
 

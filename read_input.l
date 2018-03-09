@@ -834,6 +834,14 @@ inline void rmQuotes(char *str){
     axialcurrentdensity_BSM = 0;
     if(myverbose != 0) printf("  BSM extended axial current times density correlators are not computed (this is the default) line %d operator %d\n", line_of_file, current_operator);
   }
+  {SPC}*pdensityvectordensity{EQL}yes {
+    pdensityvectordensity_BSM = 1;
+    if(myverbose != 0) printf("  BSM psuedo density(0) (without scalar)  * psdensity(x) (with scalar) %d operator %d\n", line_of_file, current_operator);
+  }
+  {SPC}*pdensityvectordensity{EQL}no {
+    pdensityvectordensity_BSM = 0;
+    if(myverbose != 0) printf("  BSM psuedo density(0) (without scalar)  * psdensity(x) (with scalar) are not computed %d operator %d\n", line_of_file, current_operator);
+  }
   {SPC}*vectordensitydensity{EQL}yes {
     vectordensitydensity_BSM = 1;
     if(myverbose != 0) printf("  BSM extended vector density times density correlators are computed line %d operator %d\n", line_of_file, current_operator);
@@ -2389,6 +2397,7 @@ int read_input(char * conf_file){
   vectordensitydensity_BSM = _default_vectordensitydensity_BSM;
   giancarlo_BSM = _default_giancarlo_BSM;
   timesmearcorrelator_BSM = _default_timesmearcorrelator_BSM;
+  pdensityvectordensity_BSM = _default_pdensityvectordensity_BSM;
   g_rgi_C1 = _default_g_rgi_C1;
   read_source_flag= _default_read_source_flag;
   if(SourceInfo.basename == NULL) SourceInfo.basename = (char*)malloc(100*sizeof(char));

@@ -44,5 +44,5 @@ void trace_in_spinor( _Complex double *dest, _Complex double *src, int spinorind
 void trace_in_color(_Complex double *dest, bispinor *src, int colorindex);
 void trace_in_space(_Complex double *dest, _Complex double *source, int idx);
 void trace_in_flavor(_Complex double *dest, _Complex double *source, int f1);
-
+void phix_taui_anti_commutator_bispinor( bispinor *dest,int tauindex, int gamma5, int dagger,int ix );
 #endif

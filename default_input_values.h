@@ -92,6 +92,7 @@
 #define _default_wilsoncurrentdensitypr2_BSM 0
 #define _default_wilsoncurrentdensitypl1_BSM 0
 #define _default_axialcurrentdensity_BSM 0
+#define _default_pdensityvectordensity_BSM 0
 #define _default_vectorcurrentdensity_BSM 0
 #define _default_axialcurrentcurrent_BSM 0
 
