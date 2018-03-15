@@ -1540,6 +1540,76 @@ int main(int argc, char *argv[]){
                    current2[ii]=0.0;
                    current3[ii]=0.0;
                  }
+                 smearedcorrelator_BSM = 0;
+
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
+                 density_ptau_density_vector( operator_list[op_id].prop_zero, TYPE_1,&temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   pscalar1[ii]+=(-1.)*temp[ii           ];
+                   pscalar2[ii]+=(-1.)*temp[ii+1*T_global];
+                   pscalar3[ii]+=(-1.)*temp[ii+2*T_global];
+                   pseudoscalar[ii] +=(-1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+                 density_ptau_density_vector( operator_list[op_id].prop_zero, TYPE_2,&temp);
+                 for (int ii=0; ii<T_global; ++ii){
+                   pscalar1[ii]+=(+1.)*temp[ii           ];
+                   pscalar2[ii]+=(+1.)*temp[ii+1*T_global];
+                   pscalar3[ii]+=(+1.)*temp[ii+2*T_global];
+                   pseudoscalar[ii] +=(+1.)*temp[ii+3*T_global];
+                 }
+                 free(temp);
+                 if (g_cart_id == 0){
+//                 fprintf(out,"S1S1nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"P1DP1NONSMEAREDNONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(pscalar1[ii]), cimag(pscalar1[ii]));
+                   }
+//                 fprintf(out,"S2S2nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"P2DP2NONSMEAREDNONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(pscalar2[ii]), cimag(pscalar2[ii]));
+                   }
+//                 fprintf(out,"PS3PS3nontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"P3DP3NONSMEAREDNONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(pscalar3[ii]), cimag(pscalar3[ii]));
+                   }
+//                 fprintf(out,"SSnontrivialscalar:\n");
+                   for (int ii=0; ii<T_global; ++ii){
+                     fprintf(out,"PDPNONSMEAREDNONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(pseudoscalar[ii]), cimag(pseudoscalar[ii]));
+                   }
+
+                 }
+                 
+                 for (int ii=0;ii<T_global; ++ii){
+                   scalar[ii]=0.0;
+                   pseudoscalar[ii]=0.0;
+                   current[ii]=0.0;
+                   pscalar1[ii]=0.0;
+                   pscalar2[ii]=0.0;
+                   pscalar3[ii]=0.0;
+                   scalar1[ii]=0.0;
+                   scalar2[ii]=0.0;
+                   scalar3[ii]=0.0;
+                   current1[ii]=0.0;
+                   current2[ii]=0.0;
+                   current3[ii]=0.0;
+                 }
+
+                 smearedcorrelator_BSM = 0;
+
+                 
                }
 
 
