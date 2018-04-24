@@ -1607,7 +1607,7 @@ int main(int argc, char *argv[]){
                    current3[ii]=0.0;
                  }
 
-                 smearedcorrelator_BSM = 0;
+                 smearedcorrelator_BSM = 1;
 
                  
                }
