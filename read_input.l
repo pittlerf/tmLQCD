@@ -722,6 +722,11 @@ inline void rmQuotes(char *str){
     mu03_BSM = c;
     if(myverbose != 0) printf("  BSM parameter mu03 set to %f\n", mu03_BSM);
   }
+  {SPC}*c5phi{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z0123] = %lf", name, &c);
+    c5phi_BSM = c;
+    if(myverbose != 0) printf("  BSM parameter c5phi set to %f\n", c5phi_BSM);
+  }
   {SPC}*propagatorsonthefly{EQL}yes {
     propagatorsonthefly_BSM = 1;
     if(myverbose != 0) printf("  BSM propagators are also computed for using them in the contractions  line %d operator %d\n", a, line_of_file, current_operator);

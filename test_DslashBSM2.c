@@ -121,7 +121,7 @@ int main(int argc,char *argv[])
 		even_odd_flag=0;
 		printf("# WARNING: even_odd_flag will be ignored (not supported here).\n");
 	}
-	int j,j_max,k,k_max = 2;
+	int j;
 //	_Complex double * drvsc;
 
 #ifdef HAVE_LIBLEMON
@@ -129,11 +129,9 @@ int main(int argc,char *argv[])
 #endif
 	int status = 0;
 
-	static double t1,t2,dt,sdt,dts,qdt,sqdt;
-	double antioptaway=0.0;
+	static double t1;
 
 #ifdef MPI
-	static double dt2;
 
 	DUM_DERI = 6;
 	DUM_SOLVER = DUM_DERI+2;
@@ -359,8 +357,6 @@ int main(int argc,char *argv[])
 #endif
 
 	/*initialize the bispinor fields*/
-	j_max=1;
-	sdt=0.;
   // w/
 	unit_spinor_field_lexic( (spinor*)(g_bispinor_field[4]));//, 	  reproduce_randomnumber_flag, RN_GAUSS);
 	unit_spinor_field_lexic( (spinor*)(g_bispinor_field[4])+VOLUME);//, reproduce_randomnumber_flag, RN_GAUSS);
