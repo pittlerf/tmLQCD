@@ -43,6 +43,7 @@
 #include "update_backward_gauge.h"
 #include "block.h"
 #include "operator/D_psi_BSM.h"
+#include "operator/D_psi_BSM3.h"
 #include "solver/dirac_operator_eigenvectors.h"
 #include "buffers/utils.h"
 #include "linalg_eo.h"
@@ -295,7 +296,7 @@ static inline void bispinor_times_phase_times_inverse_u(bispinor * restrict cons
 static inline void p0add(bispinor * restrict const tmpr , bispinor const * restrict const s,
                          su3 const * restrict const u, const int inv, const _Complex double phase,
                          const double phaseF, const scalar * const phi, const scalar * const phip,
-                         const double sign) {
+                         const double sign, const double phaseW) {
 
 #ifdef OMP
 #define static
@@ -326,13 +327,24 @@ static inline void p0add(bispinor * restrict const tmpr , bispinor const * restr
   Fadd(tmpr, &us, phi,  phaseF, sign);
   Fadd(tmpr, &us, phip, phaseF, sign);
 
+  // tmpr += b*us
+  _vector_add_mul(tmpr->sp_up.s0, phaseW, us.sp_up.s0);
+  _vector_add_mul(tmpr->sp_up.s1, phaseW, us.sp_up.s1);
+  _vector_add_mul(tmpr->sp_up.s2, phaseW, us.sp_up.s2);
+  _vector_add_mul(tmpr->sp_up.s3, phaseW, us.sp_up.s3);
+
+  _vector_add_mul(tmpr->sp_dn.s0, phaseW, us.sp_dn.s0);
+  _vector_add_mul(tmpr->sp_dn.s1, phaseW, us.sp_dn.s1);
+  _vector_add_mul(tmpr->sp_dn.s2, phaseW, us.sp_dn.s2);
+  _vector_add_mul(tmpr->sp_dn.s3, phaseW, us.sp_dn.s3);
+
   return;
 }
 
 static inline void p1add(bispinor * restrict const tmpr, bispinor const * restrict const s,
                          su3 const * restrict const u, const int inv, const _Complex double phase,
                          const double phaseF, const scalar * const phi, const scalar * const phip, 
-                         const double sign) {
+                         const double sign, const double phaseW) {
 #ifdef OMP
 #define static
 #endif
@@ -362,13 +374,25 @@ static inline void p1add(bispinor * restrict const tmpr, bispinor const * restri
   Fadd(tmpr, &us, phi,  phaseF, sign);
   Fadd(tmpr, &us, phip, phaseF, sign);
 
+  // tmpr += b*us
+  _vector_add_mul(tmpr->sp_up.s0, phaseW, us.sp_up.s0);
+  _vector_add_mul(tmpr->sp_up.s1, phaseW, us.sp_up.s1);
+  _vector_add_mul(tmpr->sp_up.s2, phaseW, us.sp_up.s2);
+  _vector_add_mul(tmpr->sp_up.s3, phaseW, us.sp_up.s3);
+
+  _vector_add_mul(tmpr->sp_dn.s0, phaseW, us.sp_dn.s0);
+  _vector_add_mul(tmpr->sp_dn.s1, phaseW, us.sp_dn.s1);
+  _vector_add_mul(tmpr->sp_dn.s2, phaseW, us.sp_dn.s2);
+  _vector_add_mul(tmpr->sp_dn.s3, phaseW, us.sp_dn.s3);
+
+
   return;
 }
 
 static inline void p2add(bispinor * restrict const tmpr, bispinor const * restrict const s,
                          su3 const * restrict const u, const int inv, const _Complex double phase,
                          const double phaseF, const scalar * const phi, const scalar * const phip, 
-                         const double sign) {
+                         const double sign, const double phaseW) {
 #ifdef OMP
 #define static
 #endif
@@ -398,13 +422,25 @@ static inline void p2add(bispinor * restrict const tmpr, bispinor const * restri
   Fadd(tmpr, &us, phi,  phaseF, sign);
   Fadd(tmpr, &us, phip, phaseF, sign);
 
+  // tmpr += b*us
+  _vector_add_mul(tmpr->sp_up.s0, phaseW, us.sp_up.s0);
+  _vector_add_mul(tmpr->sp_up.s1, phaseW, us.sp_up.s1);
+  _vector_add_mul(tmpr->sp_up.s2, phaseW, us.sp_up.s2);
+  _vector_add_mul(tmpr->sp_up.s3, phaseW, us.sp_up.s3);
+
+  _vector_add_mul(tmpr->sp_dn.s0, phaseW, us.sp_dn.s0);
+  _vector_add_mul(tmpr->sp_dn.s1, phaseW, us.sp_dn.s1);
+  _vector_add_mul(tmpr->sp_dn.s2, phaseW, us.sp_dn.s2);
+  _vector_add_mul(tmpr->sp_dn.s3, phaseW, us.sp_dn.s3);
+
+
   return;
 }
 
 static inline void p3add(bispinor * restrict const tmpr, bispinor const * restrict const s,
                          su3 const * restrict const u, const int inv, const _Complex double phase,
                          const double phaseF, const scalar * const phi, const scalar * const phip, 
-                         const double sign) {
+                         const double sign, const double phaseW) {
 #ifdef OMP
 #define static
 #endif
@@ -433,13 +469,26 @@ static inline void p3add(bispinor * restrict const tmpr, bispinor const * restri
   // tmpr += F*us
   Fadd(tmpr, &us, phi,  phaseF, sign);
   Fadd(tmpr, &us, phip, phaseF, sign);
+ 
+  // tmpr += b*us
+  _vector_add_mul(tmpr->sp_up.s0, phaseW, us.sp_up.s0);
+  _vector_add_mul(tmpr->sp_up.s1, phaseW, us.sp_up.s1);
+  _vector_add_mul(tmpr->sp_up.s2, phaseW, us.sp_up.s2);
+  _vector_add_mul(tmpr->sp_up.s3, phaseW, us.sp_up.s3);
+
+  _vector_add_mul(tmpr->sp_dn.s0, phaseW, us.sp_dn.s0);
+  _vector_add_mul(tmpr->sp_dn.s1, phaseW, us.sp_dn.s1);
+  _vector_add_mul(tmpr->sp_dn.s2, phaseW, us.sp_dn.s2);
+  _vector_add_mul(tmpr->sp_dn.s3, phaseW, us.sp_dn.s3);
+
+
 
   return;
 }
 
 
 /* D_psi_BSM acts on bispinor fields */
-void D_psi_BSM(bispinor * const P, bispinor * const Q){
+void D_psi_BSM3(bispinor * const P, bispinor * const Q){
   if(P==Q){
     printf("Error in D_psi_BSM (D_psi_BSM.c):\n");
     printf("Arguments must be different bispinor fields\n");
@@ -517,6 +566,18 @@ void D_psi_BSM(bispinor * const P, bispinor * const Q){
 	_spinor_null(rr->sp_up);
 	_spinor_null(rr->sp_dn);
 
+        // tmpr += 2*r_BSM*s
+        _vector_add_mul(rr->sp_up.s0, -2*r_BSM, s->sp_up.s0);
+        _vector_add_mul(rr->sp_up.s1, -2*r_BSM, s->sp_up.s1);
+        _vector_add_mul(rr->sp_up.s2, -2*r_BSM, s->sp_up.s2);
+        _vector_add_mul(rr->sp_up.s3, -2*r_BSM, s->sp_up.s3);
+
+        _vector_add_mul(rr->sp_dn.s0, -2*r_BSM, s->sp_dn.s0);
+        _vector_add_mul(rr->sp_dn.s1, -2*r_BSM, s->sp_dn.s1);
+        _vector_add_mul(rr->sp_dn.s2, -2*r_BSM, s->sp_dn.s2);
+        _vector_add_mul(rr->sp_dn.s3, -2*r_BSM, s->sp_dn.s3);
+
+
 
 	// tmpr += (\eta_BSM+2*\rho_BSM) * F(x)*Q(x)
 	Fadd(rr, s, phi, eta_BSM+2.0*rho_BSM, +1.);
@@ -590,49 +651,49 @@ void D_psi_BSM(bispinor * const P, bispinor * const Q){
 	iy=g_iup[ix][0];
 	sp = (bispinor *) Q +iy;
 	up=&g_gauge_field[ix][0];
-	p0add(rr, sp, up, 0, 0.5*phase_0, -0.5*rho_BSM, phi, phip[0], +1.);
+	p0add(rr, sp, up, 0, 0.5*phase_0, -0.5*rho_BSM, phi, phip[0], +1., -r_BSM);
 
 	/******************************* direction -0 *********************************/
 	iy=g_idn[ix][0];
 	sm      = (bispinor *) Q +iy;
 	um=&g_gauge_field[iy][0];
-	p0add(rr, sm, um, 1, -0.5*phase_0, 0.5*rho_BSM, phi, phim[0], +1.);
+	p0add(rr, sm, um, 1, -0.5*phase_0, 0.5*rho_BSM, phi, phim[0], +1., r_BSM);
 
 	/******************************* direction +1 *********************************/
 	iy=g_iup[ix][1];
 	sp = (bispinor *) Q +iy;
 	up=&g_gauge_field[ix][1];
-	p1add(rr, sp, up, 0, 0.5*phase_1, -0.5*rho_BSM, phi, phip[1], +1.);
+	p1add(rr, sp, up, 0, 0.5*phase_1, -0.5*rho_BSM, phi, phip[1], +1., -r_BSM);
 
 	/******************************* direction -1 *********************************/
 	iy=g_idn[ix][1];
 	sm = (bispinor *) Q +iy;
 	um=&g_gauge_field[iy][1];
-	p1add(rr, sm, um, 1, -0.5*phase_1, 0.5*rho_BSM, phi, phim[1], +1.);
+	p1add(rr, sm, um, 1, -0.5*phase_1, 0.5*rho_BSM, phi, phim[1], +1., r_BSM);
 
 	/******************************* direction +2 *********************************/
 	iy=g_iup[ix][2];
 	sp = (bispinor *) Q +iy;
 	up=&g_gauge_field[ix][2];
-	p2add(rr, sp, up, 0, 0.5*phase_2, -0.5*rho_BSM, phi, phip[2], +1.);
+	p2add(rr, sp, up, 0, 0.5*phase_2, -0.5*rho_BSM, phi, phip[2], +1., -r_BSM);
 
 	/******************************* direction -2 *********************************/
 	iy=g_idn[ix][2];
 	sm = (bispinor *) Q +iy;
 	um=&g_gauge_field[iy][2];
-	p2add(rr, sm, um, 1, -0.5*phase_2, 0.5*rho_BSM, phi, phim[2], +1.);
+	p2add(rr, sm, um, 1, -0.5*phase_2, 0.5*rho_BSM, phi, phim[2], +1., r_BSM);
 
 	/******************************* direction +3 *********************************/
 	iy=g_iup[ix][3];
 	sp = (bispinor *) Q +iy;
 	up=&g_gauge_field[ix][3];
-	p3add(rr, sp, up, 0, 0.5*phase_3, -0.5*rho_BSM, phi, phip[3], +1.);
+	p3add(rr, sp, up, 0, 0.5*phase_3, -0.5*rho_BSM, phi, phip[3], +1., -r_BSM);
 
 	/******************************* direction -3 *********************************/
 	iy=g_idn[ix][3];
 	sm = (bispinor *) Q +iy;
 	um=&g_gauge_field[iy][3];
-	p3add(rr, sm, um, 1, -0.5*phase_3, 0.5*rho_BSM, phi, phim[3], +1.);
+	p3add(rr, sm, um, 1, -0.5*phase_3, 0.5*rho_BSM, phi, phim[3], +1., r_BSM);
       }
 #ifdef OMP
   } /* OpenMP closing brace */
@@ -642,7 +703,7 @@ void D_psi_BSM(bispinor * const P, bispinor * const Q){
 
 
 /* D_psi_BSM acts on bispinor fields */
-void D_psi_dagger_BSM(bispinor * const P, bispinor * const Q){
+void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
   if(P==Q){
     printf("Error in D_psi_BSM (D_psi_BSM.c):\n");
     printf("Arguments must be different bispinor fields\n");
@@ -717,6 +778,17 @@ void D_psi_dagger_BSM(bispinor * const P, bispinor * const Q){
       // no longer needed now...
       _spinor_null(rr->sp_up);
       _spinor_null(rr->sp_dn);
+
+      // tmpr += 2*r_BSM*s
+      _vector_add_mul(rr->sp_up.s0, -2*r_BSM, s->sp_up.s0);
+      _vector_add_mul(rr->sp_up.s1, -2*r_BSM, s->sp_up.s1);
+      _vector_add_mul(rr->sp_up.s2, -2*r_BSM, s->sp_up.s2);
+      _vector_add_mul(rr->sp_up.s3, -2*r_BSM, s->sp_up.s3);
+
+      _vector_add_mul(rr->sp_dn.s0, -2*r_BSM, s->sp_dn.s0);
+      _vector_add_mul(rr->sp_dn.s1, -2*r_BSM, s->sp_dn.s1);
+      _vector_add_mul(rr->sp_dn.s2, -2*r_BSM, s->sp_dn.s2);
+      _vector_add_mul(rr->sp_dn.s3, -2*r_BSM, s->sp_dn.s3);
       
       // tmpr += (\eta_BSM+2*\rho_BSM) * Fbar(x)*Q(x)
       Fadd(rr, s, phi, eta_BSM+2.0*rho_BSM, -1.);
@@ -791,49 +863,49 @@ void D_psi_dagger_BSM(bispinor * const P, bispinor * const Q){
       iy=g_iup[ix][0];
       sp = (bispinor *) Q +iy;
       up=&g_gauge_field[ix][0];
-      p0add(rr, sp, up, 0, -0.5*phase_0, 0.5*rho_BSM, phi, phip[0], -1.);
+      p0add(rr, sp, up, 0, -0.5*phase_0, 0.5*rho_BSM, phi, phip[0], -1., r_BSM);
       
       /******************************* direction -0 *********************************/
       iy=g_idn[ix][0];
       sm        = (bispinor *) Q +iy;
       um=&g_gauge_field[iy][0];
-      p0add(rr, sm, um, 1, 0.5*phase_0, -0.5*rho_BSM, phi, phim[0], -1.);
+      p0add(rr, sm, um, 1, 0.5*phase_0, -0.5*rho_BSM, phi, phim[0], -1., -r_BSM);
       
       /******************************* direction +1 *********************************/
       iy=g_iup[ix][1];
       sp = (bispinor *) Q +iy;
       up=&g_gauge_field[ix][1];
-      p1add(rr, sp, up, 0, -0.5*phase_1, 0.5*rho_BSM, phi, phip[1], -1.);
+      p1add(rr, sp, up, 0, -0.5*phase_1, 0.5*rho_BSM, phi, phip[1], -1., r_BSM);
       
       /******************************* direction -1 *********************************/
       iy=g_idn[ix][1];
       sm = (bispinor *) Q +iy;
       um=&g_gauge_field[iy][1];
-      p1add(rr, sm, um, 1, 0.5*phase_1, -0.5*rho_BSM, phi, phim[1], -1.);
+      p1add(rr, sm, um, 1, 0.5*phase_1, -0.5*rho_BSM, phi, phim[1], -1., -r_BSM);
       
       /******************************* direction +2 *********************************/
       iy=g_iup[ix][2];
       sp = (bispinor *) Q +iy;
       up=&g_gauge_field[ix][2];
-      p2add(rr, sp, up, 0, -0.5*phase_2, 0.5*rho_BSM, phi, phip[2], -1.);
+      p2add(rr, sp, up, 0, -0.5*phase_2, 0.5*rho_BSM, phi, phip[2], -1., r_BSM);
 
       /******************************* direction -2 *********************************/
       iy=g_idn[ix][2];
       sm = (bispinor *) Q +iy;
       um=&g_gauge_field[iy][2];
-      p2add(rr, sm, um, 1, 0.5*phase_2, -0.5*rho_BSM, phi, phim[2], -1.);
+      p2add(rr, sm, um, 1, 0.5*phase_2, -0.5*rho_BSM, phi, phim[2], -1., -r_BSM);
       
       /******************************* direction +3 *********************************/
       iy=g_iup[ix][3];
       sp = (bispinor *) Q +iy;
       up=&g_gauge_field[ix][3];
-      p3add(rr, sp, up, 0, -0.5*phase_3, 0.5*rho_BSM, phi, phip[3], -1.);
+      p3add(rr, sp, up, 0, -0.5*phase_3, 0.5*rho_BSM, phi, phip[3], -1., r_BSM);
       
       /******************************* direction -3 *********************************/
       iy=g_idn[ix][3];
       sm = (bispinor *) Q +iy;
       um=&g_gauge_field[iy][3];
-      p3add(rr, sm, um, 1, 0.5*phase_3, -0.5*rho_BSM, phi, phim[3], -1.);
+      p3add(rr, sm, um, 1, 0.5*phase_3, -0.5*rho_BSM, phi, phim[3], -1., -r_BSM);
     }
 #ifdef OMP
   } /* OpenMP closing brace */
@@ -841,10 +913,10 @@ void D_psi_dagger_BSM(bispinor * const P, bispinor * const Q){
 }
 
 /* Q2_psi_BSM acts on bispinor fields */
-void Q2_psi_BSM(bispinor * const P, bispinor * const Q){
+void Q2_psi_BSM3(bispinor * const P, bispinor * const Q){
 
-  D_psi_dagger_BSM(g_bispinor_field[3] , Q);
-  D_psi_BSM(P, g_bispinor_field[3]);
+  D_psi_dagger_BSM3(g_bispinor_field[3] , Q);
+  D_psi_BSM3(P, g_bispinor_field[3]);
   assign_add_mul_r((spinor*)P, (spinor*)Q, m0_BSM, 2*VOLUME); 
   /* Q and P are spinor, not bispinor ==> made a cast */
   /* the use of [3] has to be changed to avoid future conflicts */

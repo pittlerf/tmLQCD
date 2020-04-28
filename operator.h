@@ -38,7 +38,8 @@ typedef enum op_type {
   BSM,
   BSM2b,
   BSM2m,
-  BSM2f
+  BSM2f,
+  BSM3
 } op_type;
 
 #define max_no_operators 10

@@ -80,8 +80,9 @@
 #define _default_rho_BSM 1.0
 #define _default_eta_BSM 1.0
 #define _default_m0_BSM  0.0
-#define _default c5phi_BSM 0.0
+#define _default_c5phi_BSM 0.0
 #define _default_mu03_BSM  0.0
+#define _default_r_BSM 0.0
 #define _default_mu01_BSM  0.0
 #define _default_smearedcorrelator_BSM 0
 #define _default_propagatorsonthefly_BSM 0

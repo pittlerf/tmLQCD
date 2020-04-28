@@ -515,7 +515,11 @@ inline void rmQuotes(char *str){
   else if(strcmp(yytext, "BSM2f")==0) {
     optr->type = BSM2f;
     have_bsm_op = 1;
-  }  
+  } 
+  else if(strcmp(yytext, "BSM3") == 0){
+    optr->type = BSM3;
+    have_bsm_op = 1;
+  } 
   else {
     fprintf(stderr, "Unknown operator type %s in line %d\n", yytext, line_of_file);
     exit(1);
@@ -726,6 +730,11 @@ inline void rmQuotes(char *str){
     sscanf(yytext, " %[a-zA-Z0123] = %lf", name, &c);
     c5phi_BSM = c;
     if(myverbose != 0) printf("  BSM parameter c5phi set to %f\n", c5phi_BSM);
+  }
+  {SPC}*rbsm{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z0123] = %lf", name, &c);
+    r_BSM = c;
+    if(myverbose != 0) printf("  BSM parameter r_bsm set to %f\n", r_BSM);
   }
   {SPC}*propagatorsonthefly{EQL}yes {
     propagatorsonthefly_BSM = 1;
@@ -2385,6 +2394,8 @@ int read_input(char * conf_file){
   m0_BSM  = _default_m0_BSM;
   mu03_BSM  = _default_mu03_BSM;
   mu01_BSM  = _default_mu01_BSM;
+  r_BSM = _default_r_BSM ;
+  c5phi_BSM  = _default_c5phi_BSM ;
   propagatorsonthefly_BSM = _default_propagatorsonthefly_BSM;
   smearedcorrelator_BSM = _default_smearedcorrelator_BSM;
   densitydensity_BSM = _default_densitydensity_BSM;

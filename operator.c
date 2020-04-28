@@ -41,6 +41,7 @@
 #include "operator/D_psi_BSM2b.h"
 #include "operator/D_psi_BSM2f.h"
 #include "operator/D_psi_BSM2m.h"
+#include "operator/D_psi_BSM3.h"
 #include "operator/Dov_psi.h"
 #include "operator/tm_operators_nd.h"
 #include "operator/Hopping_Matrix.h"
@@ -140,7 +141,7 @@ int add_operator(const int type) {
     optr->inverter = &op_invert;
   }
   if(optr->type == DBTMWILSON || optr->type == DBCLOVER || optr->type == BSM || optr->type == BSM2m 
-      || optr->type == BSM2b || optr->type == BSM2f ) {
+      || optr->type == BSM2b || optr->type == BSM2f || optr->type == BSM3 ) {
     optr->no_flavours = 2;
     g_running_phmc = 1;
   }
@@ -220,7 +221,7 @@ int init_operators() {
         optr->even_odd_flag = 1;
         optr->applyDbQsq = &Qtm_pm_ndpsi;
       }
-      else if(optr->type == BSM || optr->type == BSM2b || optr->type == BSM2m || optr->type== BSM2f ) {
+      else if(optr->type == BSM || optr->type == BSM2b || optr->type == BSM2m || optr->type== BSM2f || optr->type==BSM3) {
         // For the BSM operator we don't use kappa normalisation,
         // as a result, when twisted boundary conditions are applied this needs to be unity.
         // In addition, unlike in the Wilson case, the hopping term comes with a plus sign.
@@ -245,6 +246,10 @@ int init_operators() {
           optr->applyMbi    = &D_psi_BSM2f;
           optr->applyMdagbi = &D_psi_dagger_BSM2f;
           optr->applyQsqbi  = &Q2_psi_BSM2f;
+        } else if( optr->type == BSM3 ){
+          optr->applyMbi    = &D_psi_BSM3;
+          optr->applyMdagbi = &D_psi_dagger_BSM3;
+          optr->applyQsqbi  = &Q2_psi_BSM3;
         }
         // generate space for 4
         int j = init_scalar_field(VOLUMEPLUSRAND, 4);
@@ -468,7 +473,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 
     if(write_prop) optr->write_prop(op_id, index_start, 0);
   }
-  else if( optr->type == BSM || optr->type == BSM2b || optr->type == BSM2m || optr->type == BSM2f ) {
+  else if( optr->type == BSM || optr->type == BSM2b || optr->type == BSM2m || optr->type == BSM2f || optr->type == BSM3 ) {
     if (g_cart_id == 0 && g_debug_level > 1) {
      printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
     }
@@ -630,14 +635,14 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
   if(SourceInfo.type != 1) {
     if (PropInfo.splitted) {
       /* operators with additional external fields require one more index */
-      if( optr->type==BSM || optr->type==BSM2b || optr->type==BSM2m || optr->type==BSM2f ){
+      if( optr->type==BSM || optr->type==BSM2b || optr->type==BSM2m || optr->type==BSM2f || optr->type==BSM3){
         snprintf(filename, strl, "%s.%.4d.%.2d.%.2d.%.8d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, optr->n, ending);
       }else{
         snprintf(filename, strl, "%s.%.4d.%.2d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, ending);
       }
     }
     else {
-      if( optr->type==BSM || optr->type == BSM2b || optr->type==BSM2m || optr->type==BSM2f ){
+      if( optr->type==BSM || optr->type == BSM2b || optr->type==BSM2m || optr->type==BSM2f || optr->type==BSM3){
         snprintf(filename, strl, "%s.%.4d.%.2d.%.8d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, optr->n, ending);
       }else{
         snprintf(filename, strl, "%s.%.4d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, ending);
@@ -645,7 +650,7 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
     }
   }
   else {
-    if(optr->type==BSM || optr->type==BSM2b || optr->type==BSM2m || optr->type==BSM2f ){
+    if(optr->type==BSM || optr->type==BSM2b || optr->type==BSM2m || optr->type==BSM2f || optr->type==BSM3 ){
       snprintf(filename, strl, "%s.%.4d.%.5d.%.8d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, optr->n, ending);
     } else {
       snprintf(filename, strl, "%s.%.4d.%.5d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, ending);
