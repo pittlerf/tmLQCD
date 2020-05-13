@@ -141,6 +141,12 @@ typedef double scalar;
   (r).c1 += (c) * (s).c1;			\
   (r).c2 += (c) * (s).c2;
 
+#define _vector_sub_mul(r,c,s)                  \
+  (r).c0 -= (c) * (s).c0;                       \
+  (r).c1 -= (c) * (s).c1;                       \
+  (r).c2 -= (c) * (s).c2;
+
+
 #define _spinor_add_mul(r,c,s)                  \
   _vector_add_mul( (r).s0, (c), (s).s0);        \
   _vector_add_mul( (r).s1, (c), (s).s1);        \
@@ -165,6 +171,12 @@ typedef double scalar;
   (r).c0 += I*(c)*(s).c0; \
   (r).c1 += I*(c)*(s).c1; \
   (r).c2 += I*(c)*(s).c2;
+
+#define _vector_sub_i_mul(r,c,s) \
+  (r).c0 -= I*(c)*(s).c0; \
+  (r).c1 -= I*(c)*(s).c1; \
+  (r).c2 -= I*(c)*(s).c2;
+
 
 #define _vector_i_mul(r,c,s) \
   (r).c0 = I*(c)*(s).c0; \
