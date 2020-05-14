@@ -293,10 +293,11 @@ static inline void bispinor_times_phase_times_inverse_u(bispinor * restrict cons
   return;
 }
 
-static inline void p0add(bispinor * restrict const tmpr , bispinor const * restrict const s,
+
+static inline void padd_chitildebreak(bispinor * restrict const tmpr , bispinor const * restrict const s,
                          su3 const * restrict const u, const int inv, const _Complex double phase,
                          const double phaseF, const scalar * const phi, const scalar * const phip,
-                         const double sign, const double phaseW) {
+                         const double sign) {
 
 #ifdef OMP
 #define static
@@ -312,29 +313,6 @@ static inline void p0add(bispinor * restrict const tmpr , bispinor const * restr
     bispinor_times_phase_times_inverse_u(&us, phase, u, s);
   else
     bispinor_times_phase_times_u(&us, phase, u, s);
-
-  // tmpr += (r_bsm-+\gamma_0)*us
-  _vector_add_mul(tmpr->sp_up.s0, sign_gamma, us.sp_up.s2);
-  _vector_add_mul(tmpr->sp_up.s1, sign_gamma, us.sp_up.s3);
-  _vector_add_mul(tmpr->sp_up.s2, sign_gamma, us.sp_up.s0);
-  _vector_add_mul(tmpr->sp_up.s3, sign_gamma, us.sp_up.s1);
-
-  _vector_add_mul(tmpr->sp_dn.s0, sign_gamma, us.sp_dn.s2);
-  _vector_add_mul(tmpr->sp_dn.s1, sign_gamma, us.sp_dn.s3);
-  _vector_add_mul(tmpr->sp_dn.s2, sign_gamma, us.sp_dn.s0);
-  _vector_add_mul(tmpr->sp_dn.s3, sign_gamma, us.sp_dn.s1);
-
-  _vector_add_mul(tmpr->sp_up.s0, phaseW, us.sp_up.s0);
-  _vector_add_mul(tmpr->sp_up.s1, phaseW, us.sp_up.s1);
-  _vector_add_mul(tmpr->sp_up.s2, phaseW, us.sp_up.s2);
-  _vector_add_mul(tmpr->sp_up.s3, phaseW, us.sp_up.s3);
-
-  _vector_add_mul(tmpr->sp_dn.s0, phaseW, us.sp_dn.s0);
-  _vector_add_mul(tmpr->sp_dn.s1, phaseW, us.sp_dn.s1);
-  _vector_add_mul(tmpr->sp_dn.s2, phaseW, us.sp_dn.s2);
-  _vector_add_mul(tmpr->sp_dn.s3, phaseW, us.sp_dn.s3);
-
-  
 
   // tmpr += F*us
   Fadd(tmpr, &us, phi,  phaseF, sign);
@@ -345,146 +323,515 @@ static inline void p0add(bispinor * restrict const tmpr , bispinor const * restr
   return;
 }
 
-static inline void p1add(bispinor * restrict const tmpr, bispinor const * restrict const s,
+
+static inline void p0add_wilsonclover( bispinor * restrict const tmpr , bispinor const * restrict const sp,
                          su3 const * restrict const u, const int inv, const _Complex double phase,
-                         const double phaseF, const scalar * const phi, const scalar * const phip, 
-                         const double sign, const double phaseW) {
+                         const double sign) {
 #ifdef OMP
 #define static
 #endif
   static bispinor us;
   static const int sign_gamma = (inv==0) ? -sign : sign ;
+  static su3_vector halfwilson1;
+  static su3_vector halfwilson2;
+  static su3_vector chi;
+  static su3_vector results1;
+  static su3_vector results2;
 #ifdef OMP
 #undef static
 #endif
+  _vector_null( halfwilson1 );
+  _vector_null( halfwilson2 );
+  if(sign_gamma == 1){
+//Performing the multiplication on the first half of a halfspinor
+//shrink the fermion vector from four spin component to two
+//first component
+    _vector_assign(     halfwilson1, sp->sp_up.s0);
+    _vector_assign(     halfwilson2, sp->sp_dn.s0);
+    _vector_add_assign( halfwilson1, sp->sp_up.s2);
+    _vector_add_assign( halfwilson2, sp->sp_dn.s2);
+    if(inv == 1){
+      _su3_inverse_multiply(chi, (*u), halfwilson1);
+      _complexcjg_times_vector(results1, phase, chi);
+      _su3_inverse_multiply(chi, (*u), halfwilson2);
+      _complexcjg_times_vector(results2, phase, chi);
+    }
+    else{
+      _su3_multiply(chi, (*u), halfwilson1);
+      _complex_times_vector(results1, phase, chi);
+      _su3_multiply(chi, (*u), halfwilson2);
+      _complex_times_vector(results2, phase, chi);
+    }
 
-  // us = phase*u*s
-  if( inv )
-    bispinor_times_phase_times_inverse_u(&us, phase, u, s);
-  else
-    bispinor_times_phase_times_u(&us, phase, u, s);
+    _vector_add_assign( tmpr->sp_up.s0, results1);
+    _vector_add_assign( tmpr->sp_up.s2, results1);
+    _vector_add_assign( tmpr->sp_dn.s0, results2);
+    _vector_add_assign( tmpr->sp_dn.s2, results2);
 
-  // tmpr += (r_bsm+-\gamma_1)*us
-  _vector_add_i_mul(tmpr->sp_up.s0, sign_gamma, us.sp_up.s3);
-  _vector_add_i_mul(tmpr->sp_up.s1, sign_gamma, us.sp_up.s2);
-  _vector_sub_i_mul(tmpr->sp_up.s2, sign_gamma, us.sp_up.s1);
-  _vector_sub_i_mul(tmpr->sp_up.s3, sign_gamma, us.sp_up.s0);
+//Performing the multiplication on the first half of a halfspinor
+//shrink the fermion vector from four spin component to two
+//second component
+    _vector_assign(     halfwilson1, sp->sp_up.s1);
+    _vector_assign(     halfwilson2, sp->sp_dn.s1);
+    _vector_add_assign( halfwilson1, sp->sp_up.s3);
+    _vector_add_assign( halfwilson2, sp->sp_dn.s3);
 
-  _vector_add_i_mul(tmpr->sp_dn.s0, sign_gamma, us.sp_dn.s3);
-  _vector_add_i_mul(tmpr->sp_dn.s1, sign_gamma, us.sp_dn.s2);
-  _vector_sub_i_mul(tmpr->sp_dn.s2, sign_gamma, us.sp_dn.s1);
-  _vector_sub_i_mul(tmpr->sp_dn.s3, sign_gamma, us.sp_dn.s0);
+    if(inv == 1){
+      _su3_inverse_multiply(chi, (*u), halfwilson1);
+      _complexcjg_times_vector(results1, phase, chi);
+      _su3_inverse_multiply(chi, (*u), halfwilson2);
+      _complexcjg_times_vector(results2, phase, chi);
+    }
+    else{
+      _su3_multiply(chi, (*u), halfwilson1);
+      _complex_times_vector(results1, phase, chi);
+      _su3_multiply(chi, (*u), halfwilson2);
+      _complex_times_vector(results2, phase, chi);
+    }
+    _vector_add_assign( tmpr->sp_up.s1, results1);
+    _vector_add_assign( tmpr->sp_up.s3, results1);
+    _vector_add_assign( tmpr->sp_dn.s1, results2);
+    _vector_add_assign( tmpr->sp_dn.s3, results2);
+  }//end of if sign_gamma==1
+  else{
+//Performing the multiplication on the first half of a halfspinor
+//shrink the fermion vector from four spin component to two
+//first component
+    _vector_assign(     halfwilson1, sp->sp_up.s0);
+    _vector_assign(     halfwilson2, sp->sp_dn.s0);
+    _vector_sub_assign( halfwilson1, sp->sp_up.s2);
+    _vector_sub_assign( halfwilson2, sp->sp_dn.s2);
+//multiply the shrinked fermion vector with the gauge 
+    if(inv == 1){
+      _su3_inverse_multiply(chi, (*u), halfwilson1);
+      _complexcjg_times_vector(results1, phase, chi);
+      _su3_inverse_multiply(chi, (*u), halfwilson2);
+      _complexcjg_times_vector(results2, phase, chi);
+    }
+    else{
+      _su3_multiply(chi, (*u), halfwilson1);
+      _complex_times_vector(results1, phase, chi);
+      _su3_multiply(chi, (*u), halfwilson2);
+      _complex_times_vector(results2, phase, chi);
+    }
+//expand it
+    _vector_add_assign( tmpr->sp_up.s0, results1);
+    _vector_sub_assign( tmpr->sp_up.s2, results1);
+    _vector_add_assign( tmpr->sp_dn.s0, results2);
+    _vector_sub_assign( tmpr->sp_dn.s2, results2);
 
-  _vector_add_mul(tmpr->sp_up.s0, phaseW, us.sp_up.s0);
-  _vector_add_mul(tmpr->sp_up.s1, phaseW, us.sp_up.s1);
-  _vector_add_mul(tmpr->sp_up.s2, phaseW, us.sp_up.s2);
-  _vector_add_mul(tmpr->sp_up.s3, phaseW, us.sp_up.s3);
+//Performing the multiplication on the first half of a halfspinor
+//shrink the fermion vector from four spin component to two
+//second component
+    _vector_assign(     halfwilson1, sp->sp_up.s1);
+    _vector_assign(     halfwilson2, sp->sp_dn.s1);
+    _vector_sub_assign( halfwilson1, sp->sp_up.s3);
+    _vector_sub_assign( halfwilson2, sp->sp_dn.s3);
+//multiply the shrinked fermion vector with the gauge 
+    if(inv == 1){
+      _su3_inverse_multiply(chi, (*u), halfwilson1);
+      _complexcjg_times_vector(results1, phase, chi);
+      _su3_inverse_multiply(chi, (*u), halfwilson2);
+      _complexcjg_times_vector(results2, phase, chi);
+    }
+    else{
+      _su3_multiply(chi, (*u), halfwilson1);
+      _complex_times_vector(results1, phase, chi);
+      _su3_multiply(chi, (*u), halfwilson2);
+      _complex_times_vector(results2, phase, chi);
+    }
+//expand it
+    _vector_add_assign( tmpr->sp_up.s1, results1);
+    _vector_sub_assign( tmpr->sp_up.s3, results1);
+    _vector_add_assign( tmpr->sp_dn.s1, results2);
+    _vector_sub_assign( tmpr->sp_dn.s3, results2);
+  }
+  return;
+      
+}
+static inline void p1add_wilsonclover( bispinor * restrict const tmpr , bispinor const * restrict const sp,
+                         su3 const * restrict const u, const int inv, const _Complex double phase,
+                         const double sign) {
+#ifdef OMP
+#define static
+#endif
+  static bispinor us;
+  static const int sign_gamma = (inv==0) ? -sign : sign ;
+  static su3_vector halfwilson1;
+  static su3_vector halfwilson2;
+  static su3_vector chi;
+  static su3_vector results1;
+  static su3_vector results2;
+#ifdef OMP
+#undef static
+#endif
+  _vector_null( halfwilson1 );
+  _vector_null( halfwilson2 );
+  if(sign_gamma == 1){
+//Performing the multiplication on the first half of a halfspinor
+//shrink the fermion vector from four spin component to two
+//first component
+    _vector_assign(     halfwilson1, sp->sp_up.s0);
+    _vector_assign(     halfwilson2, sp->sp_dn.s0);
+    _vector_add_i_assign( halfwilson1, sp->sp_up.s3);
+    _vector_add_i_assign( halfwilson2, sp->sp_dn.s3);
+    if(inv == 1){
+      _su3_inverse_multiply(chi, (*u), halfwilson1);
+      _complexcjg_times_vector(results1, phase, chi);
+      _su3_inverse_multiply(chi, (*u), halfwilson2);
+      _complexcjg_times_vector(results2, phase, chi);
+    }
+    else{
+      _su3_multiply(chi, (*u), halfwilson1);
+      _complex_times_vector(results1, phase, chi);
+      _su3_multiply(chi, (*u), halfwilson2);
+      _complex_times_vector(results2, phase, chi);
+    }
 
-  _vector_add_mul(tmpr->sp_dn.s0, phaseW, us.sp_dn.s0);
-  _vector_add_mul(tmpr->sp_dn.s1, phaseW, us.sp_dn.s1);
-  _vector_add_mul(tmpr->sp_dn.s2, phaseW, us.sp_dn.s2);
-  _vector_add_mul(tmpr->sp_dn.s3, phaseW, us.sp_dn.s3);
+    _vector_add_assign(   tmpr->sp_up.s0, results1);
+    _vector_sub_i_assign( tmpr->sp_up.s3, results1);
+    _vector_add_assign(   tmpr->sp_dn.s0, results2);
+    _vector_sub_i_assign( tmpr->sp_dn.s3, results2);
 
-  // tmpr += F*us
-  Fadd(tmpr, &us, phi,  phaseF, sign);
-  Fadd(tmpr, &us, phip, phaseF, sign);
+//Performing the multiplication on the first half of a halfspinor
+//shrink the fermion vector from four spin component to two
+//second component
+    _vector_assign(     halfwilson1, sp->sp_up.s1);
+    _vector_assign(     halfwilson2, sp->sp_dn.s1);
+    _vector_add_i_assign( halfwilson1, sp->sp_up.s2);
+    _vector_add_i_assign( halfwilson2, sp->sp_dn.s2);
+
+    if(inv == 1){
+      _su3_inverse_multiply(chi, (*u), halfwilson1);
+      _complexcjg_times_vector(results1, phase, chi);
+      _su3_inverse_multiply(chi, (*u), halfwilson2);
+      _complexcjg_times_vector(results2, phase, chi);
+    }
+    else{
+      _su3_multiply(chi, (*u), halfwilson1);
+      _complex_times_vector(results1, phase, chi);
+      _su3_multiply(chi, (*u), halfwilson2);
+      _complex_times_vector(results2, phase, chi);
+    }
+    _vector_add_assign( tmpr->sp_up.s1, results1);
+    _vector_sub_i_assign( tmpr->sp_up.s2, results1);
+    _vector_add_assign( tmpr->sp_dn.s1, results2);
+    _vector_sub_i_assign( tmpr->sp_dn.s2, results2);
+  }//end of if sign_gamma==1
+  else{
+//Performing the multiplication on the first half of a halfspinor
+//shrink the fermion vector from four spin component to two
+//first component
+    _vector_assign(       halfwilson1, sp->sp_up.s0);
+    _vector_assign(       halfwilson2, sp->sp_dn.s0);
+    _vector_sub_i_assign( halfwilson1, sp->sp_up.s3);
+    _vector_sub_i_assign( halfwilson2, sp->sp_dn.s3);
+//multiply the shrinked fermion vector with the gauge 
+    if(inv == 1){
+      _su3_inverse_multiply(chi, (*u), halfwilson1);
+      _complexcjg_times_vector(results1, phase, chi);
+      _su3_inverse_multiply(chi, (*u), halfwilson2);
+      _complexcjg_times_vector(results2, phase, chi);
+    }
+    else{
+      _su3_multiply(chi, (*u), halfwilson1);
+      _complex_times_vector(results1, phase, chi);
+      _su3_multiply(chi, (*u), halfwilson2);
+      _complex_times_vector(results2, phase, chi);
+    }
+//expand it
+    _vector_add_assign(   tmpr->sp_up.s0, results1);
+    _vector_add_i_assign( tmpr->sp_up.s3, results1);
+    _vector_add_assign(   tmpr->sp_dn.s0, results2);
+    _vector_add_i_assign( tmpr->sp_dn.s3, results2);
+
+//Performing the multiplication on the first half of a halfspinor
+//shrink the fermion vector from four spin component to two
+//second component
+    _vector_assign(     halfwilson1, sp->sp_up.s1);
+    _vector_assign(     halfwilson2, sp->sp_dn.s1);
+    _vector_sub_i_assign( halfwilson1, sp->sp_up.s2);
+    _vector_sub_i_assign( halfwilson2, sp->sp_dn.s2);
+//multiply the shrinked fermion vector with the gauge 
+    if(inv == 1){
+      _su3_inverse_multiply(chi, (*u), halfwilson1);
+      _complexcjg_times_vector(results1, phase, chi);
+      _su3_inverse_multiply(chi, (*u), halfwilson2);
+      _complexcjg_times_vector(results2, phase, chi);
+    }
+    else{
+      _su3_multiply(chi, (*u), halfwilson1);
+      _complex_times_vector(results1, phase, chi);
+      _su3_multiply(chi, (*u), halfwilson2);
+      _complex_times_vector(results2, phase, chi);
+    }
+//expand it
+    _vector_add_assign(   tmpr->sp_up.s1, results1);
+    _vector_add_i_assign( tmpr->sp_up.s2, results1);
+    _vector_add_assign(   tmpr->sp_dn.s1, results2);
+    _vector_add_i_assign( tmpr->sp_dn.s2, results2);
+  }
+
 
   return;
+
 }
 
-static inline void p2add(bispinor * restrict const tmpr, bispinor const * restrict const s,
+
+static inline void p2add_wilsonclover( bispinor * restrict const tmpr , bispinor const * restrict const sp,
                          su3 const * restrict const u, const int inv, const _Complex double phase,
-                         const double phaseF, const scalar * const phi, const scalar * const phip, 
-                         const double sign, const double phaseW) {
+                         const double sign) {
 #ifdef OMP
 #define static
 #endif
   static bispinor us;
   static const int sign_gamma = (inv==0) ? -sign : sign ;
+  static su3_vector halfwilson1;
+  static su3_vector halfwilson2;
+  static su3_vector chi;
+  static su3_vector results1;
+  static su3_vector results2;
 #ifdef OMP
 #undef static
 #endif
+  _vector_null( halfwilson1 );
+  _vector_null( halfwilson2 );
+  if(sign_gamma == 1){
+//Performing the multiplication on the first half of a halfspinor
+//shrink the fermion vector from four spin component to two
+//first component
+    _vector_assign(     halfwilson1, sp->sp_up.s0);
+    _vector_assign(     halfwilson2, sp->sp_dn.s0);
+    _vector_add_assign( halfwilson1, sp->sp_up.s3);
+    _vector_add_assign( halfwilson2, sp->sp_dn.s3);
+    if(inv == 1){
+      _su3_inverse_multiply(chi, (*u), halfwilson1);
+      _complexcjg_times_vector(results1, phase, chi);
+      _su3_inverse_multiply(chi, (*u), halfwilson2);
+      _complexcjg_times_vector(results2, phase, chi);
+    }
+    else{
+      _su3_multiply(chi, (*u), halfwilson1);
+      _complex_times_vector(results1, phase, chi);
+      _su3_multiply(chi, (*u), halfwilson2);
+      _complex_times_vector(results2, phase, chi);
+    }
 
-  // us = phase*u*s
-  if( inv )
-    bispinor_times_phase_times_inverse_u(&us, phase, u, s);
-  else
-    bispinor_times_phase_times_u(&us, phase, u, s);
+    _vector_add_assign(   tmpr->sp_up.s0, results1);
+    _vector_add_assign(   tmpr->sp_up.s3, results1);
+    _vector_add_assign(   tmpr->sp_dn.s0, results2);
+    _vector_add_assign(   tmpr->sp_dn.s3, results2);
 
-  // tmpr += (1+-\gamma_2)*us
-  _vector_add_mul(tmpr->sp_up.s0, sign_gamma, us.sp_up.s3);
-  _vector_sub_mul(tmpr->sp_up.s1, sign_gamma, us.sp_up.s2);
-  _vector_sub_mul(tmpr->sp_up.s2, sign_gamma, us.sp_up.s1);
-  _vector_add_mul(tmpr->sp_up.s3, sign_gamma, us.sp_up.s0);
+//Performing the multiplication on the first half of a halfspinor
+//shrink the fermion vector from four spin component to two
+//second component
+    _vector_assign(     halfwilson1, sp->sp_up.s1);
+    _vector_assign(     halfwilson2, sp->sp_dn.s1);
+    _vector_sub_assign( halfwilson1, sp->sp_up.s2);
+    _vector_sub_assign( halfwilson2, sp->sp_dn.s2);
 
-  _vector_add_mul(tmpr->sp_dn.s0, sign_gamma, us.sp_dn.s3);
-  _vector_sub_mul(tmpr->sp_dn.s1, sign_gamma, us.sp_dn.s2);
-  _vector_sub_mul(tmpr->sp_dn.s2, sign_gamma, us.sp_dn.s1);
-  _vector_add_mul(tmpr->sp_dn.s3, sign_gamma, us.sp_dn.s0);
+    if(inv == 1){
+      _su3_inverse_multiply(chi, (*u), halfwilson1);
+      _complexcjg_times_vector(results1, phase, chi);
+      _su3_inverse_multiply(chi, (*u), halfwilson2);
+      _complexcjg_times_vector(results2, phase, chi);
+    }
+    else{
+      _su3_multiply(chi, (*u), halfwilson1);
+      _complex_times_vector(results1, phase, chi);
+      _su3_multiply(chi, (*u), halfwilson2);
+      _complex_times_vector(results2, phase, chi);
+    }
+    _vector_add_assign( tmpr->sp_up.s1, results1);
+    _vector_sub_assign( tmpr->sp_up.s2, results1);
+    _vector_add_assign( tmpr->sp_dn.s1, results2);
+    _vector_sub_assign( tmpr->sp_dn.s2, results2);
+  }//end of if sign_gamma==1
+  else{
+//Performing the multiplication on the first half of a halfspinor
+//shrink the fermion vector from four spin component to two
+//first component
+    _vector_assign(       halfwilson1, sp->sp_up.s0);
+    _vector_assign(       halfwilson2, sp->sp_dn.s0);
+    _vector_sub_assign(   halfwilson1, sp->sp_up.s3);
+    _vector_sub_assign(   halfwilson2, sp->sp_dn.s3);
+//multiply the shrinked fermion vector with the gauge 
+    if(inv == 1){
+      _su3_inverse_multiply(chi, (*u), halfwilson1);
+      _complexcjg_times_vector(results1, phase, chi);
+      _su3_inverse_multiply(chi, (*u), halfwilson2);
+      _complexcjg_times_vector(results2, phase, chi);
+    }
+    else{
+      _su3_multiply(chi, (*u), halfwilson1);
+      _complex_times_vector(results1, phase, chi);
+      _su3_multiply(chi, (*u), halfwilson2);
+      _complex_times_vector(results2, phase, chi);
+    }
+//expand it
+    _vector_add_assign(   tmpr->sp_up.s0, results1);
+    _vector_sub_assign(   tmpr->sp_up.s3, results1);
+    _vector_add_assign(   tmpr->sp_dn.s0, results2);
+    _vector_sub_assign(   tmpr->sp_dn.s3, results2);
 
-  _vector_add_mul(tmpr->sp_up.s0, phaseW, us.sp_up.s0);
-  _vector_add_mul(tmpr->sp_up.s1, phaseW, us.sp_up.s1);
-  _vector_add_mul(tmpr->sp_up.s2, phaseW, us.sp_up.s2);
-  _vector_add_mul(tmpr->sp_up.s3, phaseW, us.sp_up.s3);
-
-  _vector_add_mul(tmpr->sp_dn.s0, phaseW, us.sp_dn.s0);
-  _vector_add_mul(tmpr->sp_dn.s1, phaseW, us.sp_dn.s1);
-  _vector_add_mul(tmpr->sp_dn.s2, phaseW, us.sp_dn.s2);
-  _vector_add_mul(tmpr->sp_dn.s3, phaseW, us.sp_dn.s3);
-
-  // tmpr += F*us
-  Fadd(tmpr, &us, phi,  phaseF, sign);
-  Fadd(tmpr, &us, phip, phaseF, sign);
+//Performing the multiplication on the first half of a halfspinor
+//shrink the fermion vector from four spin component to two
+//second component
+    _vector_assign(     halfwilson1, sp->sp_up.s1);
+    _vector_assign(     halfwilson2, sp->sp_dn.s1);
+    _vector_add_assign( halfwilson1, sp->sp_up.s2);
+    _vector_add_assign( halfwilson2, sp->sp_dn.s2);
+//multiply the shrinked fermion vector with the gauge 
+    if(inv == 1){
+      _su3_inverse_multiply(chi, (*u), halfwilson1);
+      _complexcjg_times_vector(results1, phase, chi);
+      _su3_inverse_multiply(chi, (*u), halfwilson2);
+      _complexcjg_times_vector(results2, phase, chi);
+    }
+    else{
+      _su3_multiply(chi, (*u), halfwilson1);
+      _complex_times_vector(results1, phase, chi);
+      _su3_multiply(chi, (*u), halfwilson2);
+      _complex_times_vector(results2, phase, chi);
+    }
+//expand it
+    _vector_add_assign(   tmpr->sp_up.s1, results1);
+    _vector_add_assign(   tmpr->sp_up.s2, results1);
+    _vector_add_assign(   tmpr->sp_dn.s1, results2);
+    _vector_add_assign(   tmpr->sp_dn.s2, results2);
+  }
 
   return;
+
 }
 
-static inline void p3add(bispinor * restrict const tmpr, bispinor const * restrict const s,
+
+
+static inline void p3add_wilsonclover( bispinor * restrict const tmpr , bispinor const * restrict const sp,
                          su3 const * restrict const u, const int inv, const _Complex double phase,
-                         const double phaseF, const scalar * const phi, const scalar * const phip, 
-                         const double sign, const double phaseW) {
+                         const double sign) {
 #ifdef OMP
 #define static
 #endif
   static bispinor us;
   static const int sign_gamma = (inv==0) ? -sign : sign ;
+  static su3_vector halfwilson1;
+  static su3_vector halfwilson2;
+  static su3_vector chi;
+  static su3_vector results1;
+  static su3_vector results2;
 #ifdef OMP
 #undef static
 #endif
+  _vector_null( halfwilson1 );
+  _vector_null( halfwilson2 );
+  if(sign_gamma == 1){
+//Performing the multiplication on the first half of a halfspinor
+//shrink the fermion vector from four spin component to two
+//first component
+    _vector_assign(       halfwilson1, sp->sp_up.s0);
+    _vector_assign(       halfwilson2, sp->sp_dn.s0);
+    _vector_add_i_assign( halfwilson1, sp->sp_up.s2);
+    _vector_add_i_assign( halfwilson2, sp->sp_dn.s2);
+    if(inv == 1){
+      _su3_inverse_multiply(chi, (*u), halfwilson1);
+      _complexcjg_times_vector(results1, phase, chi);
+      _su3_inverse_multiply(chi, (*u), halfwilson2);
+      _complexcjg_times_vector(results2, phase, chi);
+    }
+    else{
+      _su3_multiply(chi, (*u), halfwilson1);
+      _complex_times_vector(results1, phase, chi);
+      _su3_multiply(chi, (*u), halfwilson2);
+      _complex_times_vector(results2, phase, chi);
+    }
 
-  // us = phase*u*s
-  if( inv )
-    bispinor_times_phase_times_inverse_u(&us, phase, u, s);
-  else
-    bispinor_times_phase_times_u(&us, phase, u, s);
+    _vector_add_assign(     tmpr->sp_up.s0, results1);
+    _vector_add_assign(     tmpr->sp_up.s2, results1);
+    _vector_sub_i_assign(   tmpr->sp_dn.s0, results2);
+    _vector_sub_i_assign(   tmpr->sp_dn.s2, results2);
 
-  // tmpr += (1+-\gamma_3)*us
-  _vector_add_i_mul(tmpr->sp_up.s0, sign_gamma, us.sp_up.s2);
-  _vector_sub_i_mul(tmpr->sp_up.s1, sign_gamma, us.sp_up.s3);
-  _vector_sub_i_mul(tmpr->sp_up.s2, sign_gamma, us.sp_up.s0);
-  _vector_add_i_mul(tmpr->sp_up.s3, sign_gamma, us.sp_up.s1);
+//Performing the multiplication on the first half of a halfspinor
+//shrink the fermion vector from four spin component to two
+//second component
+    _vector_assign(       halfwilson1, sp->sp_up.s1);
+    _vector_assign(       halfwilson2, sp->sp_dn.s1);
+    _vector_sub_i_assign( halfwilson1, sp->sp_up.s3);
+    _vector_sub_i_assign( halfwilson2, sp->sp_dn.s3);
 
-  _vector_add_i_mul(tmpr->sp_dn.s0, sign_gamma, us.sp_dn.s2);
-  _vector_sub_i_mul(tmpr->sp_dn.s1, sign_gamma, us.sp_dn.s3);
-  _vector_sub_i_mul(tmpr->sp_dn.s2, sign_gamma, us.sp_dn.s0);
-  _vector_add_i_mul(tmpr->sp_dn.s3, sign_gamma, us.sp_dn.s1);
+    if(inv == 1){
+      _su3_inverse_multiply(chi, (*u), halfwilson1);
+      _complexcjg_times_vector(results1, phase, chi);
+      _su3_inverse_multiply(chi, (*u), halfwilson2);
+      _complexcjg_times_vector(results2, phase, chi);
+    }
+    else{
+      _su3_multiply(chi, (*u), halfwilson1);
+      _complex_times_vector(results1, phase, chi);
+      _su3_multiply(chi, (*u), halfwilson2);
+      _complex_times_vector(results2, phase, chi);
+    }
+    _vector_add_assign(   tmpr->sp_up.s1, results1);
+    _vector_add_i_assign( tmpr->sp_up.s3, results1);
+    _vector_add_assign(   tmpr->sp_dn.s1, results2);
+    _vector_add_i_assign( tmpr->sp_dn.s3, results2);
+  }//end of if sign_gamma==1
+  else{
+//Performing the multiplication on the first half of a halfspinor
+//shrink the fermion vector from four spin component to two
+//first component
+    _vector_assign(         halfwilson1, sp->sp_up.s0);
+    _vector_assign(         halfwilson2, sp->sp_dn.s0);
+    _vector_sub_i_assign(   halfwilson1, sp->sp_up.s2);
+    _vector_sub_i_assign(   halfwilson2, sp->sp_dn.s2);
+//multiply the shrinked fermion vector with the gauge 
+    if(inv == 1){
+      _su3_inverse_multiply(chi, (*u), halfwilson1);
+      _complexcjg_times_vector(results1, phase, chi);
+      _su3_inverse_multiply(chi, (*u), halfwilson2);
+      _complexcjg_times_vector(results2, phase, chi);
+    }
+    else{
+      _su3_multiply(chi, (*u), halfwilson1);
+      _complex_times_vector(results1, phase, chi);
+      _su3_multiply(chi, (*u), halfwilson2);
+      _complex_times_vector(results2, phase, chi);
+    }
+//expand it
+    _vector_add_assign(     tmpr->sp_up.s0, results1);
+    _vector_add_i_assign(   tmpr->sp_up.s2, results1);
+    _vector_add_assign(     tmpr->sp_dn.s0, results2);
+    _vector_add_i_assign(   tmpr->sp_dn.s2, results2);
 
-  _vector_add_mul(tmpr->sp_up.s0, phaseW, us.sp_up.s0);
-  _vector_add_mul(tmpr->sp_up.s1, phaseW, us.sp_up.s1);
-  _vector_add_mul(tmpr->sp_up.s2, phaseW, us.sp_up.s2);
-  _vector_add_mul(tmpr->sp_up.s3, phaseW, us.sp_up.s3);
-
-  _vector_add_mul(tmpr->sp_dn.s0, phaseW, us.sp_dn.s0);
-  _vector_add_mul(tmpr->sp_dn.s1, phaseW, us.sp_dn.s1);
-  _vector_add_mul(tmpr->sp_dn.s2, phaseW, us.sp_dn.s2);
-  _vector_add_mul(tmpr->sp_dn.s3, phaseW, us.sp_dn.s3);
-
-
-  // tmpr += F*us
-  Fadd(tmpr, &us, phi,  phaseF, sign);
-  Fadd(tmpr, &us, phip, phaseF, sign);
+//Performing the multiplication on the first half of a halfspinor
+//shrink the fermion vector from four spin component to two
+//second component
+    _vector_assign(       halfwilson1, sp->sp_up.s1);
+    _vector_assign(       halfwilson2, sp->sp_dn.s1);
+    _vector_add_i_assign( halfwilson1, sp->sp_up.s3);
+    _vector_add_i_assign( halfwilson2, sp->sp_dn.s3);
+//multiply the shrinked fermion vector with the gauge 
+    if(inv == 1){
+      _su3_inverse_multiply(chi, (*u), halfwilson1);
+      _complexcjg_times_vector(results1, phase, chi);
+      _su3_inverse_multiply(chi, (*u), halfwilson2);
+      _complexcjg_times_vector(results2, phase, chi);
+    }
+    else{
+      _su3_multiply(chi, (*u), halfwilson1);
+      _complex_times_vector(results1, phase, chi);
+      _su3_multiply(chi, (*u), halfwilson2);
+      _complex_times_vector(results2, phase, chi);
+    }
+//expand it
+    _vector_add_assign(       tmpr->sp_up.s1, results1);
+    _vector_sub_i_assign(     tmpr->sp_up.s3, results1);
+    _vector_add_assign(       tmpr->sp_dn.s1, results2);
+    _vector_sub_i_assign(     tmpr->sp_dn.s3, results2);
+  }
 
   return;
+
 }
 
 
@@ -642,49 +989,58 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
 	iy=g_iup[ix][0];
 	sp = (bispinor *) Q +iy;
 	up=&g_gauge_field[ix][0];
-	p0add(rr, sp, up, 0, 0.5*phase_0, -0.5*rho_BSM, phi, phip[0], +1., r_BSM);
+        p0add_wilsonclover(rr, sp, up, 0, 0.5*phase_0, +1);
+        padd_chitildebreak(rr, sp, up, 0, 0.5*phase_0, -0.5*rho_BSM, phi, phip[0], +1.);
 
 	/******************************* direction -0 *********************************/
 	iy=g_idn[ix][0];
 	sm      = (bispinor *) Q +iy;
 	um=&g_gauge_field[iy][0];
-	p0add(rr, sm, um, 1, 0.5*phase_0, -0.5*rho_BSM, phi, phim[0], +1., r_BSM);
+        p0add_wilsonclover(rr, sm, um, 1, 0.5*phase_0, +1);
+        padd_chitildebreak(rr, sm, um, 1, 0.5*phase_0, -0.5*rho_BSM, phi, phim[0], +1.);
 
 	/******************************* direction +1 *********************************/
 	iy=g_iup[ix][1];
 	sp = (bispinor *) Q +iy;
 	up=&g_gauge_field[ix][1];
-	p1add(rr, sp, up, 0, 0.5*phase_1, -0.5*rho_BSM, phi, phip[1], +1., r_BSM);
+        p1add_wilsonclover(rr, sp, up, 0, 0.5*phase_1, +1);
+        padd_chitildebreak(rr, sp, up, 0, 0.5*phase_1, -0.5*rho_BSM, phi, phip[1], +1.);
 
 	/******************************* direction -1 *********************************/
 	iy=g_idn[ix][1];
 	sm = (bispinor *) Q +iy;
 	um=&g_gauge_field[iy][1];
-	p1add(rr, sm, um, 1, 0.5*phase_1, -0.5*rho_BSM, phi, phim[1], +1., r_BSM);
+        p1add_wilsonclover(rr, sm, um, 1, 0.5*phase_1, +1);
+        padd_chitildebreak(rr, sm, um, 1, 0.5*phase_1, -0.5*rho_BSM, phi, phim[1], +1.);
 
 	/******************************* direction +2 *********************************/
 	iy=g_iup[ix][2];
 	sp = (bispinor *) Q +iy;
 	up=&g_gauge_field[ix][2];
-	p2add(rr, sp, up, 0, 0.5*phase_2, -0.5*rho_BSM, phi, phip[2], +1., r_BSM);
+        p2add_wilsonclover(rr, sp, up, 0, 0.5*phase_2, +1);
+        padd_chitildebreak(rr, sp, up, 0, 0.5*phase_2, -0.5*rho_BSM, phi, phip[2], +1.);
 
 	/******************************* direction -2 *********************************/
 	iy=g_idn[ix][2];
 	sm = (bispinor *) Q +iy;
 	um=&g_gauge_field[iy][2];
-	p2add(rr, sm, um, 1, 0.5*phase_2, -0.5*rho_BSM, phi, phim[2], +1., r_BSM);
+        p2add_wilsonclover(rr, sm, um, 1, 0.5*phase_2, +1);
+        padd_chitildebreak(rr, sm, um, 1, 0.5*phase_2, -0.5*rho_BSM, phi, phim[2], +1.);
 
 	/******************************* direction +3 *********************************/
 	iy=g_iup[ix][3];
 	sp = (bispinor *) Q +iy;
 	up=&g_gauge_field[ix][3];
-	p3add(rr, sp, up, 0, 0.5*phase_3, -0.5*rho_BSM, phi, phip[3], +1., r_BSM);
+        p3add_wilsonclover(rr, sp, up, 0, 0.5*phase_3, +1);
+        padd_chitildebreak(rr, sp, up, 0, 0.5*phase_3, -0.5*rho_BSM, phi, phip[3], +1.);
 
 	/******************************* direction -3 *********************************/
 	iy=g_idn[ix][3];
 	sm = (bispinor *) Q +iy;
 	um=&g_gauge_field[iy][3];
-	p3add(rr, sm, um, 1, 0.5*phase_3, -0.5*rho_BSM, phi, phim[3], +1., r_BSM);
+        p3add_wilsonclover(rr, sm, um, 1, 0.5*phase_3, +1);
+        padd_chitildebreak(rr, sm, um, 1, 0.5*phase_3, -0.5*rho_BSM, phi, phim[3], +1.);
+
       }
 #ifdef OMP
   } /* OpenMP closing brace */
@@ -844,49 +1200,59 @@ void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
       iy=g_iup[ix][0];
       sp = (bispinor *) Q +iy;
       up=&g_gauge_field[ix][0];
-      p0add(rr, sp, up, 0, 0.5*phase_0, -0.5*rho_BSM, phi, phip[0], -1., r_BSM);
-      
+      p0add_wilsonclover(rr, sp, up, 0, 0.5*phase_0, -1);
+      padd_chitildebreak(rr, sp, up, 0, 0.5*phase_0, -0.5*rho_BSM, phi, phip[0], -1.);
+ 
       /******************************* direction -0 *********************************/
       iy=g_idn[ix][0];
       sm        = (bispinor *) Q +iy;
       um=&g_gauge_field[iy][0];
-      p0add(rr, sm, um, 1, 0.5*phase_0, -0.5*rho_BSM, phi, phim[0], -1., r_BSM);
+      p0add_wilsonclover(rr, sm, um, 1, 0.5*phase_0, -1);
+      padd_chitildebreak(rr, sm, um, 1, 0.5*phase_0, -0.5*rho_BSM, phi, phim[0], -1.);
+
       
       /******************************* direction +1 *********************************/
       iy=g_iup[ix][1];
       sp = (bispinor *) Q +iy;
       up=&g_gauge_field[ix][1];
-      p1add(rr, sp, up, 0, 0.5*phase_1, -0.5*rho_BSM, phi, phip[1], -1., r_BSM);
-      
+      p1add_wilsonclover(rr, sp, up, 0, 0.5*phase_1, -1);
+      padd_chitildebreak(rr, sp, up, 0, 0.5*phase_1, -0.5*rho_BSM, phi, phip[1], -1.);
+ 
       /******************************* direction -1 *********************************/
       iy=g_idn[ix][1];
       sm = (bispinor *) Q +iy;
       um=&g_gauge_field[iy][1];
-      p1add(rr, sm, um, 1, 0.5*phase_1, -0.5*rho_BSM, phi, phim[1], -1., r_BSM);
-      
+      p1add_wilsonclover(rr, sm, um, 1, 0.5*phase_1, -1);
+      padd_chitildebreak(rr, sm, um, 1, 0.5*phase_1, -0.5*rho_BSM, phi, phim[1], -1.);
+ 
       /******************************* direction +2 *********************************/
       iy=g_iup[ix][2];
       sp = (bispinor *) Q +iy;
       up=&g_gauge_field[ix][2];
-      p2add(rr, sp, up, 0, 0.5*phase_2, -0.5*rho_BSM, phi, phip[2], -1., r_BSM);
+      p2add_wilsonclover(rr, sp, up, 0, 0.5*phase_2, -1);
+      padd_chitildebreak(rr, sp, up, 0, 0.5*phase_2, -0.5*rho_BSM, phi, phip[2], -1.);
 
       /******************************* direction -2 *********************************/
       iy=g_idn[ix][2];
       sm = (bispinor *) Q +iy;
       um=&g_gauge_field[iy][2];
-      p2add(rr, sm, um, 1, 0.5*phase_2, -0.5*rho_BSM, phi, phim[2], -1., r_BSM);
-      
+      p2add_wilsonclover(rr, sm, um, 1, 0.5*phase_2, -1);
+      padd_chitildebreak(rr, sm, um, 1, 0.5*phase_2, -0.5*rho_BSM, phi, phim[2], -1.);
+ 
       /******************************* direction +3 *********************************/
       iy=g_iup[ix][3];
       sp = (bispinor *) Q +iy;
       up=&g_gauge_field[ix][3];
-      p3add(rr, sp, up, 0, 0.5*phase_3, -0.5*rho_BSM, phi, phip[3], -1., r_BSM);
+      p3add_wilsonclover(rr, sp, up, 0, 0.5*phase_3, -1);
+      padd_chitildebreak(rr, sp, up, 0, 0.5*phase_3, -0.5*rho_BSM, phi, phip[3], -1.);
       
       /******************************* direction -3 *********************************/
       iy=g_idn[ix][3];
       sm = (bispinor *) Q +iy;
       um=&g_gauge_field[iy][3];
-      p3add(rr, sm, um, 1, 0.5*phase_3, -0.5*rho_BSM, phi, phim[3], -1., r_BSM);
+      p3add_wilsonclover(rr, sm, um, 1, 0.5*phase_3, -1);
+      padd_chitildebreak(rr, sm, um, 1, 0.5*phase_3, -0.5*rho_BSM, phi, phim[3], -1.);
+
     }
 #ifdef OMP
   } /* OpenMP closing brace */
