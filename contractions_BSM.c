@@ -697,7 +697,7 @@ int main(int argc, char *argv[]){
 
                  if (g_cart_id == 0){
                    for (int ii=0; ii<T_global; ++ii){
-                     fprintf(out,"JTILDEV3JTILDEV3NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
+                     fprintf(out,"JTILDEV3JTILDEV3\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
                    }
                  }
                  for (int ii=0;ii<T_global; ++ii){
@@ -750,7 +750,7 @@ int main(int argc, char *argv[]){
 
                  if (g_cart_id == 0){
                    for (int ii=0; ii<T_global; ++ii){
-                     fprintf(out,"JTILDEA1JTILDEA1TRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
+                     fprintf(out,"JTILDEA1JTILDEA1\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
                    }
                  }
                  for (int ii=0;ii<T_global; ++ii){
@@ -837,89 +837,6 @@ int main(int argc, char *argv[]){
                    current2[ii]=0.0;
                    current3[ii]=0.0;
                  }
-               }
-               if (vectorcurrentdensity_BSM == 1){
-                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_1,0, 1, 0, 1, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(-1.)*temp[ii];
-                 }
-                 free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_2,0, 1, 0, 1, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(+1.)*temp[ii];
-                 }
-                 free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_3,0, 1, 0, 1, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(-1.)*temp[ii];
-                 }
-                 free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_4,0, 1, 0, 1, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(+1.)*temp[ii];
-                 }
-                 free(temp);
-                 if (g_cart_id == 0){
-//                 fprintf(out,"S1S1nontrivialscalar:\n");
-                   for (int ii=0; ii<T_global; ++ii){
-                     fprintf(out,"JTILDEV2P1NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
-                   }
-                 }
-                 for (int ii=0;ii<T_global; ++ii){
-                   scalar[ii]=0.0;
-                   pseudoscalar[ii]=0.0;
-                   current[ii]=0.0;
-                   pscalar1[ii]=0.0;
-                   pscalar2[ii]=0.0;
-                   pscalar3[ii]=0.0;
-                   scalar1[ii]=0.0;
-                   scalar2[ii]=0.0;
-                   scalar3[ii]=0.0;
-                   current1[ii]=0.0;
-                   current2[ii]=0.0;
-                   current3[ii]=0.0;
-                 }
-
-                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_1,1, 0, 0, 1, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(-1.)*temp[ii];
-                 }
-                 free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_2,1, 0, 0, 1, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(+1.)*temp[ii];
-                 }
-                 free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_3,1, 0, 0, 1, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(-1.)*temp[ii];
-                 }
-                 free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_4,1, 0, 0, 1, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(+1.)*temp[ii];
-                 }
-                 free(temp);
-                 if (g_cart_id == 0){
-//                 fprintf(out,"S1S1nontrivialscalar:\n");
-                   for (int ii=0; ii<T_global; ++ii){
-                     fprintf(out,"JTILDEV1P2NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
-                   }
-                 }
-                 for (int ii=0;ii<T_global; ++ii){
-                   scalar[ii]=0.0;
-                   pseudoscalar[ii]=0.0;
-                   current[ii]=0.0;
-                   pscalar1[ii]=0.0;
-                   pscalar2[ii]=0.0;
-                   pscalar3[ii]=0.0;
-                   scalar1[ii]=0.0;
-                   scalar2[ii]=0.0;
-                   scalar3[ii]=0.0;
-                   current1[ii]=0.0;
-                   current2[ii]=0.0;
-                   current3[ii]=0.0;
-                 }
 
                  vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_1,2, 2, 0, 0, &temp );
                  for (int ii=0; ii<T_global; ++ii){
@@ -945,7 +862,7 @@ int main(int argc, char *argv[]){
                  if (g_cart_id == 0){
 //                 fprintf(out,"S1S1nontrivialscalar:\n");
                    for (int ii=0; ii<T_global; ++ii){
-                     fprintf(out,"JTILDEV3P3NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
+                     fprintf(out,"JTILDEV3DS3NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
                    }
                  }
                  for (int ii=0;ii<T_global; ++ii){
@@ -976,7 +893,6 @@ int main(int argc, char *argv[]){
                  vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_1,0, 1, 0, 1, &temp );
                  for (int ii=0; ii<T_global; ++ii){
                    current[ii]+=(-1.)*temp[ii];
-                   printf("%10.10e\n",creal(temp[ii]));
                  }
                  free(temp);
                  vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_2,0, 1, 0, 1, &temp );
@@ -1035,43 +951,11 @@ int main(int argc, char *argv[]){
                    current[ii]+=(+1.)*temp[ii];
                  }
                  free(temp);
-                 if (g_cart_id == 0){
-//                 fprintf(out,"S1S1nontrivialscalar:\n");
+                 if (g_cart_id == 0){         
                    for (int ii=0; ii<T_global; ++ii){
                      fprintf(out,"JTILDEV1P2TRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
                    }
-                 }
-                 for (int ii=0;ii<T_global; ++ii){
-                   scalar[ii]=0.0;
-                   pseudoscalar[ii]=0.0;
-                   current[ii]=0.0;
-                   pscalar1[ii]=0.0;
-                   pscalar2[ii]=0.0;
-                   pscalar3[ii]=0.0;
-                   scalar1[ii]=0.0;
-                   scalar2[ii]=0.0;
-                   scalar3[ii]=0.0;
-                   current1[ii]=0.0;
-                   current2[ii]=0.0;
-                   current3[ii]=0.0;
-                 }
-
-                 vector_2_psueodoscalar_1_12( operator_list[op_id].prop_zero, TYPE_1, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(-1.)*temp[ii];
-                 }
-                 free(temp);
-                 vector_2_psueodoscalar_1_12( operator_list[op_id].prop_zero, TYPE_2, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(-1.)*temp[ii];
-                 }
-                 free(temp);
-                 if (g_cart_id == 0){
-//                 fprintf(out,"S1S1nontrivialscalar:\n");
-                   for (int ii=0; ii<T_global; ++ii){
-                     fprintf(out,"TESTTTTTJTILDEV2P1TRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii])*2, cimag(current[ii])*2);
-                   }
-                 }
+                 } 
 
 
                  for (int ii=0;ii<T_global; ++ii){
@@ -1205,151 +1089,6 @@ int main(int argc, char *argv[]){
                    }
                  }
 
-                 for (int ii=0;ii<T_global; ++ii){
-                   scalar[ii]=0.0;
-                   pseudoscalar[ii]=0.0;
-                   current[ii]=0.0;
-                   pscalar1[ii]=0.0;
-                   pscalar2[ii]=0.0;
-                   pscalar3[ii]=0.0;
-                   scalar1[ii]=0.0;
-                   scalar2[ii]=0.0;
-                   scalar3[ii]=0.0;
-                   current1[ii]=0.0;
-                   current2[ii]=0.0;
-                   current3[ii]=0.0;
-                 }
-
-
-
-                 double read_end, read_begin=gettime();
-                 if( (i = read_scalar_field_parallel(scalar_filename,g_scalar_field)) !=0 )
-                 {
-                    fprintf(stderr, "Error %d while reading scalar field from %s\n Aborting...\n", i, scalar_filename);
-                    exit(-2);
-                 }
-                 read_end=gettime();
-                 if (g_cart_id == 0) {
-                   printf("# Finished reading scalar field in %.4e seconds.\n",read_end-read_begin);
-                   fflush(stdout);
-                 }
-                 for( int s=0; s<4; s++ )
-                   generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
-                 if (smearedcorrelator_BSM == 1){
-                   smear_scalar_fields_correlator(g_smeared_scalar_field, g_scalar_field, timesmearcorrelator_BSM );
-                   for ( int s=0; s<4; s++ )
-                    generic_exchange_nogauge(g_smeared_scalar_field[s], sizeof(scalar));
-                 }
-
-
-
-
-                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_1, 0, 0, 1, 1, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(-1.)*temp[ii];
-                 }
-                 free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_2, 0, 0, 1, 1, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(+1.)*temp[ii];
-                 }
-                 free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_3, 0, 0, 1, 1, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(-1.)*temp[ii];
-                 }
-                 free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_4, 0, 0, 1, 1, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(+1.)*temp[ii];
-                 }
-                 free(temp);
-                 if (g_cart_id == 0){
-//                 fprintf(out,"S1S1nontrivialscalar:\n");
-                   for (int ii=0; ii<T_global; ++ii){
-                     fprintf(out,"JTILDEA1P1NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
-                   }
-                 }
-                 for (int ii=0;ii<T_global; ++ii){
-                   scalar[ii]=0.0;
-                   pseudoscalar[ii]=0.0;
-                   current[ii]=0.0;
-                   pscalar1[ii]=0.0;
-                   pscalar2[ii]=0.0;
-                   pscalar3[ii]=0.0;
-                   scalar1[ii]=0.0;
-                   scalar2[ii]=0.0;
-                   scalar3[ii]=0.0;
-                   current1[ii]=0.0;
-                   current2[ii]=0.0;
-                   current3[ii]=0.0;
-                 }
-
-                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_1,1, 1, 1, 1, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(-1.)*temp[ii];
-                 }
-                 free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_2,1, 1, 1, 1, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(+1.)*temp[ii];
-                 }
-                 free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_3,1, 1, 1, 1, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(-1.)*temp[ii];
-                 }
-                 free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_4,1, 1, 1, 1, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(+1.)*temp[ii];
-                 }
-                 free(temp);
-                 if (g_cart_id == 0){
-                   for (int ii=0; ii<T_global; ++ii){
-                     fprintf(out,"JTILDEA2P2NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
-                   }
-                 }
-                 for (int ii=0;ii<T_global; ++ii){
-                   scalar[ii]=0.0;
-                   pseudoscalar[ii]=0.0;
-                   current[ii]=0.0;
-                   pscalar1[ii]=0.0;
-                   pscalar2[ii]=0.0;
-                   pscalar3[ii]=0.0;
-                   scalar1[ii]=0.0;
-                   scalar2[ii]=0.0;
-                   scalar3[ii]=0.0;
-                   current1[ii]=0.0;
-                   current2[ii]=0.0;
-                   current3[ii]=0.0;
-                 }
-
-                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_1,2, 2, 1, 1, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(-1.)*temp[ii];
-                 }
-                 free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_2,2, 2, 1, 1, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(+1.)*temp[ii];
-                 }
-                 free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_3,2, 2, 1, 1, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(-1.)*temp[ii];
-                 }
-                 free(temp);
-                 vector_axial_current_density_1234(operator_list[op_id].prop_zero, TYPE_4,2, 2, 1, 1, &temp );
-                 for (int ii=0; ii<T_global; ++ii){
-                   current[ii]+=(+1.)*temp[ii];
-                 }
-                 free(temp);
-                 if (g_cart_id == 0){
-                   for (int ii=0; ii<T_global; ++ii){
-                     fprintf(out,"JTILDEA3P3NONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
-                   }
-                 }
                  for (int ii=0;ii<T_global; ++ii){
                    scalar[ii]=0.0;
                    pseudoscalar[ii]=0.0;
