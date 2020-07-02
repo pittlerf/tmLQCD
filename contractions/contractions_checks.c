@@ -1441,6 +1441,7 @@ void wilsoncurrent62a_petros( bispinor **propfields )
        trace_in_spinor_and_color62a(C1111,propfields,ix,1,1,1,1);
 
     }
+#if defined MPI
     count=0;
     generic_exchange_direction_nonblocking( C0000, sizeof(_Complex double), TDOWN   , request, &count );
     MPI_Waitall( count, request, statuses);
@@ -1490,6 +1491,7 @@ void wilsoncurrent62a_petros( bispinor **propfields )
     generic_exchange_direction_nonblocking( C1111, sizeof(_Complex double), TDOWN   , request, &count );
     MPI_Waitall( count, request, statuses);
     count=0;
+#endif
 
 
     for (ix=0; ix<T_global; ++ix)
