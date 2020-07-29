@@ -747,8 +747,8 @@ static inline void p3add_wilsonclover( bispinor * restrict const tmpr , bispinor
     }
 
     _vector_add_assign(     tmpr->sp_up.s0, results1);
-    _vector_add_assign(     tmpr->sp_up.s2, results1);
-    _vector_sub_i_assign(   tmpr->sp_dn.s0, results2);
+    _vector_add_assign(     tmpr->sp_dn.s0, results2);
+    _vector_sub_i_assign(   tmpr->sp_up.s2, results1);
     _vector_sub_i_assign(   tmpr->sp_dn.s2, results2);
 
 //Performing the multiplication on the first half of a halfspinor
@@ -851,7 +851,7 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
 #ifdef MPI
   generic_exchange(Q, sizeof(bispinor));
 #endif
-        
+
 #ifdef OMP
 #pragma omp parallel
   {
@@ -936,13 +936,13 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
         if( fabs(mu03_BSM) > 1.e-10 )
           tm3_add(rr, s, 1);
 
-
         //Adding the clover term:
         // upper two spin components first
+        
         su3_vector ALIGN chi;
         w1=&sw[ix][0][0];
-        w2=w1+2; /*&sw[ix][1][0];*/
-        w3=w1+4; /*&sw[ix][2][0];*/
+        w2=w1+2; //&sw[ix][1][0];
+        w3=w1+4; //&sw[ix][2][0];
         _su3_multiply(rr->sp_up.s0,*w1,s->sp_up.s0);
         _su3_multiply(chi,*w2, s->sp_up.s1);
         _vector_add_assign(rr->sp_up.s0,chi);
@@ -950,9 +950,10 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
         _su3_multiply(chi,*w3,s->sp_up.s1);
         _vector_add_assign(rr->sp_up.s1,chi);
 
+
         w1=&sw[ix][0][1];
-        w2=w1+2; /*&sw[ix][1][1];*/
-        w3=w1+4; /*&sw[ix][2][1];*/
+        w2=w1+2; //&sw[ix][1][1];
+        w3=w1+4; //&sw[ix][2][1];
         _su3_multiply(rr->sp_up.s2,*w1,s->sp_up.s2);
         _su3_multiply(chi,*w2, s->sp_up.s3);
         _vector_add_assign(rr->sp_up.s2,chi);
@@ -962,8 +963,8 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
 
         // upper two spin components first
         w1=&sw[ix][0][0];
-        w2=w1+2; /*&sw[ix][1][0];*/
-        w3=w1+4; /*&sw[ix][2][0];*/
+        w2=w1+2; //&sw[ix][1][0];
+        w3=w1+4; //&sw[ix][2][0];
         _su3_multiply(rr->sp_dn.s0,*w1,s->sp_dn.s0);
         _su3_multiply(chi,*w2, s->sp_dn.s1);
         _vector_add_assign(rr->sp_dn.s0,chi);
@@ -972,8 +973,8 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
         _vector_add_assign(rr->sp_dn.s1,chi);
 
         w1=&sw[ix][0][1];
-        w2=w1+2; /*&sw[ix][1][1];*/
-        w3=w1+4; /*&sw[ix][2][1];*/
+        w2=w1+2; //&sw[ix][1][1];
+        w3=w1+4; //&sw[ix][2][1];
         _su3_multiply(rr->sp_dn.s2,*w1,s->sp_dn.s2);
         _su3_multiply(chi,*w2, s->sp_dn.s3);
         _vector_add_assign(rr->sp_dn.s2,chi);
@@ -981,7 +982,7 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
         _su3_multiply(chi,*w3,s->sp_dn.s3);
         _vector_add_assign(rr->sp_dn.s3,chi);
 
-
+        
 
 	// the hopping part:
 	// tmpr += +1/2 \sum_\mu (1-gamma_\mu - \rho_BSM/2*F(x) - \rho_BSM/2*F(x+-\mu))*U_{+-\mu}(x)*Q(x+-\mu)
@@ -1151,8 +1152,8 @@ void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
       // upper two spin components first
       su3_vector ALIGN chi;
       w1=&sw[ix][0][0];
-      w2=w1+2; /*&sw[ix][1][0];*/
-      w3=w1+4; /*&sw[ix][2][0];*/
+      w2=w1+2; //&sw[ix][1][0];
+      w3=w1+4; //&sw[ix][2][0];
       _su3_multiply(rr->sp_up.s0,*w1,s->sp_up.s0);
       _su3_multiply(chi,*w2, s->sp_up.s1);
       _vector_add_assign(rr->sp_up.s0,chi);
@@ -1161,8 +1162,8 @@ void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
       _vector_add_assign(rr->sp_up.s1,chi);
 
       w1=&sw[ix][0][1];
-      w2=w1+2; /*&sw[ix][1][1];*/
-      w3=w1+4; /*&sw[ix][2][1];*/
+      w2=w1+2; //&sw[ix][1][1];
+      w3=w1+4; //&sw[ix][2][1];
       _su3_multiply(rr->sp_up.s2,*w1,s->sp_up.s2);
       _su3_multiply(chi,*w2, s->sp_up.s3);
       _vector_add_assign(rr->sp_up.s2,chi);
@@ -1172,8 +1173,8 @@ void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
 
       // upper two spin components first
       w1=&sw[ix][0][0];
-      w2=w1+2; /*&sw[ix][1][0];*/
-      w3=w1+4; /*&sw[ix][2][0];*/
+      w2=w1+2; //&sw[ix][1][0];
+      w3=w1+4; //&sw[ix][2][0];
       _su3_multiply(rr->sp_dn.s0,*w1,s->sp_dn.s0);
       _su3_multiply(chi,*w2, s->sp_dn.s1);
       _vector_add_assign(rr->sp_dn.s0,chi);
@@ -1182,8 +1183,8 @@ void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
       _vector_add_assign(rr->sp_dn.s1,chi);
 
       w1=&sw[ix][0][1];
-      w2=w1+2; /*&sw[ix][1][1];*/
-      w3=w1+4; /*&sw[ix][2][1];*/
+      w2=w1+2; //&sw[ix][1][1];
+      w3=w1+4; //&sw[ix][2][1];
       _su3_multiply(rr->sp_dn.s2,*w1,s->sp_dn.s2);
       _su3_multiply(chi,*w2, s->sp_dn.s3);
       _vector_add_assign(rr->sp_dn.s2,chi);
