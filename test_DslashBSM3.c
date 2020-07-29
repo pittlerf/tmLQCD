@@ -25,7 +25,7 @@
 * otherwise a simple application of Dslash on a spinor will be tested.
 *
 *******************************************************************************/
-#define TEST_INVERSION 0
+#define TEST_INVERSION 1
 
 
 #ifdef HAVE_CONFIG_H
@@ -384,7 +384,9 @@ int main(int argc,char *argv[])
   random_spinor_field_lexic( (spinor*)(g_bispinor_field[5])+VOLUME, reproduce_randomnumber_flag, RN_GAUSS);
 #if defined MPI
   generic_exchange(g_bispinor_field[4], sizeof(bispinor));
+  generic_exchange(g_bispinor_field[5], sizeof(bispinor));
 #endif
+
 
   // print L2-norm of w source:
   double squarenorm_w = square_norm((spinor*)g_bispinor_field[4], 2*VOLUME, 1); 
@@ -411,7 +413,7 @@ int main(int argc,char *argv[])
 
   // Feri's operator
 
-  printf("Now comes Feri'S operator");
+  printf("Now comes Feri'S operator\n");
 #ifdef MPI
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
@@ -425,7 +427,7 @@ int main(int argc,char *argv[])
   t_FP = t1;
 #endif
 
-  printf("Now comes Feri'S operator");
+  printf("Now comes Feri'S operator\n");
 #ifdef MPI
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
@@ -450,6 +452,34 @@ int main(int argc,char *argv[])
           printf("< w, D_FP^dagger v > = %.16e + I*(%.16e)\n", creal(prod2_FP_wdv), cimag(prod2_FP_wdv));
 
   }
+
+#if TEST_INVERSION
+  if(g_proc_id==1)
+    printf("Testing inversion\n");
+  // Feri's operator
+  assign_add_mul((spinor*)g_bispinor_field[10], (spinor*)g_bispinor_field[5], 1.0, 2*VOLUME);
+  printf("Starting field %e\n",creal(g_bispinor_field[5][0].sp_up.s0.c0));
+  printf("Starting field %e\n",creal(g_bispinor_field[10][0].sp_up.s0.c0));
+  t1 = gettime();
+        cg_her_bi(g_bispinor_field[2], g_bispinor_field[5],
+           25000, 1.0e-14, 0, VOLUME, &Q2_psi_BSM3);
+  t_FP = gettime() - t1;
+
+  if(g_proc_id==0)
+    printf("Operator inversion time: t_FP = %f sec\n\n", t_FP);
+  
+
+  Q2_psi_BSM3(g_bispinor_field[9], g_bispinor_field[2]);
+  printf("Starting field %e\n",creal(g_bispinor_field[10][0].sp_up.s0.c0));
+  assign_diff_mul((spinor*)g_bispinor_field[9], (spinor*)g_bispinor_field[10], 1.0, 2*VOLUME);
+  
+  double squarenorm_FP = square_norm((spinor*)g_bispinor_field[9], 2*VOLUME, 1);
+  if(g_proc_id==0) {
+     printf("# ||Q2_FP*(Q2_FP)^-1*(b)-b||^2 = %.16e\n\n", squarenorm_FP);
+     fflush(stdout);
+  }
+
+#endif
 
 
 
