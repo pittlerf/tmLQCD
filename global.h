@@ -65,7 +65,7 @@
 #endif
 
 // for Frezzotti-Rossi model Dirac operator
-EXTERN double eta_BSM, rho_BSM, m0_BSM, c5phi_BSM, r_BSM, mu03_BSM, mu01_BSM;
+EXTERN double eta_BSM, rho_BSM, m0_BSM, c5phi_BSM, r_BSM, mu03_BSM, mu01_BSM, csw_BSM, kappa_BSM;
 EXTERN int propagatorsonthefly_BSM;
 EXTERN int smearedcorrelator_BSM;
 EXTERN int densitydensity_BSM;
@@ -203,13 +203,15 @@ EXTERN int g_running_phmc;
 /* End IF PHMC  */
 
 EXTERN su3 ** g_gauge_field;
+EXTERN su3 ** g_smeared_gauge_field;
 #ifdef _USE_HALFSPINOR
 EXTERN su3 *** g_gauge_field_copy;
+EXTERN su3 *** g_gauge_field_smeared_copy
 #elif (defined _USE_TSPLITPAR )
-EXTERN su3 ** g_gauge_field_copyt;
-EXTERN su3 ** g_gauge_field_copys;
+EXTERN su3 ** g_gauge_field_smeared_copyt;
+EXTERN su3 ** g_gauge_field_smeared_copys;
 #else
-EXTERN su3 ** g_gauge_field_copy;
+EXTERN su3 ** g_gauge_field_smeared_copy;
 #endif
 
 /*for temporalgauge in GPU part*/

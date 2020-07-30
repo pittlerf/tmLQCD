@@ -846,6 +846,7 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
     update_backward_gauge(g_gauge_field);
+    update_backward_gauge(g_smeared_gauge_field);
   }
 #endif
 #ifdef MPI
@@ -982,64 +983,71 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
         _su3_multiply(chi,*w3,s->sp_dn.s3);
         _vector_add_assign(rr->sp_dn.s3,chi);
 
-        
 
 	// the hopping part:
 	// tmpr += +1/2 \sum_\mu (1-gamma_\mu - \rho_BSM/2*F(x) - \rho_BSM/2*F(x+-\mu))*U_{+-\mu}(x)*Q(x+-\mu)
 	/******************************* direction +0 *********************************/
 	iy=g_iup[ix][0];
 	sp = (bispinor *) Q +iy;
-	up=&g_gauge_field[ix][0];
+	up=&g_smeared_gauge_field[ix][0];
         p0add_wilsonclover(rr, sp, up, 0, 0.5*phase_0, +1);
+        up=&g_gauge_field[ix][0];
         padd_chitildebreak(rr, sp, up, 0, 0.5*phase_0, -0.5*rho_BSM, phi, phip[0], +1.);
 
 	/******************************* direction -0 *********************************/
 	iy=g_idn[ix][0];
-	sm      = (bispinor *) Q +iy;
-	um=&g_gauge_field[iy][0];
+	sm = (bispinor *) Q +iy;
+	um=&g_smeared_gauge_field[iy][0];
         p0add_wilsonclover(rr, sm, um, 1, 0.5*phase_0, +1);
+        um=&g_gauge_field[iy][0];
         padd_chitildebreak(rr, sm, um, 1, 0.5*phase_0, -0.5*rho_BSM, phi, phim[0], +1.);
 
 	/******************************* direction +1 *********************************/
 	iy=g_iup[ix][1];
 	sp = (bispinor *) Q +iy;
-	up=&g_gauge_field[ix][1];
+	up=&g_smeared_gauge_field[ix][1];
         p1add_wilsonclover(rr, sp, up, 0, 0.5*phase_1, +1);
+        up=&g_gauge_field[ix][1];
         padd_chitildebreak(rr, sp, up, 0, 0.5*phase_1, -0.5*rho_BSM, phi, phip[1], +1.);
 
 	/******************************* direction -1 *********************************/
 	iy=g_idn[ix][1];
 	sm = (bispinor *) Q +iy;
-	um=&g_gauge_field[iy][1];
+	um=&g_smeared_gauge_field[iy][1];
         p1add_wilsonclover(rr, sm, um, 1, 0.5*phase_1, +1);
+	um=&g_gauge_field[iy][1];
         padd_chitildebreak(rr, sm, um, 1, 0.5*phase_1, -0.5*rho_BSM, phi, phim[1], +1.);
 
 	/******************************* direction +2 *********************************/
 	iy=g_iup[ix][2];
 	sp = (bispinor *) Q +iy;
-	up=&g_gauge_field[ix][2];
+        up=&g_smeared_gauge_field[ix][2];
         p2add_wilsonclover(rr, sp, up, 0, 0.5*phase_2, +1);
+	up=&g_gauge_field[ix][2];
         padd_chitildebreak(rr, sp, up, 0, 0.5*phase_2, -0.5*rho_BSM, phi, phip[2], +1.);
 
 	/******************************* direction -2 *********************************/
 	iy=g_idn[ix][2];
 	sm = (bispinor *) Q +iy;
-	um=&g_gauge_field[iy][2];
+	um=&g_smeared_gauge_field[iy][2];
         p2add_wilsonclover(rr, sm, um, 1, 0.5*phase_2, +1);
+	um=&g_gauge_field[iy][2];
         padd_chitildebreak(rr, sm, um, 1, 0.5*phase_2, -0.5*rho_BSM, phi, phim[2], +1.);
 
 	/******************************* direction +3 *********************************/
 	iy=g_iup[ix][3];
 	sp = (bispinor *) Q +iy;
-	up=&g_gauge_field[ix][3];
+	up=&g_smeared_gauge_field[ix][3];
         p3add_wilsonclover(rr, sp, up, 0, 0.5*phase_3, +1);
+	up=&g_gauge_field[ix][3];
         padd_chitildebreak(rr, sp, up, 0, 0.5*phase_3, -0.5*rho_BSM, phi, phip[3], +1.);
 
 	/******************************* direction -3 *********************************/
 	iy=g_idn[ix][3];
 	sm = (bispinor *) Q +iy;
-	um=&g_gauge_field[iy][3];
+	um=&g_smeared_gauge_field[iy][3];
         p3add_wilsonclover(rr, sm, um, 1, 0.5*phase_3, +1);
+	um=&g_gauge_field[iy][3];
         padd_chitildebreak(rr, sm, um, 1, 0.5*phase_3, -0.5*rho_BSM, phi, phim[3], +1.);
 
       }
@@ -1192,66 +1200,72 @@ void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
       _su3_multiply(chi,*w3,s->sp_dn.s3);
       _vector_add_assign(rr->sp_dn.s3,chi);
 
-
-
       
       // the hopping part:
       // tmpr += +1/2 \sum_\mu (1+\gamma_\mu - \rho_BSM/2*Fbar(x) - \rho_BSM/2*Fbar(x+-\mu)*U_{+-\mu}(x)*Q(x+-\mu)
       /******************************* direction +0 *********************************/
       iy=g_iup[ix][0];
       sp = (bispinor *) Q +iy;
-      up=&g_gauge_field[ix][0];
+      up=&g_smeared_gauge_field[ix][0];
       p0add_wilsonclover(rr, sp, up, 0, 0.5*phase_0, -1);
+      up=&g_gauge_field[ix][0];
       padd_chitildebreak(rr, sp, up, 0, 0.5*phase_0, -0.5*rho_BSM, phi, phip[0], -1.);
  
       /******************************* direction -0 *********************************/
       iy=g_idn[ix][0];
-      sm        = (bispinor *) Q +iy;
-      um=&g_gauge_field[iy][0];
+      sm = (bispinor *) Q +iy;
+      um=&g_smeared_gauge_field[iy][0];
       p0add_wilsonclover(rr, sm, um, 1, 0.5*phase_0, -1);
+      um=&g_gauge_field[iy][0];
       padd_chitildebreak(rr, sm, um, 1, 0.5*phase_0, -0.5*rho_BSM, phi, phim[0], -1.);
 
       
       /******************************* direction +1 *********************************/
       iy=g_iup[ix][1];
       sp = (bispinor *) Q +iy;
-      up=&g_gauge_field[ix][1];
+      up=&g_smeared_gauge_field[ix][1];
       p1add_wilsonclover(rr, sp, up, 0, 0.5*phase_1, -1);
+      up=&g_gauge_field[ix][1];
       padd_chitildebreak(rr, sp, up, 0, 0.5*phase_1, -0.5*rho_BSM, phi, phip[1], -1.);
  
       /******************************* direction -1 *********************************/
       iy=g_idn[ix][1];
       sm = (bispinor *) Q +iy;
-      um=&g_gauge_field[iy][1];
+      um=&g_smeared_gauge_field[iy][1];
       p1add_wilsonclover(rr, sm, um, 1, 0.5*phase_1, -1);
+      um=&g_gauge_field[iy][1];
       padd_chitildebreak(rr, sm, um, 1, 0.5*phase_1, -0.5*rho_BSM, phi, phim[1], -1.);
  
       /******************************* direction +2 *********************************/
       iy=g_iup[ix][2];
       sp = (bispinor *) Q +iy;
-      up=&g_gauge_field[ix][2];
+      up=&g_smeared_gauge_field[ix][2];
       p2add_wilsonclover(rr, sp, up, 0, 0.5*phase_2, -1);
+      up=&g_gauge_field[ix][2];
       padd_chitildebreak(rr, sp, up, 0, 0.5*phase_2, -0.5*rho_BSM, phi, phip[2], -1.);
 
       /******************************* direction -2 *********************************/
       iy=g_idn[ix][2];
       sm = (bispinor *) Q +iy;
-      um=&g_gauge_field[iy][2];
+      um=&g_smeared_gauge_field[iy][2]; 
       p2add_wilsonclover(rr, sm, um, 1, 0.5*phase_2, -1);
+      um=&g_gauge_field[iy][2]; 
       padd_chitildebreak(rr, sm, um, 1, 0.5*phase_2, -0.5*rho_BSM, phi, phim[2], -1.);
  
       /******************************* direction +3 *********************************/
       iy=g_iup[ix][3];
       sp = (bispinor *) Q +iy;
-      up=&g_gauge_field[ix][3];
+      up=&g_smeared_gauge_field[ix][3];
       p3add_wilsonclover(rr, sp, up, 0, 0.5*phase_3, -1);
+      up=&g_gauge_field[ix][3];
       padd_chitildebreak(rr, sp, up, 0, 0.5*phase_3, -0.5*rho_BSM, phi, phip[3], -1.);
       
       /******************************* direction -3 *********************************/
       iy=g_idn[ix][3];
       sm = (bispinor *) Q +iy;
-      um=&g_gauge_field[iy][3];
+      um=&g_smeared_gauge_field[iy][3];
       p3add_wilsonclover(rr, sm, um, 1, 0.5*phase_3, -1);
+      um=&g_gauge_field[iy][3];
       padd_chitildebreak(rr, sm, um, 1, 0.5*phase_3, -0.5*rho_BSM, phi, phim[3], -1.);
 
     }

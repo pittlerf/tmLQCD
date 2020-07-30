@@ -736,6 +736,16 @@ inline void rmQuotes(char *str){
     r_BSM = c;
     if(myverbose != 0) printf("  BSM parameter r_bsm set to %f\n", r_BSM);
   }
+  {SPC}*kappa{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z0123] = %lf", name, &c);
+    kappa_BSM = c;
+    if(myverbose != 0) printf("  BSM parameter kappa_BSM set to %f\n", kappa_BSM);
+  }
+  {SPC}*csw{EQL}{FLT} {
+    sscanf(yytext, " %[a-zA-Z0123] = %lf", name, &c);
+    csw_BSM = c;
+    if(myverbose != 0) printf("  BSM parameter csw_bsm set to %f\n", csw_BSM);
+  }
   {SPC}*propagatorsonthefly{EQL}yes {
     propagatorsonthefly_BSM = 1;
     if(myverbose != 0) printf("  BSM propagators are also computed for using them in the contractions  line %d operator %d\n", a, line_of_file, current_operator);
@@ -2396,6 +2406,8 @@ int read_input(char * conf_file){
   mu01_BSM  = _default_mu01_BSM;
   r_BSM = _default_r_BSM ;
   c5phi_BSM  = _default_c5phi_BSM ;
+  kappa_BSM = _default_kappa_BSM;
+  csw_BSM = _default_csw_BSM ;
   propagatorsonthefly_BSM = _default_propagatorsonthefly_BSM;
   smearedcorrelator_BSM = _default_smearedcorrelator_BSM;
   densitydensity_BSM = _default_densitydensity_BSM;
