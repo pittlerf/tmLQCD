@@ -275,7 +275,6 @@ int init_gauge_field(const int V, const int back) {
       return(4);
     }
 #endif
-#endif
 
 #  if (defined SSE || defined SSE2 || defined SSE3)
     g_gauge_field_copy[0] = (su3*)(((unsigned long int)(gauge_field_copy)+ALIGN_BASE)&~ALIGN_BASE);
@@ -295,8 +294,9 @@ int init_gauge_field(const int V, const int back) {
     for(i = 1; i < (VOLUME+RAND); i++) {
       g_smeared_gauge_field_copy[i] = g_smeared_gauge_field_copy[i-1]+8;
     }
+#endif
   }
-#  endif
+#endif
   g_update_gauge_copy = 1;
   return(0);
 }

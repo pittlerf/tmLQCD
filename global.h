@@ -203,9 +203,9 @@ EXTERN int g_running_phmc;
 /* End IF PHMC  */
 
 EXTERN su3 ** g_gauge_field;
-//#ifdef _USE_BSM 
+#ifdef _USE_BSM 
 EXTERN su3 ** g_smeared_gauge_field;
-//#endif
+#endif
 #ifdef _USE_HALFSPINOR
 EXTERN su3 *** g_gauge_field_copy;
 #ifdef _USE_BSM
