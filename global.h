@@ -203,15 +203,26 @@ EXTERN int g_running_phmc;
 /* End IF PHMC  */
 
 EXTERN su3 ** g_gauge_field;
+//#ifdef _USE_BSM 
 EXTERN su3 ** g_smeared_gauge_field;
+//#endif
 #ifdef _USE_HALFSPINOR
 EXTERN su3 *** g_gauge_field_copy;
-EXTERN su3 *** g_gauge_field_smeared_copy
+#ifdef _USE_BSM
+EXTERN su3 *** g_smeared_gauge_field_copy;
+#endif
 #elif (defined _USE_TSPLITPAR )
-EXTERN su3 ** g_gauge_field_smeared_copyt;
-EXTERN su3 ** g_gauge_field_smeared_copys;
+EXTERN su3 ** g_gauge_field_copyt;
+EXTERN su3 ** g_gauge_field_copys;
+#ifdef _USE_BSM
+EXTERN su3 ** g_smeared_gauge_field_copyt;
+EXTERN su3 ** g_smeared_gauge_field_copys;
+#endif
 #else
-EXTERN su3 ** g_gauge_field_smeared_copy;
+EXTERN su3 ** g_gauge_field_copy;
+#ifdef _USE_BSM
+EXTERN su3 ** g_smeared_gauge_field_copy;
+#endif
 #endif
 
 /*for temporalgauge in GPU part*/

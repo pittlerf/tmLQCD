@@ -212,6 +212,9 @@ int main(int argc,char *argv[])
 #ifdef _PERSISTENT
      printf("# The code was compiled for persistent MPI calls (halfspinor only)\n");
 #endif
+#ifdef _USE_BSM
+     printf("# The code was compiled for persistent for BSM operators i.e. we are using two gauge fields\n");
+#endif
 #endif
 #ifdef MPI
 #ifdef _NON_BLOCKING
@@ -222,6 +225,7 @@ int main(int argc,char *argv[])
      fflush(stdout);
   }
 
+#ifdef _USE_BSM
 
 #ifdef _GAUGE_COPY
   init_gauge_field(VOLUMEPLUSRAND + g_dbw2rand, 1);
@@ -289,10 +293,16 @@ int main(int argc,char *argv[])
 
   // read gauge field
   if( strcmp(gauge_input_filename, "create_random_gaugefield") == 0 ) {
+
+    //Creating random field for the chitilde breaking part
     random_gauge_field(reproduce_randomnumber_flag, g_gauge_field);
+
+    //Creating random field for the wilson part part
+    random_gauge_field(reproduce_randomnumber_flag, g_smeared_gauge_field);
+
   }
   else {
-    sprintf(conf_filename, "%s.%.4d", gauge_input_filename, nstore);
+    snprintf(conf_filename, 50, "%s.%.4d", gauge_input_filename, nstore);
     if (g_cart_id == 0) {
       printf("#\n# Trying to read gauge field from file %s in %s precision.\n",
 		conf_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
@@ -304,6 +314,19 @@ int main(int argc,char *argv[])
 	  fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", i, conf_filename);
 	  exit(-2);
     }
+
+    snprintf(conf_filename, 50, "%s_smeared.%.4d", gauge_input_filename, nstore);
+    if (g_cart_id == 0) {
+      printf("#\n# Trying to read smeared gauge field from file %s in %s precision.\n",
+                conf_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
+      fflush(stdout);
+    }
+
+    if( (i = read_gauge_field(conf_filename,g_smeared_gauge_field)) !=0) {
+          fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", i, conf_filename);
+          exit(-2);
+    }
+
 
     if (g_cart_id == 0) {
       printf("# Finished reading gauge field.\n");
@@ -346,15 +369,24 @@ int main(int argc,char *argv[])
 
 #ifdef MPI
   xchange_gauge(g_gauge_field);
+  xchange_gauge(g_smeared_gauge_field);
 #endif
 
   /*compute the energy of the gauge field*/
   plaquette_energy = measure_plaquette( (const su3**) g_gauge_field);
 
   if (g_cart_id == 0) {
-    printf("# The computed plaquette value is %e.\n", plaquette_energy / (6.*VOLUME*g_nproc));
+    printf("# The computed plaquette for the unsmeared gauge field value is %e.\n", plaquette_energy / (6.*VOLUME*g_nproc));
     fflush(stdout);
   }
+
+  plaquette_energy = measure_plaquette( (const su3**) g_smeared_gauge_field);
+
+  if (g_cart_id == 0) {
+    printf("# The computed plaquette for the  smeared gauge field value is %e.\n", plaquette_energy / (6.*VOLUME*g_nproc));
+    fflush(stdout);
+  }
+
 
 #if defined MPI
   for( int s=0; s<numbScalarFields; s++ )
@@ -404,7 +436,7 @@ int main(int argc,char *argv[])
 
 
   init_sw_fields(VOLUME);
-  sw_term( (const su3**) g_gauge_field,1., 1.);
+  sw_term( (const su3**) g_smeared_gauge_field, kappa_BSM, csw_BSM);
 
         
 
@@ -479,19 +511,20 @@ int main(int argc,char *argv[])
      fflush(stdout);
   }
 
-#endif
+#endif  //TEST_INVERSION
 
+  free_bispinor_field();
+  free_scalar_field();
 
+  free_gauge_field();
+  free_geometry_indices();
 
+#endif //_USE_BSM
   
 
 #ifdef OMP
   free_omp_accumulators();
 #endif 
-  free_gauge_field();
-  free_geometry_indices();
-  free_bispinor_field();
-  free_scalar_field();
 #ifdef MPI
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
