@@ -156,12 +156,12 @@ int init_gauge_field(const int V, const int back) {
 #ifdef _USE_BSM
     g_smeared_gauge_field_copy[0][0] = (su3*)(((unsigned long int)(smeared_gauge_field_copy)+ALIGN_BASE)&~ALIGN_BASE);
 #endif
-#    else
+#else
     g_gauge_field_copy[0][0] = gauge_field_copy;
 #ifdef _USE_BSM
     g_smeared_gauge_field_copy[0][0] = smeared_gauge_field_copy;
 #endif
-#    endif
+#endif
     for(i = 1; i < (VOLUME)/2; i++) {
       g_gauge_field_copy[0][i] = g_gauge_field_copy[0][i-1]+4;
     }
@@ -223,14 +223,14 @@ int init_gauge_field(const int V, const int back) {
       return(4);
     }
 #endif
-#    if (defined SSE || defined SSE2 || defined SSE3)
+#if (defined SSE || defined SSE2 || defined SSE3)
     g_gauge_field_copyt[0] = (su3*)(((unsigned long int)(gauge_field_copyt)+ALIGN_BASE)&~ALIGN_BASE);
     g_gauge_field_copys[0] = (su3*)(((unsigned long int)(gauge_field_copys)+ALIGN_BASE)&~ALIGN_BASE);
 #ifdef _USE_BSM
     g_smeared_gauge_field_copyt[0] = (su3*)(((unsigned long int)(smeared_gauge_field_copyt)+ALIGN_BASE)&~ALIGN_BASE);
     g_smeared_gauge_field_copys[0] = (su3*)(((unsigned long int)(smeared_gauge_field_copys)+ALIGN_BASE)&~ALIGN_BASE);
 #endif
-#    else
+#else
     g_gauge_field_copyt[0] = gauge_field_copyt;
     g_gauge_field_copys[0] = gauge_field_copys;
 #ifdef _USE_BSM
@@ -274,6 +274,7 @@ int init_gauge_field(const int V, const int back) {
       errno = 0;
       return(4);
     }
+#endif
 #endif
 
 #  if (defined SSE || defined SSE2 || defined SSE3)
@@ -319,9 +320,9 @@ void free_gauge_field() {
   free(smeared_gauge_field_copys);
 #endif
 #  else
-  free(smeared_gauge_field_copy);
-#ifdef _USE_BSM
   free(gauge_field_copy);
+#ifdef _USE_BSM
+  free(smeared_gauge_field_copy);
 #endif
 #  endif
 }
