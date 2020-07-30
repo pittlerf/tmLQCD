@@ -303,7 +303,6 @@ static inline void padd_chitildebreak(bispinor * restrict const tmpr , bispinor 
 #define static
 #endif
   static bispinor us;
-  static const int sign_gamma = (inv==0) ? -sign : sign ;
 #ifdef OMP
 #undef static
 #endif
@@ -330,7 +329,6 @@ static inline void p0add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef OMP
 #define static
 #endif
-  static bispinor us;
   static const int sign_gamma = (inv==0) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
@@ -455,7 +453,6 @@ static inline void p1add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef OMP
 #define static
 #endif
-  static bispinor us;
   static const int sign_gamma = (inv==0) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
@@ -584,7 +581,6 @@ static inline void p2add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef OMP
 #define static
 #endif
-  static bispinor us;
   static const int sign_gamma = (inv==0) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
@@ -713,7 +709,6 @@ static inline void p3add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef OMP
 #define static
 #endif
-  static bispinor us;
   static const int sign_gamma = (inv==0) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
