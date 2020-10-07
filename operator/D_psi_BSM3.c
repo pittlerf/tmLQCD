@@ -255,6 +255,54 @@ static inline void bispinor_times_phase_times_u(bispinor * restrict const us, co
   return;
 }
 
+static inline void bispinor_times_real_times_u(bispinor * restrict const us, const double realnum,
+                                                su3 const * restrict const u, bispinor const * restrict const s)
+{
+#ifdef OMP
+#define static
+#endif
+  static su3_vector chi;
+#ifdef OMP
+#undef static
+#endif
+
+  _su3_multiply(chi, (*u), s->sp_up.s0);
+  _vector_null( us->sp_up.s0 );
+  _vector_add_mul( us->sp_up.s0, realnum, chi );
+
+  _su3_multiply(chi, (*u), s->sp_up.s1);
+  _vector_null( us->sp_up.s1 );
+  _vector_add_mul( us->sp_up.s1, realnum, chi );
+
+  _su3_multiply(chi, (*u), s->sp_up.s2);
+  _vector_null( us->sp_up.s2 );
+  _vector_add_mul( us->sp_up.s2, realnum, chi );
+
+  _su3_multiply(chi, (*u), s->sp_up.s3);
+  _vector_null( us->sp_up.s3 );
+  _vector_add_mul( us->sp_up.s3, realnum, chi );
+
+  _su3_multiply(chi, (*u), s->sp_dn.s0);
+  _vector_null( us->sp_dn.s0 );
+  _vector_add_mul( us->sp_dn.s0, realnum, chi );
+
+  _su3_multiply(chi, (*u), s->sp_dn.s1);
+  _vector_null( us->sp_dn.s1 );
+  _vector_add_mul( us->sp_dn.s1, realnum, chi );
+
+  _su3_multiply(chi, (*u), s->sp_dn.s2);
+  _vector_null( us->sp_dn.s2 );
+  _vector_add_mul( us->sp_dn.s2, realnum, chi );
+
+  _su3_multiply(chi, (*u), s->sp_dn.s3);
+  _vector_null( us->sp_dn.s3 );
+  _vector_add_mul( us->sp_dn.s3, realnum, chi );
+  
+  return;
+}
+
+
+
 static inline void bispinor_times_phase_times_inverse_u(bispinor * restrict const us, const _Complex double phase,
 							su3 const * restrict const u, bispinor const * restrict const s)
 {
@@ -293,6 +341,280 @@ static inline void bispinor_times_phase_times_inverse_u(bispinor * restrict cons
   return;
 }
 
+static inline void bispinor_times_real_times_inverse_u(bispinor * restrict const us, const double realnum,
+                                                        su3 const * restrict const u, bispinor const * restrict const s)
+{
+#ifdef OMP
+#define static
+#endif
+  static su3_vector chi;
+#ifdef OMP
+#undef static
+#endif
+
+
+  _su3_inverse_multiply(chi, (*u), s->sp_up.s0);
+  _vector_null( us->sp_up.s0 );
+  _vector_add_mul( us->sp_up.s0, realnum, chi );
+
+  _su3_inverse_multiply(chi, (*u), s->sp_up.s1);
+  _vector_null( us->sp_up.s1 );
+  _vector_add_mul( us->sp_up.s1, realnum, chi );
+
+  _su3_inverse_multiply(chi, (*u), s->sp_up.s2);
+  _vector_null( us->sp_up.s2 );
+  _vector_add_mul( us->sp_up.s2, realnum, chi );
+
+  _su3_inverse_multiply(chi, (*u), s->sp_up.s3);
+  _vector_null( us->sp_up.s3 );
+  _vector_add_mul( us->sp_up.s3, realnum, chi );
+
+  _su3_inverse_multiply(chi, (*u), s->sp_dn.s0);
+  _vector_null( us->sp_dn.s0 );
+  _vector_add_mul( us->sp_dn.s0, realnum, chi );
+
+  _su3_inverse_multiply(chi, (*u), s->sp_dn.s1);
+  _vector_null( us->sp_dn.s1 );
+  _vector_add_mul( us->sp_dn.s1, realnum, chi );
+
+  _su3_inverse_multiply(chi, (*u), s->sp_dn.s2);
+  _vector_null( us->sp_dn.s2 );
+  _vector_add_mul( us->sp_dn.s2, realnum, chi );
+
+  _su3_inverse_multiply(chi, (*u), s->sp_dn.s3);
+  _vector_null( us->sp_dn.s3 );
+  _vector_add_mul( us->sp_dn.s3, realnum, chi );
+
+  return;
+}
+
+
+static inline void p0add(bispinor * restrict const tmpr , bispinor const * restrict const s,
+                         su3 const * restrict const u, const int inv, const _Complex double phase,
+                         const double phaseF, const scalar * const phi, const scalar * const phip,
+                         const double sign) {
+
+#ifdef OMP
+#define static
+#endif
+  static bispinor us;
+#ifdef OMP
+#undef static
+#endif
+
+
+  // us = phase*u*s
+  if( inv ){
+    bispinor_times_phase_times_inverse_u(&us, phase, u, s);
+    _vector_add_mul(tmpr->sp_up.s0, -r0_BSM, us.sp_up.s0);
+    _vector_add_mul(tmpr->sp_up.s1, -r0_BSM, us.sp_up.s1);
+    _vector_add_mul(tmpr->sp_up.s2, -r0_BSM, us.sp_up.s2);
+    _vector_add_mul(tmpr->sp_up.s3, -r0_BSM, us.sp_up.s3);
+    _vector_add_mul(tmpr->sp_dn.s0, -r0_BSM, us.sp_dn.s0);
+    _vector_add_mul(tmpr->sp_dn.s1, -r0_BSM, us.sp_dn.s1);
+    _vector_add_mul(tmpr->sp_dn.s2, -r0_BSM, us.sp_dn.s2);
+    _vector_add_mul(tmpr->sp_dn.s3, -r0_BSM, us.sp_dn.s3);
+  }
+  else{
+    bispinor_times_phase_times_u(&us, phase, u, s);
+    _vector_add_mul(tmpr->sp_up.s0, r0_BSM, us.sp_up.s0);
+    _vector_add_mul(tmpr->sp_up.s1, r0_BSM, us.sp_up.s1);
+    _vector_add_mul(tmpr->sp_up.s2, r0_BSM, us.sp_up.s2);
+    _vector_add_mul(tmpr->sp_up.s3, r0_BSM, us.sp_up.s3);
+    _vector_add_mul(tmpr->sp_dn.s0, r0_BSM, us.sp_dn.s0);
+    _vector_add_mul(tmpr->sp_dn.s1, r0_BSM, us.sp_dn.s1);
+    _vector_add_mul(tmpr->sp_dn.s2, r0_BSM, us.sp_dn.s2);
+    _vector_add_mul(tmpr->sp_dn.s3, r0_BSM, us.sp_dn.s3);
+  }
+
+
+  // tmpr += \gamma_0*us
+  _vector_add_assign(tmpr->sp_up.s0, us.sp_up.s2);
+  _vector_add_assign(tmpr->sp_up.s1, us.sp_up.s3);
+  _vector_add_assign(tmpr->sp_up.s2, us.sp_up.s0);
+  _vector_add_assign(tmpr->sp_up.s3, us.sp_up.s1);
+
+  _vector_add_assign(tmpr->sp_dn.s0, us.sp_dn.s2);
+  _vector_add_assign(tmpr->sp_dn.s1, us.sp_dn.s3);
+  _vector_add_assign(tmpr->sp_dn.s2, us.sp_dn.s0);
+  _vector_add_assign(tmpr->sp_dn.s3, us.sp_dn.s1);
+
+  // tmpr += F*us
+  Fadd(tmpr, &us, phi,  phaseF, sign);
+  Fadd(tmpr, &us, phip, phaseF, sign);
+
+  return;
+}
+
+static inline void p1add(bispinor * restrict const tmpr, bispinor const * restrict const s,
+                         su3 const * restrict const u, const int inv, const _Complex double phase,
+                         const double phaseF, const scalar * const phi, const scalar * const phip,
+                         const double sign) {
+#ifdef OMP
+#define static
+#endif
+  static bispinor us;
+#ifdef OMP
+#undef static
+#endif
+
+  // us = phase*u*s
+  if( inv ){
+    bispinor_times_phase_times_inverse_u(&us, phase, u, s);
+    _vector_add_mul(tmpr->sp_up.s0, -1*r0_BSM, us.sp_up.s0);
+    _vector_add_mul(tmpr->sp_up.s1, -1*r0_BSM, us.sp_up.s1);
+    _vector_add_mul(tmpr->sp_up.s2, -1*r0_BSM, us.sp_up.s2);
+    _vector_add_mul(tmpr->sp_up.s3, -1*r0_BSM, us.sp_up.s3);
+    _vector_add_mul(tmpr->sp_dn.s0, -1*r0_BSM, us.sp_dn.s0);
+    _vector_add_mul(tmpr->sp_dn.s1, -1*r0_BSM, us.sp_dn.s1);
+    _vector_add_mul(tmpr->sp_dn.s2, -1*r0_BSM, us.sp_dn.s2);
+    _vector_add_mul(tmpr->sp_dn.s3, -1*r0_BSM, us.sp_dn.s3);
+  }
+  else{
+    bispinor_times_phase_times_u(&us, phase, u, s);
+    _vector_add_mul(tmpr->sp_up.s0, r0_BSM, us.sp_up.s0);
+    _vector_add_mul(tmpr->sp_up.s1, r0_BSM, us.sp_up.s1);
+    _vector_add_mul(tmpr->sp_up.s2, r0_BSM, us.sp_up.s2);
+    _vector_add_mul(tmpr->sp_up.s3, r0_BSM, us.sp_up.s3);
+    _vector_add_mul(tmpr->sp_dn.s0, r0_BSM, us.sp_dn.s0);
+    _vector_add_mul(tmpr->sp_dn.s1, r0_BSM, us.sp_dn.s1);
+    _vector_add_mul(tmpr->sp_dn.s2, r0_BSM, us.sp_dn.s2);
+    _vector_add_mul(tmpr->sp_dn.s3, r0_BSM, us.sp_dn.s3);
+  }
+
+  // tmpr += \gamma_1*us
+  _vector_i_add_assign(tmpr->sp_up.s0, us.sp_up.s3);
+  _vector_i_add_assign(tmpr->sp_up.s1, us.sp_up.s2);
+  _vector_i_sub_assign(tmpr->sp_up.s2, us.sp_up.s1);
+  _vector_i_sub_assign(tmpr->sp_up.s3, us.sp_up.s0);
+
+  _vector_i_add_assign(tmpr->sp_dn.s0, us.sp_dn.s3);
+  _vector_i_add_assign(tmpr->sp_dn.s1, us.sp_dn.s2);
+  _vector_i_sub_assign(tmpr->sp_dn.s2, us.sp_dn.s1);
+  _vector_i_sub_assign(tmpr->sp_dn.s3, us.sp_dn.s0);
+
+  // tmpr += F*us
+  Fadd(tmpr, &us, phi,  phaseF, sign);
+  Fadd(tmpr, &us, phip, phaseF, sign);
+
+  return;
+}
+
+static inline void p2add(bispinor * restrict const tmpr, bispinor const * restrict const s,
+                         su3 const * restrict const u, const int inv, const _Complex double phase,
+                         const double phaseF, const scalar * const phi, const scalar * const phip,
+                         const double sign) {
+#ifdef OMP
+#define static
+#endif
+  static bispinor us;
+#ifdef OMP
+#undef static
+#endif
+  // us = phase*u*s
+  if( inv ){
+    bispinor_times_phase_times_inverse_u(&us, phase, u, s);
+    _vector_add_mul(tmpr->sp_up.s0, -1*r0_BSM, us.sp_up.s0);
+    _vector_add_mul(tmpr->sp_up.s1, -1*r0_BSM, us.sp_up.s1);
+    _vector_add_mul(tmpr->sp_up.s2, -1*r0_BSM, us.sp_up.s2);
+    _vector_add_mul(tmpr->sp_up.s3, -1*r0_BSM, us.sp_up.s3);
+    _vector_add_mul(tmpr->sp_dn.s0, -1*r0_BSM, us.sp_dn.s0);
+    _vector_add_mul(tmpr->sp_dn.s1, -1*r0_BSM, us.sp_dn.s1);
+    _vector_add_mul(tmpr->sp_dn.s2, -1*r0_BSM, us.sp_dn.s2);
+    _vector_add_mul(tmpr->sp_dn.s3, -1*r0_BSM, us.sp_dn.s3);
+  }
+  else{
+    bispinor_times_phase_times_u(&us, phase, u, s);
+    _vector_add_mul(tmpr->sp_up.s0, r0_BSM, us.sp_up.s0);
+    _vector_add_mul(tmpr->sp_up.s1, r0_BSM, us.sp_up.s1);
+    _vector_add_mul(tmpr->sp_up.s2, r0_BSM, us.sp_up.s2);
+    _vector_add_mul(tmpr->sp_up.s3, r0_BSM, us.sp_up.s3);
+    _vector_add_mul(tmpr->sp_dn.s0, r0_BSM, us.sp_dn.s0);
+    _vector_add_mul(tmpr->sp_dn.s1, r0_BSM, us.sp_dn.s1);
+    _vector_add_mul(tmpr->sp_dn.s2, r0_BSM, us.sp_dn.s2);
+    _vector_add_mul(tmpr->sp_dn.s3, r0_BSM, us.sp_dn.s3);
+  }
+
+  // us = phase*u*s
+  if( inv )
+    bispinor_times_phase_times_inverse_u(&us, phase, u, s);
+  else
+    bispinor_times_phase_times_u(&us, phase, u, s);
+
+  // tmpr += \gamma_2*us
+  _vector_add_assign(tmpr->sp_up.s0, us.sp_up.s3);
+  _vector_sub_assign(tmpr->sp_up.s1, us.sp_up.s2);
+  _vector_sub_assign(tmpr->sp_up.s2, us.sp_up.s1);
+  _vector_add_assign(tmpr->sp_up.s3, us.sp_up.s0);
+
+  _vector_add_assign(tmpr->sp_dn.s0, us.sp_dn.s3);
+  _vector_sub_assign(tmpr->sp_dn.s1, us.sp_dn.s2);
+  _vector_sub_assign(tmpr->sp_dn.s2, us.sp_dn.s1);
+  _vector_add_assign(tmpr->sp_dn.s3, us.sp_dn.s0);
+
+  // tmpr += F*us
+  Fadd(tmpr, &us, phi,  phaseF, sign);
+  Fadd(tmpr, &us, phip, phaseF, sign);
+
+  return;
+}
+
+static inline void p3add(bispinor * restrict const tmpr, bispinor const * restrict const s,
+                         su3 const * restrict const u, const int inv, const _Complex double phase,
+                         const double phaseF, const scalar * const phi, const scalar * const phip,
+                         const double sign) {
+#ifdef OMP
+#define static
+#endif
+  static bispinor us;
+#ifdef OMP
+#undef static
+#endif
+
+  // us = phase*u*s
+  if( inv ){
+    bispinor_times_phase_times_inverse_u(&us, phase, u, s);
+    _vector_add_mul(tmpr->sp_up.s0, -1*r0_BSM, us.sp_up.s0);
+    _vector_add_mul(tmpr->sp_up.s1, -1*r0_BSM, us.sp_up.s1);
+    _vector_add_mul(tmpr->sp_up.s2, -1*r0_BSM, us.sp_up.s2);
+    _vector_add_mul(tmpr->sp_up.s3, -1*r0_BSM, us.sp_up.s3);
+    _vector_add_mul(tmpr->sp_dn.s0, -1*r0_BSM, us.sp_dn.s0);
+    _vector_add_mul(tmpr->sp_dn.s1, -1*r0_BSM, us.sp_dn.s1);
+    _vector_add_mul(tmpr->sp_dn.s2, -1*r0_BSM, us.sp_dn.s2);
+    _vector_add_mul(tmpr->sp_dn.s3, -1*r0_BSM, us.sp_dn.s3);
+  }
+  else{
+    bispinor_times_phase_times_u(&us, phase, u, s);
+    _vector_add_mul(tmpr->sp_up.s0, r0_BSM, us.sp_up.s0);
+    _vector_add_mul(tmpr->sp_up.s1, r0_BSM, us.sp_up.s1);
+    _vector_add_mul(tmpr->sp_up.s2, r0_BSM, us.sp_up.s2);
+    _vector_add_mul(tmpr->sp_up.s3, r0_BSM, us.sp_up.s3);
+    _vector_add_mul(tmpr->sp_dn.s0, r0_BSM, us.sp_dn.s0);
+    _vector_add_mul(tmpr->sp_dn.s1, r0_BSM, us.sp_dn.s1);
+    _vector_add_mul(tmpr->sp_dn.s2, r0_BSM, us.sp_dn.s2);
+    _vector_add_mul(tmpr->sp_dn.s3, r0_BSM, us.sp_dn.s3);
+  }
+
+
+  // tmpr += \gamma_3*us
+  _vector_i_add_assign(tmpr->sp_up.s0, us.sp_up.s2);
+  _vector_i_sub_assign(tmpr->sp_up.s1, us.sp_up.s3);
+  _vector_i_sub_assign(tmpr->sp_up.s2, us.sp_up.s0);
+  _vector_i_add_assign(tmpr->sp_up.s3, us.sp_up.s1);
+
+  _vector_i_add_assign(tmpr->sp_dn.s0, us.sp_dn.s2);
+  _vector_i_sub_assign(tmpr->sp_dn.s1, us.sp_dn.s3);
+  _vector_i_sub_assign(tmpr->sp_dn.s2, us.sp_dn.s0);
+  _vector_i_add_assign(tmpr->sp_dn.s3, us.sp_dn.s1);
+
+  // tmpr += F*us
+  Fadd(tmpr, &us, phi,  phaseF, sign);
+  Fadd(tmpr, &us, phip, phaseF, sign);
+
+  return;
+}
+
+
 
 static inline void padd_chitildebreak(bispinor * restrict const tmpr , bispinor const * restrict const s,
                          su3 const * restrict const u, const int inv, const _Complex double phase,
@@ -329,7 +651,7 @@ static inline void p0add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef OMP
 #define static
 #endif
-  static const int sign_gamma = (inv==0) ? -sign : sign ;
+  static const int sign_gamma = (inv==1) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
   static su3_vector chi;
@@ -344,10 +666,8 @@ static inline void p0add_wilsonclover( bispinor * restrict const tmpr , bispinor
 //Performing the multiplication on the first half of a halfspinor
 //shrink the fermion vector from four spin component to two
 //first component
-    _vector_assign(     halfwilson1, sp->sp_up.s0);
-    _vector_assign(     halfwilson2, sp->sp_dn.s0);
-    _vector_add_assign( halfwilson1, sp->sp_up.s2);
-    _vector_add_assign( halfwilson2, sp->sp_dn.s2);
+    _vector_add(     halfwilson1, sp->sp_up.s0, sp->sp_up.s2);
+    _vector_add(     halfwilson2, sp->sp_dn.s0, sp->sp_dn.s2);
     if(inv == 1){
       _su3_inverse_multiply(chi, (*u), halfwilson1);
       _complexcjg_times_vector(results1, phase, chi);
@@ -369,10 +689,8 @@ static inline void p0add_wilsonclover( bispinor * restrict const tmpr , bispinor
 //Performing the multiplication on the first half of a halfspinor
 //shrink the fermion vector from four spin component to two
 //second component
-    _vector_assign(     halfwilson1, sp->sp_up.s1);
-    _vector_assign(     halfwilson2, sp->sp_dn.s1);
-    _vector_add_assign( halfwilson1, sp->sp_up.s3);
-    _vector_add_assign( halfwilson2, sp->sp_dn.s3);
+    _vector_add(     halfwilson1, sp->sp_up.s1, sp->sp_up.s3 );
+    _vector_add(     halfwilson2, sp->sp_dn.s1, sp->sp_dn.s3 );
 
     if(inv == 1){
       _su3_inverse_multiply(chi, (*u), halfwilson1);
@@ -453,7 +771,7 @@ static inline void p1add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef OMP
 #define static
 #endif
-  static const int sign_gamma = (inv==0) ? -sign : sign ;
+  static const int sign_gamma = (inv==1) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
   static su3_vector chi;
@@ -581,7 +899,7 @@ static inline void p2add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef OMP
 #define static
 #endif
-  static const int sign_gamma = (inv==0) ? -sign : sign ;
+  static const int sign_gamma = (inv==1) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
   static su3_vector chi;
@@ -709,7 +1027,7 @@ static inline void p3add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef OMP
 #define static
 #endif
-  static const int sign_gamma = (inv==0) ? -sign : sign ;
+  static const int sign_gamma = (inv==1) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
   static su3_vector chi;
@@ -921,7 +1239,6 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
 	  Fadd(rr, s, phip[mu], 0.25*rho_BSM, +1.);
 	  Fadd(rr, s, phim[mu], 0.25*rho_BSM, +1.);
 	}
-
         Fabsadd(rr,s,phi,c5phi_BSM);
 
         // tmpr+=i\gamma_5\tau_1 mu0 *Q 
@@ -934,15 +1251,25 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
 
         //Adding the clover term:
         // upper two spin components first
-        
+       /* 
         su3_vector ALIGN chi;
         w1=&sw[ix][0][0];
         w2=w1+2; //&sw[ix][1][0];
         w3=w1+4; //&sw[ix][2][0];
-        _su3_multiply(rr->sp_up.s0,*w1,s->sp_up.s0);
+        printf("csw_BSM %e\n", csw_BSM);
+        printf("%e %e \n",creal(rr->sp_up.s0.c0),cimag(rr->sp_up.s0.c0));
+
+        _su3_multiply(chi,*w1,s->sp_up.s0);
+        printf("%e %e \n",creal(chi.c0),cimag(chi.c0));
+        _vector_add_assign(rr->sp_up.s0,chi);
         _su3_multiply(chi,*w2, s->sp_up.s1);
         _vector_add_assign(rr->sp_up.s0,chi);
-        _su3_inverse_multiply(rr->sp_up.s1,*w2,s->sp_up.s0);
+        printf("%e %e\n",creal(rr->sp_up.s0.c0),cimag(rr->sp_up.s0.c0));
+
+        exit(1);
+
+        _su3_inverse_multiply(chi,*w2,s->sp_up.s0);
+        _vector_add_assign(rr->sp_up.s1,chi);
         _su3_multiply(chi,*w3,s->sp_up.s1);
         _vector_add_assign(rr->sp_up.s1,chi);
 
@@ -950,10 +1277,13 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
         w1=&sw[ix][0][1];
         w2=w1+2; //&sw[ix][1][1];
         w3=w1+4; //&sw[ix][2][1];
-        _su3_multiply(rr->sp_up.s2,*w1,s->sp_up.s2);
+        _su3_multiply(chi,*w1,s->sp_up.s2);
+        _vector_add_assign(rr->sp_up.s2,chi);
         _su3_multiply(chi,*w2, s->sp_up.s3);
         _vector_add_assign(rr->sp_up.s2,chi);
-        _su3_inverse_multiply(rr->sp_up.s3,*w2,s->sp_up.s2);
+
+        _su3_inverse_multiply(chi,*w2,s->sp_up.s2);
+        _vector_add_assign(rr->sp_up.s3,chi);
         _su3_multiply(chi,*w3,s->sp_up.s3);
         _vector_add_assign(rr->sp_up.s3,chi);
 
@@ -961,57 +1291,71 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
         w1=&sw[ix][0][0];
         w2=w1+2; //&sw[ix][1][0];
         w3=w1+4; //&sw[ix][2][0];
-        _su3_multiply(rr->sp_dn.s0,*w1,s->sp_dn.s0);
+        _su3_multiply(chi,*w1,s->sp_dn.s0);
+        _vector_add_assign(rr->sp_dn.s0,chi);
         _su3_multiply(chi,*w2, s->sp_dn.s1);
         _vector_add_assign(rr->sp_dn.s0,chi);
-        _su3_inverse_multiply(rr->sp_dn.s1,*w2,s->sp_dn.s0);
+
+        _su3_inverse_multiply(chi,*w2,s->sp_dn.s0);
+        _vector_add_assign(rr->sp_dn.s1,chi);
         _su3_multiply(chi,*w3,s->sp_dn.s1);
         _vector_add_assign(rr->sp_dn.s1,chi);
 
         w1=&sw[ix][0][1];
         w2=w1+2; //&sw[ix][1][1];
         w3=w1+4; //&sw[ix][2][1];
-        _su3_multiply(rr->sp_dn.s2,*w1,s->sp_dn.s2);
+        _su3_multiply(chi,*w1, s->sp_dn.s2);
+        _vector_add_assign(rr->sp_dn.s2,chi);
         _su3_multiply(chi,*w2, s->sp_dn.s3);
         _vector_add_assign(rr->sp_dn.s2,chi);
-        _su3_inverse_multiply(rr->sp_dn.s3,*w2,s->sp_dn.s2);
+
+        _su3_inverse_multiply(chi,*w2,s->sp_dn.s2);
+        _vector_add_assign(rr->sp_dn.s3,chi);
         _su3_multiply(chi,*w3,s->sp_dn.s3);
         _vector_add_assign(rr->sp_dn.s3,chi);
-
-
+*/
 	// the hopping part:
 	// tmpr += +1/2 \sum_\mu (1-gamma_\mu - \rho_BSM/2*F(x) - \rho_BSM/2*F(x+-\mu))*U_{+-\mu}(x)*Q(x+-\mu)
 	/******************************* direction +0 *********************************/
 	iy=g_iup[ix][0];
 	sp = (bispinor *) Q +iy;
 	up=&g_smeared_gauge_field[ix][0];
-        p0add_wilsonclover(rr, sp, up, 0, 0.5*phase_0, +1);
+
+        //p0add_wilsonclover(rr, sp, up, 0, 0.5*phase_0, 1);
+        
         up=&g_gauge_field[ix][0];
-        padd_chitildebreak(rr, sp, up, 0, 0.5*phase_0, -0.5*rho_BSM, phi, phip[0], +1.);
+        p0add(rr, sp, up, 0, 0.5*phase_0, -0.5*rho_BSM, phi, phip[0], +1.);
+        //padd_chitildebreak(rr, sp, up, 0, 0.5*phase_0, -0.5*rho_BSM, phi, phip[0], +1.);
 
 	/******************************* direction -0 *********************************/
+
 	iy=g_idn[ix][0];
 	sm = (bispinor *) Q +iy;
 	um=&g_smeared_gauge_field[iy][0];
-        p0add_wilsonclover(rr, sm, um, 1, 0.5*phase_0, +1);
+ //       p0add_wilsonclover(rr, sm, um, 1, 0.5*phase_0, 1);
         um=&g_gauge_field[iy][0];
-        padd_chitildebreak(rr, sm, um, 1, 0.5*phase_0, -0.5*rho_BSM, phi, phim[0], +1.);
+        p0add(rr, sm, um, 1, -0.5*phase_0, 0.5*rho_BSM, phi, phim[0], +1.);
+//        padd_chitildebreak(rr, sm, um, 1, -0.5*phase_0, 0.5*rho_BSM, phi, phim[0], +1.);
 
 	/******************************* direction +1 *********************************/
 	iy=g_iup[ix][1];
 	sp = (bispinor *) Q +iy;
 	up=&g_smeared_gauge_field[ix][1];
-        p1add_wilsonclover(rr, sp, up, 0, 0.5*phase_1, +1);
+       // p1add_wilsonclover(rr, sp, up, 0, 0.5*phase_1, +1);
         up=&g_gauge_field[ix][1];
-        padd_chitildebreak(rr, sp, up, 0, 0.5*phase_1, -0.5*rho_BSM, phi, phip[1], +1.);
+        p1add(rr, sp, up, 0, 0.5*phase_1, -0.5*rho_BSM, phi, phip[1], +1.);
+//        padd_chitildebreak(rr, sp, up, 0, 0.5*phase_1, -0.5*rho_BSM, phi, phip[1], +1.);
+
 
 	/******************************* direction -1 *********************************/
 	iy=g_idn[ix][1];
 	sm = (bispinor *) Q +iy;
 	um=&g_smeared_gauge_field[iy][1];
-        p1add_wilsonclover(rr, sm, um, 1, 0.5*phase_1, +1);
+//        p1add_wilsonclover(rr, sm, um, 1, 0.5*phase_1, +1);
 	um=&g_gauge_field[iy][1];
-        padd_chitildebreak(rr, sm, um, 1, 0.5*phase_1, -0.5*rho_BSM, phi, phim[1], +1.);
+        p1add(rr, sm, um, 1, -0.5*phase_1, 0.5*rho_BSM, phi, phim[1], +1.);
+//        padd_chitildebreak(rr, sm, um, 1, -0.5*phase_1, 0.5*rho_BSM, phi, phim[1], +1.);
+
 
 	/******************************* direction +2 *********************************/
 	iy=g_iup[ix][2];
@@ -1019,7 +1363,9 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
         up=&g_smeared_gauge_field[ix][2];
         p2add_wilsonclover(rr, sp, up, 0, 0.5*phase_2, +1);
 	up=&g_gauge_field[ix][2];
+//        p2add(rr, sp, up, 0, 0.5*phase_2, -0.5*rho_BSM, phi, phip[2], +1.);
         padd_chitildebreak(rr, sp, up, 0, 0.5*phase_2, -0.5*rho_BSM, phi, phip[2], +1.);
+
 
 	/******************************* direction -2 *********************************/
 	iy=g_idn[ix][2];
@@ -1027,7 +1373,9 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
 	um=&g_smeared_gauge_field[iy][2];
         p2add_wilsonclover(rr, sm, um, 1, 0.5*phase_2, +1);
 	um=&g_gauge_field[iy][2];
-        padd_chitildebreak(rr, sm, um, 1, 0.5*phase_2, -0.5*rho_BSM, phi, phim[2], +1.);
+//        p2add(rr, sm, um, 1, -0.5*phase_2, 0.5*rho_BSM, phi, phim[2], +1.);
+        padd_chitildebreak(rr, sm, um, 1, -0.5*phase_2, 0.5*rho_BSM, phi, phim[2], +1.);
+
 
 	/******************************* direction +3 *********************************/
 	iy=g_iup[ix][3];
@@ -1035,6 +1383,7 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
 	up=&g_smeared_gauge_field[ix][3];
         p3add_wilsonclover(rr, sp, up, 0, 0.5*phase_3, +1);
 	up=&g_gauge_field[ix][3];
+//        p3add(rr, sp, up, 0, 0.5*phase_3, -0.5*rho_BSM, phi, phip[3], +1.);
         padd_chitildebreak(rr, sp, up, 0, 0.5*phase_3, -0.5*rho_BSM, phi, phip[3], +1.);
 
 	/******************************* direction -3 *********************************/
@@ -1043,8 +1392,8 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
 	um=&g_smeared_gauge_field[iy][3];
         p3add_wilsonclover(rr, sm, um, 1, 0.5*phase_3, +1);
 	um=&g_gauge_field[iy][3];
-        padd_chitildebreak(rr, sm, um, 1, 0.5*phase_3, -0.5*rho_BSM, phi, phim[3], +1.);
-
+//        p3add(rr, sm, um, 1, -0.5*phase_3, 0.5*rho_BSM, phi, phim[3], +1.);
+        padd_chitildebreak(rr, sm, um, 1, -0.5*phase_3, 0.5*rho_BSM, phi, phim[3], +1.);
       }
 #ifdef OMP
   } /* OpenMP closing brace */
@@ -1157,20 +1506,26 @@ void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
       w1=&sw[ix][0][0];
       w2=w1+2; //&sw[ix][1][0];
       w3=w1+4; //&sw[ix][2][0];
-      _su3_multiply(rr->sp_up.s0,*w1,s->sp_up.s0);
+      _su3_multiply(chi,*w1,s->sp_up.s0);
+      _vector_add_assign(rr->sp_up.s0,chi);
       _su3_multiply(chi,*w2, s->sp_up.s1);
       _vector_add_assign(rr->sp_up.s0,chi);
-      _su3_inverse_multiply(rr->sp_up.s1,*w2,s->sp_up.s0);
+
+      _su3_inverse_multiply(chi,*w2,s->sp_up.s0);
+      _vector_add_assign(rr->sp_up.s1,chi);
       _su3_multiply(chi,*w3,s->sp_up.s1);
       _vector_add_assign(rr->sp_up.s1,chi);
 
       w1=&sw[ix][0][1];
       w2=w1+2; //&sw[ix][1][1];
       w3=w1+4; //&sw[ix][2][1];
-      _su3_multiply(rr->sp_up.s2,*w1,s->sp_up.s2);
+      _su3_multiply(chi,*w1,s->sp_up.s2);
+      _vector_add_assign(rr->sp_up.s2,chi);
       _su3_multiply(chi,*w2, s->sp_up.s3);
       _vector_add_assign(rr->sp_up.s2,chi);
-      _su3_inverse_multiply(rr->sp_up.s3,*w2,s->sp_up.s2);
+
+      _su3_inverse_multiply(chi,*w2,s->sp_up.s2);
+      _vector_add_assign(rr->sp_up.s3,chi);
       _su3_multiply(chi,*w3,s->sp_up.s3);
       _vector_add_assign(rr->sp_up.s3,chi);
 
@@ -1178,20 +1533,26 @@ void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
       w1=&sw[ix][0][0];
       w2=w1+2; //&sw[ix][1][0];
       w3=w1+4; //&sw[ix][2][0];
-      _su3_multiply(rr->sp_dn.s0,*w1,s->sp_dn.s0);
+      _su3_multiply(chi,*w1,s->sp_dn.s0);
+      _vector_add_assign(rr->sp_dn.s0,chi);
       _su3_multiply(chi,*w2, s->sp_dn.s1);
       _vector_add_assign(rr->sp_dn.s0,chi);
-      _su3_inverse_multiply(rr->sp_dn.s1,*w2,s->sp_dn.s0);
+
+      _su3_inverse_multiply(chi,*w2,s->sp_dn.s0);
+      _vector_add_assign(rr->sp_dn.s1,chi);
       _su3_multiply(chi,*w3,s->sp_dn.s1);
       _vector_add_assign(rr->sp_dn.s1,chi);
 
       w1=&sw[ix][0][1];
       w2=w1+2; //&sw[ix][1][1];
       w3=w1+4; //&sw[ix][2][1];
-      _su3_multiply(rr->sp_dn.s2,*w1,s->sp_dn.s2);
+      _su3_multiply(chi,*w1,s->sp_dn.s2);
+      _vector_add_assign(rr->sp_dn.s2,chi);
       _su3_multiply(chi,*w2, s->sp_dn.s3);
       _vector_add_assign(rr->sp_dn.s2,chi);
-      _su3_inverse_multiply(rr->sp_dn.s3,*w2,s->sp_dn.s2);
+
+      _su3_inverse_multiply(chi,*w2,s->sp_dn.s2);
+      _vector_add_assign(rr->sp_dn.s3,chi);
       _su3_multiply(chi,*w3,s->sp_dn.s3);
       _vector_add_assign(rr->sp_dn.s3,chi);
 

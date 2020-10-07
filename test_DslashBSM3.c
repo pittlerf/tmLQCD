@@ -25,7 +25,7 @@
 * otherwise a simple application of Dslash on a spinor will be tested.
 *
 *******************************************************************************/
-#define TEST_INVERSION 1
+#define TEST_INVERSION 0
 
 
 #ifdef HAVE_CONFIG_H
@@ -134,14 +134,15 @@ int main(int argc,char *argv[])
   static double t1,t2,dt,sdt,dts,qdt,sqdt;
   double antioptaway=0.0;
 
-#ifdef MPI
   static double dt2;
 
   DUM_DERI = 6;
-  DUM_SOLVER = DUM_DERI+2;
+  DUM_SOLVER = DUM_DERI+4;
   DUM_MATRIX = DUM_SOLVER+6;
   NO_OF_SPINORFIELDS = DUM_MATRIX+2;
 
+
+#ifdef MPI
 #ifdef OMP
   int mpi_thread_provided;
   MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
@@ -241,7 +242,7 @@ int main(int argc,char *argv[])
      exit(0);  
   }
 
-  j = init_spinor_field(VOLUMEPLUSRAND, 12);
+  j = init_spinor_field(VOLUMEPLUSRAND, NO_OF_SPINORFIELDS+1);
   if ( j!= 0) {
     fprintf(stderr, "Not enough memory for spinor fields! Aborting...\n");
     exit(0);
@@ -284,6 +285,7 @@ int main(int argc,char *argv[])
     fprintf(stderr, "Checking of geometry failed. Unable to proceed.\nAborting....\n");
     exit(1);
   }
+  init_dirac_halfspinor();
 #if (defined MPI && !(defined _USE_SHMEM))
 // fails, we're not using spinor fields
 //	check_xchange();
@@ -419,7 +421,9 @@ int main(int argc,char *argv[])
   generic_exchange(g_bispinor_field[5], sizeof(bispinor));
 #endif
 
+  double squarenorm_w;
 
+#if 0
   // print L2-norm of w source:
   double squarenorm_w = square_norm((spinor*)g_bispinor_field[4], 2*VOLUME, 1); 
   if(g_proc_id==0) {
@@ -434,14 +438,16 @@ int main(int argc,char *argv[])
    fflush(stdout);
   }
 
-
+#endif
   init_sw_fields(VOLUME);
-  sw_term( (const su3**) g_smeared_gauge_field, kappa_BSM, csw_BSM);
+  printf("csw bsm %e\n", csw_BSM);
+  printf("kappa_bsm %e\n", kappa_BSM);
+  //sw_term( (const su3**) g_smeared_gauge_field, kappa_BSM, csw_BSM);
 
         
 
   double t_FP;
-
+#if 0
 
   // Feri's operator
 
@@ -510,8 +516,115 @@ int main(int argc,char *argv[])
      printf("# ||Q2_FP*(Q2_FP)^-1*(b)-b||^2 = %.16e\n\n", squarenorm_FP);
      fflush(stdout);
   }
+#endif
+/* Testing D_psi_BSM3 Dirac operator gives the same results as the usual 
+ * clover wilson operator at rho=eta=0 */
+ #endif
+  printf("Testing with the original BSM operator\n"); 
+//  eta_BSM=0;
+//  rho_BSM=0;
+  kappa_BSM=0;
+  csw_BSM=0;
+  r0_BSM=1;
+  rho_BSM=1.;
+  sw_term( (const su3**) g_smeared_gauge_field, kappa_BSM, csw_BSM);
 
-#endif  //TEST_INVERSION
+//  rho_BSM=0;
+//  eta_BSM=0;
+
+  random_spinor_field_lexic( (spinor*)(g_bispinor_field[4]), reproduce_randomnumber_flag, RN_GAUSS);
+  random_spinor_field_lexic( (spinor*)(g_bispinor_field[4])+VOLUME, reproduce_randomnumber_flag, RN_GAUSS);
+
+
+#if defined MPI
+  generic_exchange(g_bispinor_field[4], sizeof(bispinor));
+#endif
+
+ // print L2-norm of w source:
+  squarenorm_w = square_norm((spinor*)g_bispinor_field[4], 2*VOLUME, 1);
+  if(g_proc_id==0) {
+   printf("\n# square norm of the source: ||w||^2 = %e\n\n", squarenorm_w);
+   fflush(stdout);
+  }
+
+  // Feri's operator
+
+  printf("Now comes Feri'S operator\n");
+#ifdef MPI
+  MPI_Barrier(MPI_COMM_WORLD);
+#endif
+  t_FP = 0.0;
+  t1 = gettime();
+  D_psi_BSM3(g_bispinor_field[2], g_bispinor_field[4]);
+  t1 = gettime() - t1;
+#ifdef MPI
+  MPI_Allreduce (&t1, &t_FP, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#else
+  t_FP = t1;
+#endif
+  squarenorm_w = square_norm((spinor*)g_bispinor_field[2], 2*VOLUME, 1);
+  if(g_proc_id==0) {
+   printf("\n# square norm of the propagator: ||w||^2 = %e\n\n", squarenorm_w);
+   fflush(stdout);
+  }
+/*
+#ifdef MPI
+  MPI_Barrier(MPI_COMM_WORLD);
+#endif
+  squarenorm_w = square_norm((spinor*)g_bispinor_field[4], 2*VOLUME, 1);
+  if(g_proc_id==0) {
+   printf("\n# square norm of the source: ||w||^2 = %e\n\n", squarenorm_w);
+   fflush(stdout);
+  }
+
+  printf("Now comes Carsten'S operator\n");
+  t_FP = 0.0;
+  t1 = gettime();
+  D_psi_BSM(g_bispinor_field[5], g_bispinor_field[4]);
+  t1 = gettime() - t1;
+#ifdef MPI
+  MPI_Allreduce (&t1, &t_FP, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#else
+  t_FP = t1;
+#endif
+  squarenorm_w = square_norm((spinor*)g_bispinor_field[5], 2*VOLUME, 1);
+  if(g_proc_id==0) {
+   printf("\n# square norm of the propagator: ||w||^2 = %e\n\n", squarenorm_w);
+   fflush(stdout);
+  }
+
+*/
+//  Msw_psi((spinor *)(g_bispinor_field[5])+VOLUME, (spinor*)(g_bispinor_field[4])+VOLUME);
+
+/*
+
+  convert_lexic_to_eo(g_spinor_field[0], g_spinor_field[1], (spinor*)(g_bispinor_field[4]));
+  convert_lexic_to_eo(g_spinor_field[2], g_spinor_field[3], (spinor*)(g_bispinor_field[4])+VOLUME);
+
+  double s1_norm= square_norm((spinor*)g_spinor_field[0], VOLUME, 1);
+  double s2_norm= square_norm((spinor*)g_spinor_field[1], VOLUME, 1);
+  double s3_norm= square_norm((spinor*)g_spinor_field[2], VOLUME, 1);
+  double s4_norm= square_norm((spinor*)g_spinor_field[3], VOLUME, 1);
+
+  printf("norm of the souce %e\n", s1_norm+s2_norm+s3_norm+s4_norm);
+
+  update_backward_gauge(g_gauge_field);
+
+
+  M_full(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], (spinor *)(g_spinor_field[0]), (spinor*)(g_spinor_field[1])) ;
+  M_full(g_spinor_field[DUM_DERI+3], g_spinor_field[DUM_DERI+4], (spinor *)(g_spinor_field[2]), (spinor*)(g_spinor_field[3])) ;
+
+
+  s1_norm= square_norm((spinor*)g_spinor_field[DUM_DERI+1], VOLUME, 1);
+  s2_norm= square_norm((spinor*)g_spinor_field[DUM_DERI+2], VOLUME, 1);
+  s3_norm= square_norm((spinor*)g_spinor_field[DUM_DERI+3], VOLUME, 1);
+  s4_norm= square_norm((spinor*)g_spinor_field[DUM_DERI+4], VOLUME, 1);
+
+  printf("norm of the propagator %e\n", s1_norm+s2_norm+s3_norm+s4_norm);
+
+*/
+
+
 
   free_bispinor_field();
   free_scalar_field();
