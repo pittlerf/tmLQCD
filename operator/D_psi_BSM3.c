@@ -1161,6 +1161,9 @@ void D_psi_BSM3_test(bispinor * const P, bispinor * const Q){
     printf("Program aborted\n");
     exit(1);
   }
+
+  clover(0,P, Q, Q, 0.0);
+
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
     update_backward_gauge(g_gauge_field);
@@ -1253,76 +1256,6 @@ void D_psi_BSM3_test(bispinor * const P, bispinor * const Q){
         /* tmpr+=i\gamma_5\tau_3 mu0 *Q */
         if( fabs(mu03_BSM) > 1.e-10 )
           tm3_add(rr, s, 1);
-
-        /* Clover term: using the instruction found
-         * clover_term.c for build the clover term:
-         * r_0 = sw[0][0] s_0 + sw[1][0] s_1 + i mu s_0
-         * r_1 = sw[1][0]^-1 s_0 + sw[2][0] s_1 + i mu s_1
-         * r_2 = sw[0][1] s_2 + sw[1][1] s_3 - i mu s_2
-         * r_3 = sw[1][1]^-1 s_2 + sw[2][1] s_3 - i mu s_3
-         * sw[i][k] should have been already computed using the 
-         * sw_term() routine 
-         */
-
-        /* Adding the clover term
-         * upper two spin components first */
-           
-        
-        su3_vector ALIGN chi;
-        w1=&sw[ix][0][0];
-        w2=w1+2; /*&sw[ix][1][0];*/
-        w3=w1+4; /*&sw[ix][2][0];*/
-
-        _su3_multiply(chi,*w1,s->sp_up.s0);
-        _vector_add_assign(rr->sp_up.s0,chi);
-        _su3_multiply(chi,*w2, s->sp_up.s1);
-        _vector_add_assign(rr->sp_up.s0,chi);
-
-        _su3_inverse_multiply(chi,*w2,s->sp_up.s0);
-        _vector_add_assign(rr->sp_up.s1,chi);
-        _su3_multiply(chi,*w3,s->sp_up.s1);
-        _vector_add_assign(rr->sp_up.s1,chi);
-
-
-        w1=&sw[ix][0][1];
-        w2=w1+2; /*&sw[ix][1][1];*/
-        w3=w1+4; /*&sw[ix][2][1];*/
-        _su3_multiply(chi,*w1,s->sp_up.s2);
-        _vector_add_assign(rr->sp_up.s2,chi);
-        _su3_multiply(chi,*w2, s->sp_up.s3);
-        _vector_add_assign(rr->sp_up.s2,chi);
-
-        _su3_inverse_multiply(chi,*w2,s->sp_up.s2);
-        _vector_add_assign(rr->sp_up.s3,chi);
-        _su3_multiply(chi,*w3,s->sp_up.s3);
-        _vector_add_assign(rr->sp_up.s3,chi);
-
-        /*Same for the down */
-        w1=&sw[ix][0][0];
-        w2=w1+2; /*&sw[ix][1][0];*/
-        w3=w1+4; /*&sw[ix][2][0];*/
-        _su3_multiply(chi,*w1,s->sp_dn.s0);
-        _vector_add_assign(rr->sp_dn.s0,chi);
-        _su3_multiply(chi,*w2, s->sp_dn.s1);
-        _vector_add_assign(rr->sp_dn.s0,chi);
-
-        _su3_inverse_multiply(chi,*w2,s->sp_dn.s0);
-        _vector_add_assign(rr->sp_dn.s1,chi);
-        _su3_multiply(chi,*w3,s->sp_dn.s1);
-        _vector_add_assign(rr->sp_dn.s1,chi);
-
-        w1=&sw[ix][0][1];
-        w2=w1+2; /*&sw[ix][1][1];*/
-        w3=w1+4; /*&sw[ix][2][1];*/
-        _su3_multiply(chi,*w1, s->sp_dn.s2);
-        _vector_add_assign(rr->sp_dn.s2,chi);
-        _su3_multiply(chi,*w2, s->sp_dn.s3);
-        _vector_add_assign(rr->sp_dn.s2,chi);
-
-        _su3_inverse_multiply(chi,*w2,s->sp_dn.s2);
-        _vector_add_assign(rr->sp_dn.s3,chi);
-        _su3_multiply(chi,*w3,s->sp_dn.s3);
-        _vector_add_assign(rr->sp_dn.s3,chi);
 
 	/* the hopping part:
 	 * tmpr += +1/2 \sum_\mu (1-gamma_\mu - \rho_BSM/2*F(x) - \rho_BSM/2*F(x+-\mu))*U_{+-\mu}(x)*Q(x+-\mu)
