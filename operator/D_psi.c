@@ -295,8 +295,53 @@ static inline void p0add(spinor * restrict const tmpr , spinor const * restrict 
 }
 
 
-static inline void m0add(spinor * restrict const tmpr, spinor const * restrict const s, 
-			 su3 const * restrict const u, const _Complex double phase) {
+static inline void p0add_bispinor(bispinor * restrict const tmpr , bispinor const * restrict const s,
+                         su3 const * restrict const u, const _Complex double phase) {
+
+#ifdef OMP
+#define static
+#endif
+  static su3_vector chi, psi;
+#ifdef OMP
+#undef static
+#endif
+
+  _vector_add(psi,s->sp_up.s0, s->sp_up.s2);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_up.s0, psi);
+  _vector_add_assign(tmpr->sp_up.s2, psi);
+
+  _vector_add(psi,s->sp_dn.s0, s->sp_dn.s2);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_dn.s0, psi);
+  _vector_add_assign(tmpr->sp_dn.s2, psi);
+
+
+  _vector_add(psi, s->sp_up.s1, s->sp_up.s3);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_up.s1, psi);
+  _vector_add_assign(tmpr->sp_up.s3, psi);
+
+  _vector_add(psi, s->sp_dn.s1, s->sp_dn.s3);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_dn.s1, psi);
+  _vector_add_assign(tmpr->sp_dn.s3, psi);
+
+
+  return;
+}
+
+
+static inline void m0add(spinor * restrict const tmpr, spinor const * restrict const s,
+                         su3 const * restrict const u, const _Complex double phase) {
 #ifdef OMP
 #define static
 #endif
@@ -318,6 +363,49 @@ static inline void m0add(spinor * restrict const tmpr, spinor const * restrict c
   _complexcjg_times_vector(psi, phase, chi);
   _vector_add_assign(tmpr->s1, psi);
   _vector_sub_assign(tmpr->s3, psi);
+
+  return;
+}
+
+
+static inline void m0add_bispinor(bispinor * restrict const tmpr, bispinor const * restrict const s, 
+			 su3 const * restrict const u, const _Complex double phase) {
+#ifdef OMP
+#define static
+#endif
+  static su3_vector chi, psi;
+#ifdef OMP
+#undef static
+#endif
+
+  _vector_sub(psi, s->sp_up.s0, s->sp_up.s2);
+  _su3_inverse_multiply(chi, (*u), psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_up.s0, psi);
+  _vector_sub_assign(tmpr->sp_up.s2, psi);
+
+  _vector_sub(psi, s->sp_dn.s0, s->sp_dn.s2);
+  _su3_inverse_multiply(chi, (*u), psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_dn.s0, psi);
+  _vector_sub_assign(tmpr->sp_dn.s2, psi);
+
+  _vector_sub(psi, s->sp_up.s1, s->sp_up.s3);
+  _su3_inverse_multiply(chi, (*u), psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_up.s1, psi);
+  _vector_sub_assign(tmpr->sp_up.s3, psi);
+
+  _vector_sub(psi, s->sp_dn.s1, s->sp_dn.s3);
+  _su3_inverse_multiply(chi, (*u), psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_dn.s1, psi);
+  _vector_sub_assign(tmpr->sp_dn.s3, psi);
+
 
   return;
 }
@@ -349,6 +437,49 @@ static inline void p1add(spinor * restrict const tmpr, spinor const * restrict c
   return;
 }
 
+static inline void p1add_bispinor(bispinor * restrict const tmpr, bispinor const * restrict const s,
+                         su3 const * restrict const u, const _Complex double phase) {
+#ifdef OMP
+#define static
+#endif
+  static su3_vector chi, psi;
+#ifdef OMP
+#undef static
+#endif
+
+  _vector_i_add(psi,s->sp_up.s0,s->sp_up.s3);
+  _su3_multiply(chi,(*u),psi);
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_up.s0, psi);
+  _vector_i_sub_assign(tmpr->sp_up.s3, psi);
+
+  _vector_i_add(psi, s->sp_up.s1, s->sp_up.s2);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_up.s1, psi);
+  _vector_i_sub_assign(tmpr->sp_up.s2, psi);
+
+  _vector_i_add(psi,s->sp_dn.s0,s->sp_dn.s3);
+  _su3_multiply(chi,(*u),psi);
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_dn.s0, psi);
+  _vector_i_sub_assign(tmpr->sp_dn.s3, psi);
+
+  _vector_i_add(psi, s->sp_dn.s1, s->sp_dn.s2);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_dn.s1, psi);
+  _vector_i_sub_assign(tmpr->sp_dn.s2, psi);
+
+  return;
+}
+
+
+
 static inline void m1add(spinor * restrict const tmpr, spinor const * restrict const s, 
 			 su3 const * restrict const u, const _Complex double phase) {
 #ifdef OMP
@@ -375,6 +506,50 @@ static inline void m1add(spinor * restrict const tmpr, spinor const * restrict c
 
   return;
 }
+
+static inline void m1add_bispinor(bispinor * restrict const tmpr, bispinor const * restrict const s,
+                         su3 const * restrict const u, const _Complex double phase) {
+#ifdef OMP
+#define static
+#endif
+  static su3_vector chi, psi;
+#ifdef OMP
+#undef static
+#endif
+
+  _vector_i_sub(psi,s->sp_up.s0, s->sp_up.s3);
+  _su3_inverse_multiply(chi,(*u), psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_up.s0, psi);
+  _vector_i_add_assign(tmpr->sp_up.s3, psi);
+
+  _vector_i_sub(psi, s->sp_up.s1, s->sp_up.s2);
+  _su3_inverse_multiply(chi, (*u), psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_up.s1, psi);
+  _vector_i_add_assign(tmpr->sp_up.s2, psi);
+
+  _vector_i_sub(psi,s->sp_dn.s0, s->sp_dn.s3);
+  _su3_inverse_multiply(chi,(*u), psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_dn.s0, psi);
+  _vector_i_add_assign(tmpr->sp_dn.s3, psi);
+
+  _vector_i_sub(psi, s->sp_dn.s1, s->sp_dn.s2);
+  _su3_inverse_multiply(chi, (*u), psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_dn.s1, psi);
+  _vector_i_add_assign(tmpr->sp_dn.s2, psi);
+
+
+  return;
+}
+
+
 
 static inline void p2add(spinor * restrict const tmpr, spinor const * restrict const s, 
 			 su3 const * restrict const u, const _Complex double phase) {
@@ -404,6 +579,49 @@ static inline void p2add(spinor * restrict const tmpr, spinor const * restrict c
   return;
 }
 
+static inline void p2add_bispinor(bispinor * restrict const tmpr, bispinor const * restrict const s,
+                         su3 const * restrict const u, const _Complex double phase) {
+#ifdef OMP
+#define static
+#endif
+  static su3_vector chi, psi;
+#ifdef OMP
+#undef static
+#endif
+
+  _vector_add(psi,s->sp_up.s0,s->sp_up.s3);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_up.s0, psi);
+  _vector_add_assign(tmpr->sp_up.s3, psi);
+
+  _vector_sub(psi,s->sp_up.s1,s->sp_up.s2);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_up.s1, psi);
+  _vector_sub_assign(tmpr->sp_up.s2, psi);
+
+
+  _vector_add(psi,s->sp_dn.s0,s->sp_dn.s3);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_dn.s0, psi);
+  _vector_add_assign(tmpr->sp_dn.s3, psi);
+
+  _vector_sub(psi,s->sp_dn.s1,s->sp_dn.s2);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_dn.s1, psi);
+  _vector_sub_assign(tmpr->sp_dn.s2, psi);
+
+  return;
+}
+
+
 static inline void m2add(spinor * restrict const tmpr, spinor const * restrict const s, 
 			 su3 const * restrict const u, const _Complex double phase) {
 #ifdef OMP
@@ -430,6 +648,51 @@ static inline void m2add(spinor * restrict const tmpr, spinor const * restrict c
 
   return;
 }
+
+
+static inline void m2add_bispinor(bispinor * restrict const tmpr, bispinor const * restrict const s,
+                         su3 const * restrict const u, const _Complex double phase) {
+#ifdef OMP
+#define static
+#endif
+  static su3_vector chi, psi;
+#ifdef OMP
+#undef static
+#endif
+
+  _vector_sub(psi, s->sp_up.s0, s->sp_up.s3);
+  _su3_inverse_multiply(chi, (*u), psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_up.s0, psi);
+  _vector_sub_assign(tmpr->sp_up.s3, psi);
+
+  _vector_add(psi, s->sp_up.s1, s->sp_up.s2);
+  _su3_inverse_multiply(chi, (*u),psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_up.s1, psi);
+  _vector_add_assign(tmpr->sp_up.s2, psi);
+
+
+  _vector_sub(psi, s->sp_dn.s0, s->sp_dn.s3);
+  _su3_inverse_multiply(chi, (*u), psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_dn.s0, psi);
+  _vector_sub_assign(tmpr->sp_dn.s3, psi);
+
+  _vector_add(psi, s->sp_dn.s1, s->sp_dn.s2);
+  _su3_inverse_multiply(chi, (*u),psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_dn.s1, psi);
+  _vector_add_assign(tmpr->sp_dn.s2, psi);
+
+
+  return;
+}
+
 
 static inline void p3add(spinor * restrict const tmpr, spinor const * restrict const s, 
 			 su3 const * restrict const u, const _Complex double phase) {
@@ -458,6 +721,49 @@ static inline void p3add(spinor * restrict const tmpr, spinor const * restrict c
   return;
 }
 
+static inline void p3add_bispinor(bispinor * restrict const tmpr, bispinor const * restrict const s,
+                         su3 const * restrict const u, const _Complex double phase) {
+#ifdef OMP
+#define static
+#endif
+  static su3_vector chi, psi;
+#ifdef OMP
+#undef static
+#endif
+
+  _vector_i_add(psi, s->sp_up.s0, s->sp_up.s2);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_up.s0, psi);
+  _vector_i_sub_assign(tmpr->sp_up.s2, psi);
+
+  _vector_i_sub(psi,s->sp_up.s1, s->sp_up.s3);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_up.s1, psi);
+  _vector_i_add_assign(tmpr->sp_up.s3, psi);
+
+  _vector_i_add(psi, s->sp_dn.s0, s->sp_dn.s2);
+  _su3_multiply(chi, (*u), psi);
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_dn.s0, psi);
+  _vector_i_sub_assign(tmpr->sp_dn.s2, psi);
+
+  _vector_i_sub(psi,s->sp_dn.s1, s->sp_dn.s3);
+  _su3_multiply(chi, (*u), psi); 
+
+  _complex_times_vector(psi, phase, chi);
+  _vector_add_assign(tmpr->sp_dn.s1, psi);
+  _vector_i_add_assign(tmpr->sp_dn.s3, psi);
+
+
+  return;
+}
+
+
 static inline void m3addandstore(spinor * restrict const r, spinor const * restrict const s, 
 				 su3 const * restrict const u, const _Complex double phase,
          spinor const * restrict const tmpr) {
@@ -485,6 +791,51 @@ static inline void m3addandstore(spinor * restrict const r, spinor const * restr
 
   return;
 }
+
+
+static inline void m3addandstore_bispinor(bispinor * restrict const r, bispinor const * restrict const s,
+                                 su3 const * restrict const u, const _Complex double phase,
+         bispinor const * restrict const tmpr) {
+#ifdef OMP
+#define static
+#endif
+  static su3_vector chi, psi;
+#ifdef OMP
+#undef static
+#endif
+
+  _vector_i_sub(psi,s->sp_up.s0, s->sp_up.s2);
+  _su3_inverse_multiply(chi, (*u), psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add(r->sp_up.s0, tmpr->sp_up.s0, psi);
+  _vector_i_add(r->sp_up.s2, tmpr->sp_up.s2, psi);
+
+  _vector_i_add(psi, s->sp_up.s1, s->sp_up.s3);
+  _su3_inverse_multiply(chi, (*u), psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add(r->sp_up.s1, tmpr->sp_up.s1, psi);
+  _vector_i_sub(r->sp_up.s3, tmpr->sp_up.s3, psi);
+
+  _vector_i_sub(psi,s->sp_dn.s0, s->sp_dn.s2);
+  _su3_inverse_multiply(chi, (*u), psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add(r->sp_dn.s0, tmpr->sp_dn.s0, psi);
+  _vector_i_add(r->sp_dn.s2, tmpr->sp_dn.s2, psi);
+
+  _vector_i_add(psi, s->sp_dn.s1, s->sp_dn.s3);
+  _su3_inverse_multiply(chi, (*u), psi);
+
+  _complexcjg_times_vector(psi, phase, chi);
+  _vector_add(r->sp_dn.s1, tmpr->sp_dn.s1, psi);
+  _vector_i_sub(r->sp_dn.s3, tmpr->sp_dn.s3, psi);
+
+
+  return;
+}
+
 
 /* this is the hopping part only */
 static inline void local_H(spinor * const rr, spinor const * const s, su3 const * restrict u, int * _idx, spinor * const restrict tmpr) {
@@ -1296,6 +1647,117 @@ void D_psi(spinor * const P, spinor * const Q){
   } /* OpenMP closing brace */
 #endif
 }
+
+void D_psi_bispinor(bispinor * const P, bispinor * const Q){
+  if(P==Q){
+    printf("Error in D_psi (operator.c):\n");
+    printf("Arguments must be different spinor fields\n");
+    printf("Program aborted\n");
+    exit(1);
+  }
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+      update_backward_gauge(g_gauge_field);
+  }
+#endif
+# if defined MPI
+  generic_exchange(Q, sizeof(bispinor));
+# endif
+
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
+  int ix,iy;
+  su3 * restrict up,* restrict um;
+  bispinor * restrict rr;
+  bispinor const * restrict s;
+  bispinor const * restrict sp;
+  bispinor const * restrict sm;
+  _Complex double rho1, rho2;
+  bispinor tmpr;
+
+  rho1 = 0.5*(1. + g_mu * I);
+  rho2 = conj(rho1);
+
+  /************************ loop over all lattice sites *************************/
+
+#ifdef OMP
+#pragma omp for
+#endif
+  for (ix=0;ix<VOLUME;ix++)
+  {
+    rr  = (bispinor *) P +ix;
+    s  = (bispinor *) Q +ix;
+
+    _bispinor_null( tmpr);
+
+    _complex_times_vector(tmpr.sp_up.s0, rho1, s->sp_up.s0);
+    _complex_times_vector(tmpr.sp_up.s1, rho1, s->sp_up.s1);
+    _complex_times_vector(tmpr.sp_up.s2, rho2, s->sp_up.s2);
+    _complex_times_vector(tmpr.sp_up.s3, rho2, s->sp_up.s3);
+
+    _complex_times_vector(tmpr.sp_dn.s0, rho1, s->sp_dn.s0);
+    _complex_times_vector(tmpr.sp_dn.s1, rho1, s->sp_dn.s1);
+    _complex_times_vector(tmpr.sp_dn.s2, rho2, s->sp_dn.s2);
+    _complex_times_vector(tmpr.sp_dn.s3, rho2, s->sp_dn.s3);
+
+
+
+    /******************************* direction +0 *********************************/
+    iy=g_iup[ix][0];
+    sp = (bispinor *) Q +iy;
+    up=&g_gauge_field[ix][0];
+    p0add_bispinor(&tmpr, sp, up, 0.5*phase_0);
+
+    /******************************* direction -0 *********************************/
+    iy=g_idn[ix][0];
+    sm  = (bispinor *) Q +iy;
+    um=&g_gauge_field[iy][0];
+    m0add_bispinor(&tmpr, sm, um, 0.5*phase_0);
+
+    /******************************* direction +1 *********************************/
+    iy=g_iup[ix][1];
+    sp = (bispinor *) Q +iy;
+    up=&g_gauge_field[ix][1];
+    p1add_bispinor(&tmpr, sp, up, 0.5*phase_1);
+
+    /******************************* direction -1 *********************************/
+    iy=g_idn[ix][1];
+    sm = (bispinor *) Q +iy;
+    um=&g_gauge_field[iy][1];
+    m1add_bispinor(&tmpr, sm, um, 0.5*phase_1);
+
+    /******************************* direction +2 *********************************/
+    iy=g_iup[ix][2];
+    sp = (bispinor *) Q +iy;
+    up=&g_gauge_field[ix][2];
+    p2add_bispinor(&tmpr, sp, up, 0.5*phase_2);
+
+    /******************************* direction -2 *********************************/
+    iy=g_idn[ix][2];
+    sm = (bispinor *) Q +iy;
+    um=&g_gauge_field[iy][2];
+    m2add_bispinor(&tmpr, sm, um, 0.5*phase_2);
+
+    /******************************* direction +3 *********************************/
+    iy=g_iup[ix][3];
+    sp = (bispinor *) Q +iy;
+    up=&g_gauge_field[ix][3];
+    p3add_bispinor(&tmpr, sp, up, 0.5*phase_3);
+
+    /******************************* direction -3 *********************************/
+    iy=g_idn[ix][3];
+    sm = (bispinor *) Q +iy;
+    um=&g_gauge_field[iy][3];
+    m3addandstore_bispinor(rr, sm, um, 0.5*phase_3, &tmpr);
+  }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+}
+
 
 #endif
 

@@ -440,11 +440,8 @@ int main(int argc,char *argv[])
 
 #endif
   init_sw_fields(VOLUME);
-  printf("csw bsm %e\n", csw_BSM);
-  printf("kappa_bsm %e\n", kappa_BSM);
-  g_mu=0;
-  g_kappa=0;
-  //sw_term( (const su3**) g_smeared_gauge_field, kappa_BSM, csw_BSM);
+  g_mu=0.0;
+  g_kappa=10.0;
 
         
 
@@ -521,14 +518,14 @@ int main(int argc,char *argv[])
 #endif
 /* Testing D_psi_BSM3 Dirac operator gives the same results as the usual 
  * clover wilson operator at rho=eta=0 */
- #endif
-  printf("Testing with the original BSM operator\n"); 
-  eta_BSM=0;
-  rho_BSM=0;
-  kappa_BSM=0;
-  csw_BSM=0;
+#endif
+
+  printf("# [tmlqcd-BSM test] Testing with the original BSM operator (implemented by Carsten) \n"); 
+  eta_BSM=0.5;
+  rho_BSM=0.5;
+  kappa_BSM=0;/* We set to zero, original BSM operator is naive, without the Wilson term */
+  csw_BSM=0;  /* Also original BSM operator is without the clover term */
   r0_BSM=0;
-  rho_BSM=1.;
   sw_term( (const su3**) g_smeared_gauge_field, kappa_BSM, csw_BSM);
 
   random_spinor_field_lexic( (spinor*)(g_bispinor_field[4]), reproduce_randomnumber_flag, RN_GAUSS);
@@ -540,19 +537,18 @@ int main(int argc,char *argv[])
 #endif
 
 
-  printf("Testing the new BSM operator with respect to the old one at kappa_BSM=0, r0_BSM=0\n");
+  printf("# [tmlqcd-BSM test] Testing the new BSM operator with respect to the old one at kappa_BSM=0, r0_BSM=0\n");
 
  // print L2-norm of w source:
   squarenorm_w = square_norm((spinor*)g_bispinor_field[4], 2*VOLUME, 1);
   if(g_proc_id==0) {
-   printf("\n# input source vector for application D_BSM3: square norm of the source: ||w||^2 = %e\n\n", squarenorm_w);
+   printf("# [tmlqcd-BSM test] input source vector for application D_BSM3: square norm of the source: ||w||^2 = %e\n\n", squarenorm_w);
    fflush(stdout);
   }
 
   // Feri's operator
 
-
-  printf("Now comes Feri's operator\n");
+  printf("# [tmlqcd-BSM test] Now comes Feri's operator\n");
 #ifdef MPI
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
@@ -567,7 +563,7 @@ int main(int argc,char *argv[])
 #endif
   squarenorm_w = square_norm((spinor*)g_bispinor_field[2], 2*VOLUME, 1);
   if(g_proc_id==0) {
-   printf("\n# square norm of the multiplication results with D_BSM3: ||w||^2 = %e\n\n", squarenorm_w);
+   printf("# [tmlqcd-BSM test] square norm of the multiplication results with D_BSM3: ||w||^2 = %e\n\n", squarenorm_w);
    fflush(stdout);
   }
 
@@ -576,11 +572,11 @@ int main(int argc,char *argv[])
 #endif
   squarenorm_w = square_norm((spinor*)g_bispinor_field[4], 2*VOLUME, 1);
   if(g_proc_id==0) {
-   printf("\n# square norm of the source: ||w||^2 = %e\n\n", squarenorm_w);
+   printf("# [tmlqcd-BSM test] square norm of the source for D_psi__BSM : ||w||^2 = %e\n\n", squarenorm_w);
    fflush(stdout);
   }
 
-  printf("Now comes Carsten' operator\n");
+  printf("# [tmlqcd-BSM test] Now comes Carsten' operator\n");
   t_FP = 0.0;
   t1 = gettime();
   D_psi_BSM(g_bispinor_field[5], g_bispinor_field[4]);
@@ -592,9 +588,85 @@ int main(int argc,char *argv[])
 #endif
   squarenorm_w = square_norm((spinor*)g_bispinor_field[5], 2*VOLUME, 1);
   if(g_proc_id==0) {
+   printf("# [tmlqcd-BSM test] square norm of the multiplication results with D_BSM:  ||w||^2 = %e\n\n", squarenorm_w);
+   fflush(stdout);
+  }
+
+  assign_diff_mul((spinor *)g_bispinor_field[5], (spinor *)g_bispinor_field[2],1.0,  2*VOLUME ); 
+
+  squarenorm_w = square_norm((spinor*)g_bispinor_field[5], 2*VOLUME, 1);
+  if(g_proc_id==0) {
+   printf("# [tmlqcd-BSM test] square norm of the difference D_psi_BSM - D_psi_BSM3:  ||w||^2 = %e\n\n", squarenorm_w);
+   fflush(stdout);
+  }
+
+ // print L2-norm of w source:
+  bispinor_assign(g_bispinor_field[5],g_bispinor_field[4], VOLUME);
+  if(g_proc_id==0) {
+   printf("# [tmlqcd-BSM test] Now wes test the compatibility with the Wilson operator implemented, BSM parameters zero(mu,rho,eta), r0_BSM=1\n");
+   fflush(stdout);
+  }
+
+  squarenorm_w = square_norm((spinor*)g_bispinor_field[4], 2*VOLUME, 1);
+  if(g_proc_id==0) {
+   printf("#  [tmlqcd-BSM test] input source vector for application D_BSM3: square norm of the source: ||w||^2 = %e\n\n", squarenorm_w);
+   fflush(stdout);
+  }
+  // Feri's operator
+
+  r0_BSM=1;
+  m0_BSM=0;
+  mu03_BSM=0;
+  eta_BSM=0.;
+  rho_BSM=0.;
+  printf(" [tmlqcd-BSM test] Now comes Feri's operator\n");
+#ifdef MPI
+  MPI_Barrier(MPI_COMM_WORLD);
+#endif
+  t_FP = 0.0;
+  t1 = gettime();
+  D_psi_BSM3(g_bispinor_field[2], g_bispinor_field[4]);
+  t1 = gettime() - t1;
+#ifdef MPI
+  MPI_Allreduce (&t1, &t_FP, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+#else
+  t_FP = t1;
+#endif
+  squarenorm_w = square_norm((spinor*)g_bispinor_field[2], 2*VOLUME, 1);
+  if(g_proc_id==0) {
+   printf("#  [tmlqcd-BSM test] square norm of the multiplication results with D_BSM3: ||w||^2 = %e\n\n", squarenorm_w);
+   fflush(stdout);
+  }
+
+
+  squarenorm_w = square_norm((spinor*)g_bispinor_field[4], 2*VOLUME, 1);
+  if(g_proc_id==0) {
+   printf("#  [tmlqcd-BSM test] input source vector for application D_psi: square norm of the source: ||w||^2 = %e\n\n", squarenorm_w);
+   fflush(stdout);
+  }
+
+
+  printf("# [tmlqcd-BSM test] Now comes Carsten' operator\n");
+
+  D_psi_bispinor((bispinor *)(g_bispinor_field[3]), (bispinor *)(g_bispinor_field[4]));
+
+  squarenorm_w = square_norm((spinor*)g_bispinor_field[3], 2*VOLUME, 1);
+  if(g_proc_id==0) {
    printf("\n# # square norm of the multiplication results with D_BSM3:  ||w||^2 = %e\n\n", squarenorm_w);
    fflush(stdout);
   }
+
+  assign_diff_mul((spinor *)g_bispinor_field[3], (spinor *)g_bispinor_field[2],1.0,  2*VOLUME );
+
+  squarenorm_w = square_norm((spinor*)g_bispinor_field[3], 2*VOLUME, 1);
+  if(g_proc_id==0) {
+   printf("# [tmlqcd-BSM test] square norm of the difference D_psi_BSM - D_psi_BSM3:  ||w||^2 = %e\n\n", squarenorm_w);
+   fflush(stdout);
+  }
+#if 0
+
+
+
 
 
 //  Msw_psi((spinor *)(g_bispinor_field[5])+VOLUME, (spinor*)(g_bispinor_field[4])+VOLUME);
@@ -623,7 +695,7 @@ int main(int argc,char *argv[])
   s4_norm= square_norm((spinor*)g_spinor_field[DUM_DERI+4], VOLUME, 1);
 
   printf("norm of the propagator %e\n", s1_norm+s2_norm+s3_norm+s4_norm);
-
+#endif
 
 
   free_bispinor_field();

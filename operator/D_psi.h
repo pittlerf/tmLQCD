@@ -24,6 +24,8 @@
 #include "block.h"
 
 void D_psi(spinor * const P, spinor * const Q);
+void D_psi_bispinor(bispinor * const P, bispinor * const Q);
+
 void D_psi_prec(spinor * const P, spinor * const Q);
 void Block_D_psi(block * blk, spinor * const rr, spinor * const s);
 void Block_H_psi(block * blk, spinor * const rr, spinor * const s, const int eo);

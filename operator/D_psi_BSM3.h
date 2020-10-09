@@ -24,6 +24,7 @@
 
 //#include "block.h"
 
+void D_psi_BSM3_test(bispinor * const P, bispinor * const Q);
 void D_psi_BSM3(bispinor * const P, bispinor * const Q);
 void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q);
 void Q2_psi_BSM3(bispinor * const P, bispinor * const Q);
