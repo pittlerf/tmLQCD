@@ -23,6 +23,8 @@
 #define _D_PSI_BSM3_H
 
 //#include "block.h"
+void init_D_psi_BSM3(void);
+void free_D_psi_BSM3(void);
 
 void D_psi_BSM3_test(bispinor * const P, bispinor * const Q);
 void D_psi_BSM3(bispinor * const P, bispinor * const Q);
