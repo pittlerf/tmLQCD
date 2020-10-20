@@ -1,5 +1,5 @@
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+# include <tmlqcd_config.h>
 #endif
 #ifndef _UTILS_H
 #define _UTILS_H

@@ -26,7 +26,7 @@
  *******************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -248,6 +248,11 @@ void assign_spinor_to_complex(_Complex double * const R, spinor * const S, const
   return;
 }
 
+void assign_32(spinor32 * const R, spinor32 * const S, const int N)
+{
+  memcpy(R, S, N*sizeof(spinor32));
+  return;
+}
 
 #ifdef WITHLAPH
 void assign_su3vect(su3_vector * const R, su3_vector * const S, const int N)
