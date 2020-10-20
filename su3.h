@@ -182,6 +182,17 @@ typedef double scalar;
   (r).c1 -= I*(s).c1; \
   (r).c2 -= I*(s).c2;
 
+#define _vector_i_add_assign(r,s)               \
+  (r).c0 += I * (s).c0;                 \
+  (r).c1 += I * (s).c1;                 \
+  (r).c2 += I * (s).c2;
+
+
+#define _vector_i_sub_assign(r,s)               \
+  (r).c0 -= I * (s).c0;                         \
+  (r).c1 -= I * (s).c1;                         \
+  (r).c2 -= I * (s).c2;
+
 
 #define _vector_sub_i_mul(r,c,s) \
   (r).c0 -= I*(c)*(s).c0; \
