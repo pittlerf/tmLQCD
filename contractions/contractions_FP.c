@@ -19,7 +19,7 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #include"lime.h"
 #include <stdlib.h>
@@ -28,7 +28,7 @@
 #include <math.h>
 #include <errno.h>
 #include <time.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
 #include "global.h"
@@ -223,7 +223,7 @@ void density_density_1234_s0s0( bispinor ** propfields, int type_1234, _Complex 
  
 //Gather the results from all nodes to complete the trace in space
 
-#if defined MPI
+#if defined TM_USE_MPI
          for (i=0; i<8*T_global; ++i){
             _Complex double tmp;
             MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
@@ -393,7 +393,7 @@ void density_density_1234( bispinor ** propfields, int type_1234, _Complex doubl
             } //End of trace space
 
 //Gather the results from all nodes to complete the trace in space
-#if defined MPI
+#if defined TM_USE_MPI
             for (i=0; i<8*T_global; ++i){
                _Complex double tmp;
                MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
@@ -524,7 +524,7 @@ void giancarlodensity( bispinor ** propfields, int tau3, _Complex double  **resu
          trace_in_space(spacetrace,colortrace,ix);
        } //End of trace space
 //Gather the results from all nodes to complete the trace in space
-#if defined MPI
+#if defined TM_USE_MPI
        for (i=0; i<8*T_global; ++i){
           _Complex double tmp;
           MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
@@ -677,7 +677,7 @@ void density_ptau_density_vector( bispinor **propfields, int type_12,_Complex do
          } //End of trace space
 
 //Gather the results from all nodes to complete the trace in space
-#if defined MPI
+#if defined TM_USE_MPI
          for (i=0; i<8*T_global; ++i){
            _Complex double tmp;
            MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
@@ -843,7 +843,7 @@ void density_density_1234_sxsx( bispinor ** propfields, int type_1234, _Complex 
          } //End of trace space
 
 //Gather the results from all nodes to complete the trace in space
-#if defined MPI
+#if defined TM_USE_MPI
          for (i=0; i<8*T_global; ++i){
            _Complex double tmp;
            MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
@@ -916,7 +916,7 @@ void vector_axial_current_density_1234( bispinor ** propfields, int type_1234,in
    _Complex double *flavortrace;
    int type;
 
-#if defined MPI
+#if defined TM_USE_MPI
    int count;
    MPI_Status  statuses[8];
    MPI_Request *request;
@@ -955,7 +955,7 @@ void vector_axial_current_density_1234( bispinor ** propfields, int type_1234,in
    }
 
 //Doing the neccessary communication
-#if defined MPI
+#if defined TM_USE_MPI
    for (s1=spinorstart; s1<spinorend; ++s1)
       for (c1=0; c1<3; ++c1)
          for (f1=0; f1<2; ++f1){
@@ -1016,7 +1016,7 @@ void vector_axial_current_density_1234( bispinor ** propfields, int type_1234,in
          trace_in_space(spacetrace,colortrace,ix);
        } //End of trace space
 //Gather the results from all nodes to complete the trace in space
-#if defined MPI
+#if defined TM_USE_MPI
        for (i=0; i<8*T_global; ++i){
          _Complex double tmp;
         MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
@@ -1080,7 +1080,7 @@ void vector_2_psueodoscalar_1_12( bispinor ** propfields, int type_12,_Complex d
    _Complex double *flavortrace;
    int type;
 
-#if defined MPI
+#if defined TM_USE_MPI
    int count;
    MPI_Status  statuses[8];
    MPI_Request *request;
@@ -1108,7 +1108,7 @@ void vector_2_psueodoscalar_1_12( bispinor ** propfields, int type_12,_Complex d
    spinorend  =4;
 
 //Doing the neccessary communication
-#if defined MPI
+#if defined TM_USE_MPI
    for (s1=spinorstart; s1<spinorend; ++s1)
       for (c1=0; c1<3; ++c1)
          for (f1=0; f1<2; ++f1){
@@ -1172,7 +1172,7 @@ void vector_2_psueodoscalar_1_12( bispinor ** propfields, int type_12,_Complex d
          trace_in_space(spacetrace,colortrace,ix);
        } //End of trace space
 //Gather the results from all nodes to complete the trace in space
-#if defined MPI
+#if defined TM_USE_MPI
        for (i=0; i<8*T_global; ++i){
          _Complex double tmp;
         MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
@@ -1316,7 +1316,7 @@ void vector_density_density_1234( bispinor ** propfields, int type_1234,int taud
 
        } 
 //Gather the results from all nodes to complete the trace in space
-#if defined MPI
+#if defined TM_USE_MPI
        for (i=0; i<8*T_global; ++i){
          _Complex double tmp;
         MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
@@ -1355,7 +1355,7 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
    int spinorstart=0, spinorend=4;
    su3 * restrict upm;
    bispinor running;
-#if defined MPI
+#if defined TM_USE_MPI
    int count;
    MPI_Status  statuses[8];
    MPI_Request *request;
@@ -1398,7 +1398,7 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
 
 
 //Doing the neccessary communication
-#if defined MPI
+#if defined TM_USE_MPI
    for (s1=spinorstart; s1<spinorend; ++s1)
       for (c1=0; c1<3; ++c1)
          for (f1=0; f1<2; ++f1){
@@ -1528,7 +1528,7 @@ void naivedirac_current_density_12ab( bispinor ** propfields, int type_12, int t
             } //End of trace space
 
 //Gather the results from all nodes to complete the trace in space
-#if defined MPI
+#if defined TM_USE_MPI
             for (i=0; i<8*T_global; ++i){
                _Complex double tmp;
                MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
@@ -1597,7 +1597,7 @@ void vector_axial_current_current_1234( bispinor ** propfields_source_zero, bisp
    int type;
    su3 untminusonet;
 
-#if defined MPI
+#if defined TM_USE_MPI
    int count;
    MPI_Status  statuses[8];
    MPI_Request *request;
@@ -1614,7 +1614,7 @@ void vector_axial_current_current_1234( bispinor ** propfields_source_zero, bisp
    untminusonet.c21=g_gauge_field[g_idn[0][TUP]][TUP].c21;
    untminusonet.c22=g_gauge_field[g_idn[0][TUP]][TUP].c22;
 
-#if defined MPI
+#if defined TM_USE_MPI
    MPI_Bcast(&untminusonet.c00, 1, MPI_DOUBLE_COMPLEX, 0, g_cart_grid);
    MPI_Bcast(&untminusonet.c01, 1, MPI_DOUBLE_COMPLEX, 0, g_cart_grid);
    MPI_Bcast(&untminusonet.c02, 1, MPI_DOUBLE_COMPLEX, 0, g_cart_grid);
@@ -1647,7 +1647,7 @@ void vector_axial_current_current_1234( bispinor ** propfields_source_zero, bisp
 
 
 //Doing the neccessary communication
-#if defined MPI
+#if defined TM_USE_MPI
    for (s1=spinorstart; s1<spinorend; ++s1)
       for (c1=0; c1<3; ++c1)
          for (f1=0; f1<2; ++f1){
@@ -1743,7 +1743,7 @@ void vector_axial_current_current_1234( bispinor ** propfields_source_zero, bisp
          trace_in_space(spacetrace,colortrace,ix);
        } //End of trace space
 //Gather the results from all nodes to complete the trace in space
-#if defined MPI
+#if defined TM_USE_MPI
        for (i=0; i<8*T_global; ++i){
          _Complex double tmp;
         MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);

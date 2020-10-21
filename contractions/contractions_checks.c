@@ -19,7 +19,7 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #include"lime.h"
 #include <stdlib.h>
@@ -28,7 +28,7 @@
 #include <math.h>
 #include <errno.h>
 #include <time.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
 #include "global.h"
@@ -636,7 +636,7 @@ void wilsoncurrent31a_petros( bispinor **propfields )
     int ix;
 
 // Doing the neccessary communication
-#if defined MPI
+#if defined TM_USE_MPI
    int s1,c1,f1;
    int count;
    MPI_Status  statuses[8];
@@ -679,7 +679,7 @@ void wilsoncurrent31a_petros( bispinor **propfields )
     for (ix=0;ix<4;++ix)
        phimatrixspatialnull[ix]=phimatrix[ix][0];
 
-#if defined MPI
+#if defined TM_USE_MPI
     for (ix=0;ix<4;++ix)
        MPI_Bcast(&phimatrixspatialnull[ix], 1, MPI_DOUBLE_COMPLEX, 0, g_cart_grid);
 #endif
@@ -770,7 +770,7 @@ void wilsoncurrent31a_petros( bispinor **propfields )
                                      + 1.*phimatrixspatialnull[1*2+1]*C1111[ix]*phimatrix[1*2+1][ix];
 
     }
-#if defined MPI
+#if defined TM_USE_MPI
     for (ix=0; ix<T_global; ++ix){
        _Complex double tmp;
        MPI_Allreduce(&final_corr[ix], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
@@ -860,7 +860,7 @@ void density_density_1234_petros( bispinor **propfields )
     for (ix=0;ix<4;++ix)
        phimatrixspatialnull[ix]=phimatrix[ix][0];
 
-#if defined MPI
+#if defined TM_USE_MPI
     for (ix=0;ix<4;++ix){
        MPI_Bcast(&phimatrixspatialnull[ix], 1, MPI_DOUBLE_COMPLEX, 0, g_cart_grid);
     }
@@ -953,7 +953,7 @@ void density_density_1234_petros( bispinor **propfields )
                                      + 1.*phimatrixspatialnull[1*2+1]*C1111[ix]*conj(phimatrix[1*2+1][ix]);
 
     }
-#if defined MPI
+#if defined TM_USE_MPI
     for (ix=0; ix<T_global; ++ix){
        _Complex double tmp;
        MPI_Allreduce(&final_corr[ix], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
@@ -1044,7 +1044,7 @@ void diraccurrent1a_petros( bispinor **propfields )
     for (ix=0;ix<4;++ix)
        phimatrixspatialnull[ix]=phimatrix[ix][0];
 
-#if defined MPI
+#if defined TM_USE_MPI
     for (ix=0;ix<4;++ix){
        MPI_Bcast(&phimatrixspatialnull[ix], 1, MPI_DOUBLE_COMPLEX, 0, g_cart_grid);
     }
@@ -1105,7 +1105,7 @@ void diraccurrent1a_petros( bispinor **propfields )
                                      + 1.*phimatrixspatialnull[1*2+1]*C1111[ix];
 
     }
-#if defined MPI
+#if defined TM_USE_MPI
     for (ix=0; ix<T_global; ++ix){
        _Complex double tmp;
        MPI_Allreduce(&final_corr[ix], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
@@ -1146,7 +1146,7 @@ void diraccurrent1a_petros( bispinor **propfields )
 
 void wilsoncurrent61a_petros( bispinor **propfields )
 {
-#if defined MPI
+#if defined TM_USE_MPI
     int count;
     MPI_Status  statuses[8];
     MPI_Request *request;
@@ -1200,7 +1200,7 @@ void wilsoncurrent61a_petros( bispinor **propfields )
     for (ix=0;ix<4;++ix)
        phimatrixspatialnull[ix]=phimatrix[ix][0];
 
-#if defined MPI
+#if defined TM_USE_MPI
     for (ix=0; ix<4; ++ix){
       count=0;
       generic_exchange_direction_nonblocking( phimatrix[ix], sizeof(_Complex double), TDOWN   , request, &count );
@@ -1299,7 +1299,7 @@ void wilsoncurrent61a_petros( bispinor **propfields )
                                      + 1.*phimatrixspatialnull[1*2+1]*C1111[ix]*conj(phimatrix[1*2+1][g_idn[ix][TUP]]);
 
     }
-#if defined MPI
+#if defined TM_USE_MPI
     for (ix=0; ix<T_global; ++ix){
        _Complex double tmp;
        MPI_Allreduce(&final_corr[ix], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
@@ -1335,7 +1335,7 @@ void wilsoncurrent61a_petros( bispinor **propfields )
        free(phimatrix[ix]);
     free(phimatrix);
     free(final_corr);
-#if defined MPI
+#if defined TM_USE_MPI
     free(request);
 #endif
 
@@ -1344,7 +1344,7 @@ void wilsoncurrent61a_petros( bispinor **propfields )
 
 void wilsoncurrent62a_petros( bispinor **propfields )
 {
-#if defined MPI
+#if defined TM_USE_MPI
     int count;  
     MPI_Status  statuses[8];
     MPI_Request *request; 
@@ -1398,7 +1398,7 @@ void wilsoncurrent62a_petros( bispinor **propfields )
     for (ix=0;ix<4;++ix)
        phimatrixspatialnull[ix]=phimatrix[ix][0];
 
-#if defined MPI
+#if defined TM_USE_MPI
     for (ix=0; ix<4; ++ix){
       count=0;
       generic_exchange_direction_nonblocking( phimatrix[ix], sizeof(_Complex double), TDOWN   , request, &count );
@@ -1441,7 +1441,7 @@ void wilsoncurrent62a_petros( bispinor **propfields )
        trace_in_spinor_and_color62a(C1111,propfields,ix,1,1,1,1);
 
     }
-#if defined MPI
+#if defined TM_USE_MPI
     count=0;
     generic_exchange_direction_nonblocking( C0000, sizeof(_Complex double), TDOWN   , request, &count );
     MPI_Waitall( count, request, statuses);
@@ -1562,7 +1562,7 @@ void wilsoncurrent62a_petros( bispinor **propfields )
                                      + 1.*phimatrixspatialnull[1*2+1]*C1111[g_idn[ix][TUP]]*conj(phimatrix[1*2+1][g_idn[ix][TUP]]);
 
     }
-#if defined MPI
+#if defined TM_USE_MPI
     for (ix=0; ix<T_global; ++ix){
        _Complex double tmp;
        MPI_Allreduce(&final_corr[ix], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD);
@@ -1598,7 +1598,7 @@ void wilsoncurrent62a_petros( bispinor **propfields )
        free(phimatrix[ix]);
     free(phimatrix);
     free(final_corr);
-#if defined MPI
+#if defined TM_USE_MPI
     free(request);
 #endif
 

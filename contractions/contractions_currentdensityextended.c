@@ -19,7 +19,7 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #include"lime.h"
 #include <stdlib.h>
@@ -28,7 +28,7 @@
 #include <math.h>
 #include <errno.h>
 #include <time.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
 #include "global.h"
@@ -114,7 +114,7 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
    int f1,c1,s1,tauindex;
    int spinorstart=0, spinorend=4;
    bispinor running;
-#if defined MPI
+#if defined TM_USE_MPI
    int count;
    MPI_Status  statuses[8];
    MPI_Request *request;
@@ -156,7 +156,7 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
 
 
 // Doing the neccessary communication
-#if defined MPI
+#if defined TM_USE_MPI
    for (s1=spinorstart; s1<spinorend; ++s1)
       for (c1=0; c1<3; ++c1)
          for (f1=0; f1<2; ++f1){
@@ -239,7 +239,7 @@ void wilsonterm_current_density_312ab( bispinor ** propfields, int type_12, int 
             }  //End of trace in space
 
 //Gather the results from all nodes to complete the trace in space
-#if defined MPI
+#if defined TM_USE_MPI
             for (i=0; i<8*T_global; ++i){
                _Complex double tmp;
                MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
@@ -301,7 +301,7 @@ void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int 
    bispinor **starting2d;
    bispinor running;
    su3 * restrict upm;
-#if defined MPI
+#if defined TM_USE_MPI
    int count;
    MPI_Status  statuses[8];
    MPI_Request *request;
@@ -328,7 +328,7 @@ void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int 
      printf("Not enough memory in wilson current density 4\n");
      exit(1);
    }
-#if defined MPI
+#if defined TM_USE_MPI
    request=( MPI_Request *) malloc(sizeof(MPI_Request)*8);
 #endif
    if ( type_ab == TYPE_A ) {
@@ -378,7 +378,7 @@ void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int 
               //sum over all lattice sites the result of the color trace
              trace_in_space(spacetrace,colortrace,ix);
            } //End of trace space
-#if defined MPI
+#if defined TM_USE_MPI
            for (i=0; i<8*T_global; ++i){
              _Complex double tmp;
              MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
@@ -429,7 +429,7 @@ void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int 
         }
       }
 //Doing the neccesary communication
-#if defined MPI
+#if defined TM_USE_MPI
       for (s1=spinorstart; s1<spinorend; ++s1)
         for (c1=0; c1<3; ++c1)
            for (f1=0; f1<2; ++f1){
@@ -468,11 +468,13 @@ void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int 
                 multiply_backward_propagator(&starting2d[c1][ix], propfields, &starting2d[c1][ix], ix, TUP);
               }
             }
+#if defined TM_USE_MPI
             for (c1=0; c1<3; ++c1){
               count=0;
               generic_exchange_direction_nonblocking( starting2d[c1], sizeof(bispinor), TDOWN, request, &count );
               MPI_Waitall( count, request, statuses);
             }
+#endif
             for (ix=0; ix<VOLUME; ++ix){
               for (i=0; i<8; ++i)
                 colortrace[i]=0.;
@@ -480,7 +482,7 @@ void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int 
                 trace_in_color(colortrace,&starting2d[c1][g_idn[ix][TUP]],c1);
               trace_in_space(spacetrace,colortrace,ix);
             }
-#if defined MPI
+#if defined TM_USE_MPI
             for (i=0; i<8*T_global; ++i){
               _Complex double tmp;
               MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
@@ -521,7 +523,7 @@ void wilsonterm_current_density_412ab( bispinor ** propfields, int type_12, int 
    free(spacetrace);
    free(spinortrace);
    free(colortrace);
-#if defined MPI
+#if defined TM_USE_MPI
    if (type_12 == TYPE_2)
      free(request);
 #endif
@@ -533,7 +535,7 @@ void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int 
    int spinorstart=0, spinorend=4;
    su3 * restrict upm;
    bispinor running;
-#if defined MPI
+#if defined TM_USE_MPI
    int count;
    MPI_Status  statuses[8];
    MPI_Request *request;
@@ -573,7 +575,7 @@ void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int 
      if (g_cart_id == 0) fprintf(stdout,"Wrong argument for type_1234, it can only be TYPE_1, TYPE_2,  TYPE_3 or TYPE_4 \n");                                                                      
      exit(1);                                                                                                                                                                  
    }
-#if defined MPI
+#if defined TM_USE_MPI
 //Doing the neccesary communication
    for (s1=spinorstart; s1<spinorend; ++s1)
      for (c1=0; c1<3; ++c1)
@@ -669,7 +671,7 @@ void wilsonterm_current_density_512ab( bispinor ** propfields, int type_12, int 
                //sum over all lattice sites the result of the color trace
                trace_in_space( spacetrace, colortrace, ix);
             }  //End of trace in space
-#if defined MPI
+#if defined TM_USE_MPI
 //Gather the results from all nodes to complete the trace in space
             for (i=0; i<8*T_global; ++i){
                _Complex double tmp;
@@ -721,7 +723,7 @@ void wilsonterm_current_density_612ab( bispinor ** propfields, int type_12, int 
    int spinorstart=0, spinorend=4;
    bispinor **starting2d;
    bispinor running;
-#if defined MPI
+#if defined TM_USE_MPI
    int count;
    MPI_Status  statuses[8];
    MPI_Request *request;
@@ -749,7 +751,7 @@ void wilsonterm_current_density_612ab( bispinor ** propfields, int type_12, int 
      exit(1);
    }
 
-#if defined MPI
+#if defined TM_USE_MPI
    request=( MPI_Request *) malloc(sizeof(MPI_Request)*8);
 #endif
    if ( type_ab == TYPE_A ) {
@@ -795,7 +797,7 @@ void wilsonterm_current_density_612ab( bispinor ** propfields, int type_12, int 
               //sum over all lattice sites the result of the color trace
              trace_in_space(spacetrace,colortrace,ix);
            } //End of trace space
-#if defined MPI
+#if defined TM_USE_MPI
            for (i=0; i<8*T_global; ++i){
              _Complex double tmp;
              MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
@@ -846,7 +848,7 @@ void wilsonterm_current_density_612ab( bispinor ** propfields, int type_12, int 
         }
       } 
 //Doing the neccesary communication
-#if defined MPI
+#if defined TM_USE_MPI
       for (s1=spinorstart; s1<spinorend; ++s1)
         for (c1=0; c1<3; ++c1)
            for (f1=0; f1<2; ++f1){
@@ -885,11 +887,13 @@ void wilsonterm_current_density_612ab( bispinor ** propfields, int type_12, int 
 
               }
             }
+#if defined TM_USE_MPI
             for (c1=0; c1<3; ++c1){
               count=0;
               generic_exchange_direction_nonblocking( starting2d[c1], sizeof(bispinor), TDOWN, request, &count );
               MPI_Waitall( count, request, statuses);
             }
+#endif
             for (ix=0; ix<VOLUME; ++ix){
               for (i=0; i<8; ++i)
                 colortrace[i]=0.;
@@ -897,7 +901,7 @@ void wilsonterm_current_density_612ab( bispinor ** propfields, int type_12, int 
                 trace_in_color(colortrace,&starting2d[c1][g_idn[ix][TUP]],c1);
               trace_in_space(spacetrace,colortrace,ix);
             } 
-#if defined MPI
+#if defined TM_USE_MPI
             for (i=0; i<8*T_global; ++i){
               _Complex double tmp;
               MPI_Allreduce(&spacetrace[i], &tmp, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, g_cart_grid);
@@ -938,7 +942,7 @@ void wilsonterm_current_density_612ab( bispinor ** propfields, int type_12, int 
    free(spacetrace);
    free(spinortrace);
    free(colortrace); 
-#if defined MPI
+#if defined TM_USE_MPI
    if (type_12 == TYPE_2)
      free(request);
 #endif

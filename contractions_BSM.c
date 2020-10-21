@@ -499,7 +499,7 @@ int main(int argc, char *argv[]){
                     /* 0-3 in case of 1 flavour  */
                     /* 0-7 in case of 2 flavours */
 
-                    prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location);
+                    prepare_source(nstore, isample, ix, op_id, read_source_flag, source_location, 0);
 
 //                  if (g_cart_id == 0) printf("Source has been prepared\n\n\n");
                     //randmize initial guess for eigcg if needed-----experimental
@@ -527,7 +527,7 @@ int main(int argc, char *argv[]){
                       /* 0-3 in case of 1 flavour  */
                       /* 0-7 in case of 2 flavours */
 
-                      prepare_source(nstore, isample, ix, op_id, read_source_flag, backsource);
+                      prepare_source(nstore, isample, ix, op_id, read_source_flag, backsource, 0);
 
                       //randmize initial guess for eigcg if needed-----experimental
                       if( (operator_list[op_id].solver == INCREIGCG) && (operator_list[op_id].solver_params.eigcg_rand_guess_opt) )
@@ -799,6 +799,8 @@ int main(int argc, char *argv[]){
                      fprintf(out,"GIANCARLOUNITYNONTRIVIAL\t%d\t%10.10e\t%10.10e\n", ii, creal(current[ii]), cimag(current[ii]));
                    }
                  }
+               }
+               if (vectorcurrentdensity_BSM == 1){
                  for (int ii=0;ii<T_global; ++ii){
                    scalar[ii]=0.0;
                    pseudoscalar[ii]=0.0;

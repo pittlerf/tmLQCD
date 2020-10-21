@@ -29,21 +29,21 @@
 
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
 #include <string.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 # ifdef HAVE_LIBLEMON
 #	include <io/params.h>
 #	include <io/gauge.h>
 # endif
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 # include "init/init_openmp.h"
 #endif
@@ -133,7 +133,7 @@ int main(int argc,char *argv[])
 	static double t1,t2,dt,sdt,dts,qdt,sqdt;
 	double antioptaway=0.0;
 
-#ifdef MPI
+#ifdef TM_USE_MPI
 	static double dt2;
 
 	DUM_DERI = 6;
@@ -141,7 +141,7 @@ int main(int argc,char *argv[])
 	DUM_MATRIX = DUM_SOLVER+6;
 	NO_OF_SPINORFIELDS = DUM_MATRIX+2;
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 	int mpi_thread_provided;
 	MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
 #else
@@ -172,7 +172,7 @@ int main(int argc,char *argv[])
 		printf("parameter mu01_BSM set to %f\n", mu01_BSM);
 	}
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 	init_openmp();
 #endif
 
@@ -213,7 +213,7 @@ int main(int argc,char *argv[])
 		printf("# The code was compiled for persistent MPI calls (halfspinor only)\n");
 #endif
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
 	#ifdef _NON_BLOCKING
 		printf("# The code was compiled for non-blocking MPI calls (spinor and gauge)\n");
 	#endif
@@ -351,7 +351,7 @@ int main(int argc,char *argv[])
 		}
 	}
 
-#ifdef MPI
+#ifdef TM_USE_MPI
     xchange_gauge(g_gauge_field);
 #endif
 
@@ -363,7 +363,7 @@ int main(int argc,char *argv[])
       fflush(stdout);
     }
 
-#ifdef MPI
+#ifdef TM_USE_MPI
 	for( int s=0; s<numbScalarFields; s++ )
 		generic_exchange(g_scalar_field[s], sizeof(scalar));
 #endif
@@ -413,28 +413,28 @@ int main(int argc,char *argv[])
   /* now apply the operators to the same bispinor field and do various comparisons */
 
   // Marco's operator
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
   t_MG = 0.0;
   t1 = gettime();
   D_psi_BSM2m(g_bispinor_field[0], g_bispinor_field[4]);
   t1 = gettime() - t1;
-#ifdef MPI
+#ifdef TM_USE_MPI
 	MPI_Allreduce (&t1, &t_MG, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
   t_MG = t1;
 #endif
 
   // Bartek's operator
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
   t_BK = 0.0;
   t1 = gettime();
   D_psi_BSM2b(g_bispinor_field[1], g_bispinor_field[4]);
   t1 = gettime() - t1;
-#ifdef MPI
+#ifdef TM_USE_MPI
 	MPI_Allreduce (&t1, &t_BK, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
   t_BK = t1;
@@ -524,14 +524,14 @@ int main(int argc,char *argv[])
 	}
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 	free_omp_accumulators();
 #endif
 	free_gauge_field();
 	free_geometry_indices();
 	free_bispinor_field();
 	free_scalar_field();
-#ifdef MPI
+#ifdef TM_USE_MPI
 	MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Finalize();
 #endif

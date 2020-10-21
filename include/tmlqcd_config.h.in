@@ -7,7 +7,7 @@
 #undef CRAY
 
 /* We will use BSM type operators with additional gauge field */
-#undef _USE_BSM
+#undef TM_USE_BSM
 
 /* lapack available */
 #undef HAVE_LAPACK

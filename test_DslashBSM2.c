@@ -31,14 +31,14 @@
 
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
 #include <string.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 # ifdef HAVE_LIBLEMON
 #	include <io/params.h>
@@ -131,7 +131,7 @@ int main(int argc,char *argv[])
 
 	static double t1;
 
-#ifdef MPI
+#ifdef TM_USE_MPI
 
 	DUM_DERI = 6;
 	DUM_SOLVER = DUM_DERI+2;
@@ -163,7 +163,7 @@ int main(int argc,char *argv[])
 		printf("parameter  m0_BSM set to %f\n",  m0_BSM);
 	}
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 	init_openmp();
 #endif
 
@@ -204,7 +204,7 @@ int main(int argc,char *argv[])
 		printf("# The code was compiled for persistent MPI calls (halfspinor only)\n");
 #endif
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
 	#ifdef _NON_BLOCKING
 		printf("# The code was compiled for non-blocking MPI calls (spinor and gauge)\n");
 	#endif
@@ -334,7 +334,7 @@ int main(int argc,char *argv[])
 		}
 	}
 
-#ifdef MPI
+#ifdef TM_USE_MPI
     xchange_gauge(g_gauge_field);
 #endif
 
@@ -349,7 +349,7 @@ int main(int argc,char *argv[])
     }
    
 
-#ifdef MPI
+#ifdef TM_USE_MPI
         // printf("Starting generic exchange routines for the scalar field\n");
 	for( int s=0; s<numbScalarFields; s++ )
             generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
@@ -398,14 +398,14 @@ int main(int argc,char *argv[])
   /* now apply the operators to the same bispinor field and do various comparisons */
 
   // Feri's operator
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
   t_F = 0.0;
   t1 = gettime();
   D_psi_BSM2f(g_bispinor_field[0], g_bispinor_field[4]);
   t1 = gettime() - t1;
-#ifdef MPI
+#ifdef TM_USE_MPI
 	MPI_Allreduce (&t1, &t_F, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
   t_F = t1;
@@ -447,7 +447,7 @@ int main(int argc,char *argv[])
   free_geometry_indices();
   free_bispinor_field();
   free_scalar_field();
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 #endif

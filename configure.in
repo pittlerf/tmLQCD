@@ -110,6 +110,18 @@ else
   AC_MSG_RESULT(no)
 fi
 
+
+AC_MSG_CHECKING(checking whether we want to use BSM operators with two separate gauge fields)
+AC_ARG_ENABLE(bsm,
+  AS_HELP_STRING([--enable-bsm],[enable bsm operators using two separate gauge field [default=yes]]),
+  enable_BSM=$enableval, enable_BSM=yes)
+if test $enable_BSM = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(TM_USE_BSM,1,bsm operator with two seperate gauge field)
+else
+ AC_MSG_RESULT(no)
+fi
+
 AC_MSG_CHECKING(whether we want to use DDalphaAMG)
 AC_ARG_WITH(DDalphaAMG,
             AS_HELP_STRING([--with-DDalphaAMG[=dir]], [use DDalphaAMG, to be found in dir]),
@@ -881,18 +893,6 @@ if test $enable_tsp = yes; then
 else
  AC_MSG_RESULT(no)
 fi
-
-AC_MSG_CHECKING(checking whether we want to use BSM operators with two separate gauge fields)
-AC_ARG_ENABLE(bsm,
-  AS_HELP_STRING([--enable-bsm],[enable bsm operators using two separate gauge field [default=yes]]),
-  enable_BSM=$enableval, enable_BSM=yes)
-if test $enable_BSM = yes; then
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(_USE_BSM,1,bsm operator with two seperate gauge field)
-else
- AC_MSG_RESULT(no)
-fi
-
 
 AC_MSG_CHECKING(whether we want to compute the LapH eigenvalues)
 AC_ARG_ENABLE(laph,

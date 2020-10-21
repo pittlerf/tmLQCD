@@ -29,21 +29,21 @@
 
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
 #include <string.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include <mpi.h>
 # ifdef HAVE_LIBLEMON
 #	include <io/params.h>
 #	include <io/gauge.h>
 # endif
 #endif
-#ifdef OMP
+#ifdef TM_USE_OMP
 # include <omp.h>
 # include "init/init_openmp.h"
 #endif
@@ -142,8 +142,8 @@ int main(int argc,char *argv[])
   NO_OF_SPINORFIELDS = DUM_MATRIX+2;
 
 
-#ifdef MPI
-#ifdef OMP
+#ifdef TM_USE_MPI
+#ifdef TM_USE_OMP
   int mpi_thread_provided;
   MPI_Init_thread(&argc, &argv, MPI_THREAD_SERIALIZED, &mpi_thread_provided);
 #else
@@ -172,7 +172,7 @@ int main(int argc,char *argv[])
     printf("parameter mu01_BSM set to %f\n", mu01_BSM);
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   init_openmp();
 #endif
      
@@ -217,7 +217,7 @@ int main(int argc,char *argv[])
      printf("# The code was compiled for persistent for BSM operators i.e. we are using two gauge fields\n");
 #endif
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
 #ifdef _NON_BLOCKING
      printf("# The code was compiled for non-blocking MPI calls (spinor and gauge)\n");
 #endif
@@ -370,7 +370,7 @@ int main(int argc,char *argv[])
     }
   }
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   xchange_gauge(g_gauge_field);
   xchange_gauge(g_smeared_gauge_field);
 #endif
@@ -431,27 +431,27 @@ int main(int argc,char *argv[])
   double t_FP;
   // 
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
   t_FP = 0.0;
   t1 = gettime();
   D_psi_BSM3(g_bispinor_field[2], g_bispinor_field[4]);
   t1 = gettime() - t1;
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Allreduce (&t1, &t_FP, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
   t_FP = t1;
 #endif
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
   t_FP = 0.0;
   t1 = gettime();
   D_psi_dagger_BSM3(g_bispinor_field[1], g_bispinor_field[5]);
   t1 = gettime() - t1;
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Allreduce (&t1, &t_FP, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
   t_FP = t1;
@@ -524,14 +524,14 @@ int main(int argc,char *argv[])
   // Feri's operator
 
   printf("# [tmlqcd-BSM test] Application D_psi_BSM3 operator\n");
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
   t_FP = 0.0;
   t1 = gettime();
   D_psi_BSM3_test(g_bispinor_field[2], g_bispinor_field[4]);
   t1 = gettime() - t1;
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Allreduce (&t1, &t_FP, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
   t_FP = t1;
@@ -542,7 +542,7 @@ int main(int argc,char *argv[])
    fflush(stdout);
   }
 
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
   squarenorm_w = square_norm((spinor*)g_bispinor_field[4], 2*VOLUME, 1);
@@ -556,7 +556,7 @@ int main(int argc,char *argv[])
   t1 = gettime();
   D_psi_BSM(g_bispinor_field[5], g_bispinor_field[4]);
   t1 = gettime() - t1;
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Allreduce (&t1, &t_FP, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
   t_FP = t1;
@@ -595,14 +595,14 @@ int main(int argc,char *argv[])
   eta_BSM=0.;
   rho_BSM=0.;
   printf("# [tmlqcd-BSM test] application of D_psi_BSM3 operator\n");
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
   t_FP = 0.0;
   t1 = gettime();
   D_psi_BSM3(g_bispinor_field[2], g_bispinor_field[4]);
   t1 = gettime() - t1;
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Allreduce (&t1, &t_FP, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 #else
   t_FP = t1;
@@ -683,10 +683,10 @@ int main(int argc,char *argv[])
 #endif //_USE_BSM
   
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   free_omp_accumulators();
 #endif 
-#ifdef MPI
+#ifdef TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 #endif

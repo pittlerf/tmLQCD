@@ -37,11 +37,13 @@
 #include "operator/tm_operators.h"
 #include "linalg_eo.h"
 #include "operator/D_psi.h"
+#if defined TM_USE_BSM
 #include "operator/D_psi_BSM.h"
 #include "operator/D_psi_BSM2b.h"
 #include "operator/D_psi_BSM2f.h"
 #include "operator/D_psi_BSM2m.h"
 #include "operator/D_psi_BSM3.h"
+#endif
 #include "operator/Dov_psi.h"
 #include "operator/tm_operators_nd.h"
 #include "operator/Hopping_Matrix.h"
@@ -126,10 +128,11 @@ int add_operator(const int type) {
   optr->conf_input = _default_gauge_input_filename;
   optr->no_extra_masses = 0;
 
+#if defined TM_USE_BSM
   optr->npergauge = 1;
   optr->nscalarstep = 1;
   optr->n = 0;
-
+#endif
   optr->applyM = &dummy_M;
   optr->applyQ = &dummy_M;
   optr->applyMee = &dummy_Mee;
@@ -158,10 +161,15 @@ int add_operator(const int type) {
     optr->m = 0.;
     optr->inverter = &op_invert;
   }
-  if(optr->type == DBTMWILSON || optr->type == DBCLOVER || optr->type == BSM || optr->type == BSM2m 
-      || optr->type == BSM2b || optr->type == BSM2f || optr->type == BSM3 ) {
-    optr->no_flavours = 2;
-    g_running_phmc = 1;
+  if(optr->type == DBTMWILSON || optr->type == DBCLOVER ){
+#if defined TM_USE_BSM
+    if ( optr->type == BSM || optr->type == BSM2m || optr->type == BSM2b || optr->type == BSM2f || optr->type == BSM3 ) {
+#endif
+      optr->no_flavours = 2;
+      g_running_phmc = 1;
+#if defined TM_USE_BSM
+    }
+#endif
   }
   
   optr->precWS=NULL;
@@ -275,6 +283,7 @@ int init_operators() {
         optr->even_odd_flag = 1;
         optr->applyDbQsq = &Qsw_pm_ndpsi;
       }
+#if defined TM_USE_BSM
       else if(optr->type == BSM || optr->type == BSM2b || optr->type == BSM2m || optr->type== BSM2f || optr->type==BSM3) {
         // For the BSM operator we don't use kappa normalisation,
         // as a result, when twisted boundary conditions are applied this needs to be unity.
@@ -312,6 +321,7 @@ int init_operators() {
           exit(0);
         }
       }
+#endif
       if(optr->external_inverter==QUDA_INVERTER ) {
 #ifdef TM_USE_QUDA
         _initQuda();
@@ -554,6 +564,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
 
     if(write_prop) optr->write_prop(op_id, index_start, 0);
   }
+#if defined TM_USE_BSM
   else if( optr->type == BSM || optr->type == BSM2b || optr->type == BSM2m || optr->type == BSM2f || optr->type == BSM3 ) {
     if (g_cart_id == 0 && g_debug_level > 1) {
      printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
@@ -681,6 +692,7 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
     free(temp );
     free(temp2);
   }
+#endif
   etime = gettime();
   if (g_cart_id == 0 && g_debug_level > 0) {
     fprintf(stdout, "# Inversion done in %d iterations, squared residue = %e!\n",
@@ -734,12 +746,6 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
       }
     }
   }
-  else {
-    if(optr->type==BSM || optr->type==BSM2b || optr->type==BSM2m || optr->type==BSM2f || optr->type==BSM3 ){
-      snprintf(filename, strl, "%s.%.4d.%.5d.%.8d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, optr->n, ending);
-    } else {
-      snprintf(filename, strl, "%s.%.4d.%.5d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, ending);
-    }
   else if (SourceInfo.type == SRC_TYPE_VOL) {
     if(optr->type==BSM || optr->type==BSM2b || optr->type==BSM2m || optr->type==BSM2f || optr->type==BSM3 ){
       snprintf(filename, strl, "%s.%.4d.%.5d.%.8d.%s", PropInfo.basename, SourceInfo.nstore, SourceInfo.sample, optr->n, ending);
@@ -749,10 +755,17 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
   }
   else if(SourceInfo.type == SRC_TYPE_PION_TS || SourceInfo.type == SRC_TYPE_GEN_PION_TS) {
     if(optr->type==BSM || optr->type==BSM2b || optr->type==BSM2m || optr->type==BSM2f || optr->type==BSM3 ){
-      snprintf(filename, strl, "%s.%.4d.%.5d.%.2d.%.8d%s", PropInfo.basename, SourceInfo.nstore, SourceInfo.sample, SourceInfo.t,opt->n, ending);
+      snprintf(filename, strl, "%s.%.4d.%.5d.%.2d.%.8d%s", PropInfo.basename, SourceInfo.nstore, SourceInfo.sample, SourceInfo.t,optr->n, ending);
     }
     else {
       snprintf(filename, strl, "%s.%.4d.%.5d.%.2d.%s", PropInfo.basename, SourceInfo.nstore, SourceInfo.sample, SourceInfo.t, ending);
+    }
+  }
+  else {
+    if(optr->type==BSM || optr->type==BSM2b || optr->type==BSM2m || optr->type==BSM2f || optr->type==BSM3 ){
+      snprintf(filename, strl, "%s.%.4d.%.5d.%.8d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, optr->n, ending);
+    } else {
+      snprintf(filename, strl, "%s.%.4d.%.5d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, ending);
     }
   }
   if(!PropInfo.splitted || append_)

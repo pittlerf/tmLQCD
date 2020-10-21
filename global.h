@@ -64,7 +64,7 @@
 # include "bgl.h"
 #endif
 
-<<<<<<< HEAD
+#ifdef TM_USE_BSM
 // for Frezzotti-Rossi model Dirac operator
 EXTERN double eta_BSM, rho_BSM, m0_BSM, c5phi_BSM, r_BSM, mu03_BSM, mu01_BSM, csw_BSM, kappa_BSM, r0_BSM;
 EXTERN int propagatorsonthefly_BSM;
@@ -85,6 +85,7 @@ EXTERN int axialcurrentdensity_BSM;
 EXTERN int pdensityvectordensity_BSM;
 EXTERN int giancarlo_BSM;
 EXTERN int timesmearcorrelator_BSM;
+#endif
 #define TUP 0
 #define XUP 1
 #define YUP 2
@@ -209,26 +210,26 @@ EXTERN int g_running_phmc;
 
 EXTERN su3 ** g_gauge_field;
 EXTERN su3_32 ** g_gauge_field_32;
-#ifdef _USE_BSM 
+#ifdef TM_USE_BSM 
 EXTERN su3 ** g_smeared_gauge_field;
 #endif
 #ifdef _USE_HALFSPINOR
 EXTERN su3 *** g_gauge_field_copy;
 EXTERN su3_32 *** g_gauge_field_copy_32;
-#ifdef _USE_BSM
+#ifdef TM_USE_BSM
 EXTERN su3 *** g_smeared_gauge_field_copy;
 #endif
 #elif (defined _USE_TSPLITPAR )
 EXTERN su3 ** g_gauge_field_copyt;
 EXTERN su3 ** g_gauge_field_copys;
-#ifdef _USE_BSM
+#ifdef TM_USE_BSM
 EXTERN su3 ** g_smeared_gauge_field_copyt;
 EXTERN su3 ** g_smeared_gauge_field_copys;
 #endif
 #else
 EXTERN su3 ** g_gauge_field_copy;
 EXTERN su3_32 ** g_gauge_field_copy_32;
-#ifdef _USE_BSM
+#ifdef TM_USE_BSM
 EXTERN su3 ** g_smeared_gauge_field_copy;
 #endif
 #endif

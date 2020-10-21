@@ -19,7 +19,7 @@
  ***********************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #include"lime.h"
 #include <stdlib.h>
@@ -950,7 +950,13 @@ void phi0_taui_commutator( _Complex double *dest,int tauindex ){
    }
    free(source_copy);
 }
-
+//This routine computes the commutator between Phi(x)and tau^i
+//times a bispinor vector
+//Here Phi(x) is represented by a matrix
+//
+//(+phi_0+i*phi_3   phi_2+iphi_1)
+//(-phi_2+i*phi_1   phi_0-iphi_3)
+//
 void phix_taui_commutator_bispinor( bispinor *dest,int tauindex, int gamma5, int ix ){
 
    bispinor source_copy;

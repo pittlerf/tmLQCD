@@ -19,7 +19,7 @@
  ***********************************************************************/
 #include "utils_nonblocking.ih"
 
-#ifndef MPI /*Let's deal with this case once and for all*/
+#ifndef TM_USE_MPI /*Let's deal with this case once and for all*/
 void generic_exchange_direction_nonblocking(void *field_in, int bytes_per_site, int direction, int* counter)
 {}
 #else /* MPI */

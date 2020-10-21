@@ -28,7 +28,7 @@
  *******************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 
 #include <stdlib.h>
@@ -38,7 +38,7 @@
 #include "su3.h"
 #include "sse.h"
 #include "boundary.h"
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include "xchange/xchange.h"
 #endif
 #include "update_backward_gauge.h"
@@ -111,11 +111,11 @@ static inline void tm1_add(bispinor * const out, const bispinor * const in, cons
 }
 
 static inline void Fadd(bispinor * const out, const bispinor * const in, const scalar * const phi, const double c, const double sign) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static spinor tmp;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
   
@@ -189,11 +189,11 @@ static inline void Fadd(bispinor * const out, const bispinor * const in, const s
 static inline void bispinor_times_phase_times_u(bispinor * const us, const _Complex double phase,
             su3 const * restrict const u, bispinor const * const s)
 {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static su3_vector chi;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
 
@@ -227,11 +227,11 @@ static inline void bispinor_times_phase_times_u(bispinor * const us, const _Comp
 static inline void bispinor_times_phase_times_inverse_u(bispinor * const us, const _Complex double phase,
               su3 const * restrict const u, bispinor const * const s)
 {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static su3_vector chi;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
 
@@ -389,11 +389,11 @@ void D_psi_BSM2b(bispinor * const P, bispinor * const Q){
     update_backward_gauge(g_gauge_field);
   }
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
   generic_exchange(Q, sizeof(bispinor));
 #endif
         
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -413,7 +413,7 @@ void D_psi_BSM2b(bispinor * const P, bispinor * const Q){
 
     /************************ loop over all lattice sites *************************/
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for (ix=0;ix<VOLUME;ix++)
@@ -549,7 +549,7 @@ void D_psi_BSM2b(bispinor * const P, bispinor * const Q){
         tm3_add(rr, s, 1);
 
   } 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 }
@@ -566,11 +566,11 @@ void D_psi_dagger_BSM2b(bispinor * const P, bispinor * const Q){
     update_backward_gauge(g_gauge_field);
   }
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
   generic_exchange(Q, sizeof(bispinor));
 #endif
         
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -590,7 +590,7 @@ void D_psi_dagger_BSM2b(bispinor * const P, bispinor * const Q){
 
     /************************ loop over all lattice sites *************************/
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
   for (ix=0;ix<VOLUME;ix++)
@@ -726,7 +726,7 @@ void D_psi_dagger_BSM2b(bispinor * const P, bispinor * const Q){
         tm3_add(rr, s, -1);
     
   } 
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 }

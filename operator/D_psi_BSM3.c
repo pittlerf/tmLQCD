@@ -27,7 +27,7 @@
  *******************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 
 #include <stdlib.h>
@@ -37,7 +37,7 @@
 #include "su3.h"
 #include "sse.h"
 #include "boundary.h"
-#ifdef MPI
+#ifdef TM_USE_MPI
 # include "xchange/xchange.h"
 #endif
 #include "update_backward_gauge.h"
@@ -156,11 +156,11 @@ static inline void Fabsadd(bispinor * const out, const bispinor * const in, cons
  */
 
 static inline void Fadd(bispinor * const out, const bispinor * const in, const scalar * const phi, const double c, const double sign) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static spinor tmp;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
   
@@ -234,11 +234,11 @@ static inline void Fadd(bispinor * const out, const bispinor * const in, const s
 static inline void bispinor_times_phase_times_u(bispinor * restrict const us, const _Complex double phase,
 						su3 const * restrict const u, bispinor const * restrict const s)
 {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static su3_vector chi;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
 
@@ -272,11 +272,11 @@ static inline void bispinor_times_phase_times_u(bispinor * restrict const us, co
 static inline void bispinor_times_real_times_u(bispinor * restrict const us, const double realnum,
                                                 su3 const * restrict const u, bispinor const * restrict const s)
 {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static su3_vector chi;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
 
@@ -320,11 +320,11 @@ static inline void bispinor_times_real_times_u(bispinor * restrict const us, con
 static inline void bispinor_times_phase_times_inverse_u(bispinor * restrict const us, const _Complex double phase,
 							su3 const * restrict const u, bispinor const * restrict const s)
 {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static su3_vector chi;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
 
@@ -358,11 +358,11 @@ static inline void bispinor_times_phase_times_inverse_u(bispinor * restrict cons
 static inline void bispinor_times_real_times_inverse_u(bispinor * restrict const us, const double realnum,
                                                         su3 const * restrict const u, bispinor const * restrict const s)
 {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static su3_vector chi;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
 
@@ -408,11 +408,11 @@ static inline void p0add(bispinor * restrict const tmpr , bispinor const * restr
                          const double phaseF, const scalar * const phi, const scalar * const phip,
                          const double sign) {
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static bispinor us;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
 
@@ -464,11 +464,11 @@ static inline void p1add(bispinor * restrict const tmpr, bispinor const * restri
                          su3 const * restrict const u, const int inv, const _Complex double phase,
                          const double phaseF, const scalar * const phi, const scalar * const phip,
                          const double sign) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static bispinor us;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
 
@@ -518,11 +518,11 @@ static inline void p2add(bispinor * restrict const tmpr, bispinor const * restri
                          su3 const * restrict const u, const int inv, const _Complex double phase,
                          const double phaseF, const scalar * const phi, const scalar * const phip,
                          const double sign) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static bispinor us;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
   // us = phase*u*s
@@ -577,11 +577,11 @@ static inline void p3add(bispinor * restrict const tmpr, bispinor const * restri
                          su3 const * restrict const u, const int inv, const _Complex double phase,
                          const double phaseF, const scalar * const phi, const scalar * const phip,
                          const double sign) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static bispinor us;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
 
@@ -635,11 +635,11 @@ static inline void padd_chitildebreak(bispinor * restrict const tmpr , bispinor 
                          const double phaseF, const scalar * const phi, const scalar * const phip,
                          const double sign) {
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static bispinor us;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
 
@@ -662,7 +662,7 @@ static inline void padd_chitildebreak(bispinor * restrict const tmpr , bispinor 
 static inline void p0add_wilsonclover( bispinor * restrict const tmpr , bispinor const * restrict const sp,
                          su3 const * restrict const u, const int inv, const _Complex double phase,
                          const double sign) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static const int sign_gamma = (inv==1) ? -sign : sign ;
@@ -671,7 +671,7 @@ static inline void p0add_wilsonclover( bispinor * restrict const tmpr , bispinor
   static su3_vector chi;
   static su3_vector results1;
   static su3_vector results2;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
   _vector_null( halfwilson1 );
@@ -782,7 +782,7 @@ static inline void p0add_wilsonclover( bispinor * restrict const tmpr , bispinor
 static inline void p1add_wilsonclover( bispinor * restrict const tmpr , bispinor const * restrict const sp,
                          su3 const * restrict const u, const int inv, const _Complex double phase,
                          const double sign) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static const int sign_gamma = (inv==1) ? -sign : sign ;
@@ -791,7 +791,7 @@ static inline void p1add_wilsonclover( bispinor * restrict const tmpr , bispinor
   static su3_vector chi;
   static su3_vector results1;
   static su3_vector results2;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
   _vector_null( halfwilson1 );
@@ -910,7 +910,7 @@ static inline void p1add_wilsonclover( bispinor * restrict const tmpr , bispinor
 static inline void p2add_wilsonclover( bispinor * restrict const tmpr , bispinor const * restrict const sp,
                          su3 const * restrict const u, const int inv, const _Complex double phase,
                          const double sign) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static const int sign_gamma = (inv==1) ? -sign : sign ;
@@ -919,7 +919,7 @@ static inline void p2add_wilsonclover( bispinor * restrict const tmpr , bispinor
   static su3_vector chi;
   static su3_vector results1;
   static su3_vector results2;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
   _vector_null( halfwilson1 );
@@ -1038,7 +1038,7 @@ static inline void p2add_wilsonclover( bispinor * restrict const tmpr , bispinor
 static inline void p3add_wilsonclover( bispinor * restrict const tmpr , bispinor const * restrict const sp,
                          su3 const * restrict const u, const int inv, const _Complex double phase,
                          const double sign) {
-#ifdef OMP
+#ifdef TM_USE_OMP
 #define static
 #endif
   static const int sign_gamma = (inv==1) ? -sign : sign ;
@@ -1047,7 +1047,7 @@ static inline void p3add_wilsonclover( bispinor * restrict const tmpr , bispinor
   static su3_vector chi;
   static su3_vector results1;
   static su3_vector results2;
-#ifdef OMP
+#ifdef TM_USE_OMP
 #undef static
 #endif
   if(sign_gamma == 1){
@@ -1182,11 +1182,11 @@ void D_psi_BSM3_test(bispinor * const P, bispinor * const Q){
     update_backward_gauge(g_smeared_gauge_field);
   }
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
   generic_exchange(Q, sizeof(bispinor));
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -1206,7 +1206,7 @@ void D_psi_BSM3_test(bispinor * const P, bispinor * const Q){
 
     /************************ loop over all lattice sites *************************/
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for (ix=0;ix<VOLUME;ix++)
@@ -1324,7 +1324,7 @@ void D_psi_BSM3_test(bispinor * const P, bispinor * const Q){
 	um=&g_gauge_field[iy][3];
         p3add(rr, sm, um, 1, -0.5*phase_3, 0.5*rho_BSM, phi, phim[3], +1.);
       }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 }
@@ -1350,11 +1350,11 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
     update_backward_gauge(g_smeared_gauge_field);
   }
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
   generic_exchange(Q, sizeof(bispinor));
 #endif
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -1374,7 +1374,7 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
 
     /************************ loop over all lattice sites *************************/
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for (ix=0;ix<VOLUME;ix++)
@@ -1510,7 +1510,7 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
         um=&g_gauge_field[iy][3];
         padd_chitildebreak(rr, sm, um, 1, -0.5*phase_3, 0.5*rho_BSM, phi, phim[3], +1.);
       }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 }
@@ -1531,11 +1531,11 @@ void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
     update_backward_gauge(g_gauge_field);
   }
 #endif
-#ifdef MPI
+#ifdef TM_USE_MPI
   generic_exchange(Q, sizeof(bispinor));
 #endif
   
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp parallel
   {
 #endif
@@ -1552,7 +1552,7 @@ void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
     
     /************************ loop over all lattice sites *************************/
 
-#ifdef OMP
+#ifdef TM_USE_OMP
 #pragma omp for
 #endif
     for (ix = 0; ix < VOLUME; ix++) {
@@ -1682,7 +1682,7 @@ void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
       padd_chitildebreak(rr, sm, um, 1, -0.5*phase_3, 0.5*rho_BSM, phi, phim[3], -1.);
 
     }
-#ifdef OMP
+#ifdef TM_USE_OMP
   } /* OpenMP closing brace */
 #endif
 }

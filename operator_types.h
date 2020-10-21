@@ -28,7 +28,13 @@ typedef enum op_type_t {
   WILSON,
   DBTMWILSON,
   CLOVER,
-  DBCLOVER
+  DBCLOVER,
+  BSM,
+  BSM2b,
+  BSM2m,
+  BSM2f,
+  BSM3
+
 } op_type_t;
 
 #endif // OPERATOR_TYPES_H

@@ -128,14 +128,8 @@ $(addsuffix .o,${CXXMODULES}): %.o: ${srcdir}/%.cpp %.d Makefile $(abs_top_build
 ${addsuffix .o, ${PROGRAMS}}: %.o: ${srcdir}/%.c %.d Makefile $(abs_top_builddir)/include/tmlqcd_config.h ${top_srcdir}/git_hash.h
 	${COMPILE} ${OPTARGS} -c $<
 
-<<<<<<< HEAD
-${PROGRAMS}: %: %.o libhmc.a $(SUBDIRS)
-	 ${LINK} $@.o $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS) 
-=======
 ${PROGRAMS}: %: %.o libhmc.a $(SUBDIRS) $(addsuffix .o,${CXXMODULES})
 	 ${LINK} $@.o $(addsuffix .o,${CXXMODULES}) $(GPUOBJECTS) $(GPUOBJECTS_C) $(LIBS) ${LDFLAGS}
-
->>>>>>> etmc/master
 
 # The rules for unit tests are kept in a separate file for tidyness
 include ${top_srcdir}/Makefile.tests
@@ -167,13 +161,8 @@ clean: clean-recursive Makefile
 	rm -f benchmark hmc_tm invert test_DslashBSM *.o *.d test/*.o test/*.d tests/*.o tests/*.d
 
 distclean: distclean-recursive Makefile
-<<<<<<< HEAD
-	rm -f benchmark hmc_tm invert test_DslashBSM *.o *.d *~ Makefile config.log config.status fixed_volume.h
-	rm -f config.h
-=======
-	rm -f benchmark hmc_tm invert *.o *.d *~ Makefile config.log config.status fixed_volume.h
+	rm -f benchmark hmc_tm invert test_DslashBSM test_DslashBSM3 *.o *.d *~ Makefile config.log config.status fixed_volume.h
 	rm -f include/tmlqcd_config.h
->>>>>>> etmc/master
 
 .PHONY: all ${SUBDIRS} ${top_srcdir}/git_hash.h clean compile-clean distclean dep install \
 	all-recursive all-debug-recursive all-profile-recursive \
