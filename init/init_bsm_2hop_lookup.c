@@ -17,8 +17,9 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
+#ifdef TM_USE_BSM
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #include <stdlib.h>
 #include <stdio.h>
@@ -87,3 +88,4 @@ void free_bsm_2hop_lookup() {
   if((void*)g_bsm_2hop_lookup != NULL)
     free(g_bsm_2hop_lookup);
 }
+#endif

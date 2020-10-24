@@ -25,7 +25,7 @@
  * Action of a Dirac operator (Frezzotti-Rossi BSM toy model) on a bispinor field
  *
  *******************************************************************************/
-
+#ifdef TM_USE_BSM
 #ifdef HAVE_CONFIG_H
 # include<tmlqcd_config.h>
 #endif
@@ -665,7 +665,7 @@ static inline void p0add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef TM_USE_OMP
 #define static
 #endif
-  static const int sign_gamma = (inv==1) ? -sign : sign ;
+  int sign_gamma = (inv==1) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
   static su3_vector chi;
@@ -785,7 +785,7 @@ static inline void p1add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef TM_USE_OMP
 #define static
 #endif
-  static const int sign_gamma = (inv==1) ? -sign : sign ;
+  int sign_gamma = (inv==1) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
   static su3_vector chi;
@@ -913,7 +913,7 @@ static inline void p2add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef TM_USE_OMP
 #define static
 #endif
-  static const int sign_gamma = (inv==1) ? -sign : sign ;
+  int sign_gamma = (inv==1) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
   static su3_vector chi;
@@ -1041,7 +1041,7 @@ static inline void p3add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef TM_USE_OMP
 #define static
 #endif
-  static const int sign_gamma = (inv==1) ? -sign : sign ;
+  int sign_gamma = (inv==1) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
   static su3_vector chi;
@@ -1696,3 +1696,4 @@ void Q2_psi_BSM3(bispinor * const P, bispinor * const Q){
   /* the use of [3] has to be changed to avoid future conflicts */
 
 }
+#endif

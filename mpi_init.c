@@ -31,8 +31,9 @@
 #include "global.h"
 #include "read_input.h"
 #include "mpi_init.h"
+#ifdef TM_USE_BSM
 #include "operator/D_psi_BSM2f.h"
-
+#endif
 #ifdef TM_USE_MPI
 /* Datatypes for the data exchange */
 MPI_Datatype mpi_su3;

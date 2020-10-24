@@ -18,7 +18,7 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 #include"lime.h"
 #include <stdlib.h>
@@ -41,10 +41,12 @@
 #include "geometry_eo.h"
 #include "linalg/assign.h"
 #include "operator/D_psi.h"
+#ifdef TM_USE_BSM
 #include "operator/D_psi_BSM.h"
 #include "operator/D_psi_BSM2b.h"
 #include "operator/D_psi_BSM2f.h"
 #include "operator/D_psi_BSM2m.h"
+#endif
 #include "operator/Dov_psi.h"
 #include "operator/tm_operators_nd.h"
 #include "operator/Hopping_Matrix.h"
@@ -52,8 +54,10 @@
 #include "invert_doublet_eo.h"
 #include "invert_overlap.h"
 #include "invert_clover_eo.h"
+#ifdef TM_USE_BSM
 #include "init/init_scalar_field.h"
 #include "init/init_bsm_2hop_lookup.h"
+#endif
 #include "boundary.h"
 #include "start.h"
 #include "solver/solver.h"
@@ -63,7 +67,9 @@
 #include <io/gauge.h>
 #include <io/spinor.h>
 #include <io/utils.h>
+#ifdef TM_USE_BSM
 #include "io/scalar.h"
+#endif
 #include "buffers/utils_nonblocking.h"
 #include "buffers/utils_nogauge.h"
 #include "test/overlaptests.h"
@@ -162,6 +168,11 @@ extern int nstore;
 int check_geometry();
 static void set_default_filenames(char ** input_filename, char ** filename);
 static void process_args(int argc, char *argv[], char ** input_filename, char ** filename);
+#ifndef TM_USE_BSM
+int main(int argc, char *argv[]){
+  printf("Works only with BSM operators switched on \n");
+}
+#else
 int main(int argc, char *argv[]){
   FILE *parameterfile = NULL;
   FILE *out=NULL;
@@ -1961,3 +1972,4 @@ int main(int argc, char *argv[]){
   MPI_Finalize();
 #endif
 }
+#endif

@@ -52,7 +52,9 @@
 #include "xchange/xchange.h"
 #endif
 #include <io/utils.h>
+#ifdef TM_USE_BSM
 #include <io/scalar.h>
+#endif
 #include "source_generation.h"
 #include "read_input.h"
 #include "mpi_init.h"
@@ -113,7 +115,9 @@ int main(int argc, char *argv[])
   int j, i, ix = 0, isample = 0, op_id = 0;
   char datafilename[206];
   char parameterfilename[206];
+#ifdef TM_USE_BSM
   char scalar_filename[50];
+#endif
   char conf_filename[CONF_FILENAME_LENGTH];
   char * input_filename = NULL;
   char * filename = NULL;
@@ -216,13 +220,13 @@ int main(int argc, char *argv[])
     exit(-1);
   }
 
-  if(have_bsm_op) {
-    j = init_bispinor_field(VOLUMEPLUSRAND, 6);
-    if ( j!= 0) {
-      fprintf(stderr, "Not enough memory for bispinor fields! Aborting...\n");
-      exit(0);
-    }
+#ifdef TM_USE_BSM
+  j = init_bispinor_field(VOLUMEPLUSRAND, 6);
+  if ( j!= 0) {
+    fprintf(stderr, "Not enough memory for bispinor fields! Aborting...\n");
+    exit(0);
   }
+#endif
 
   if (g_running_phmc) {
     j = init_chi_spinor_field(VOLUMEPLUSRAND / 2, 20);
@@ -393,8 +397,11 @@ int main(int argc, char *argv[])
     for(op_id = 0; op_id < no_operators; op_id++) {
       boundary(operator_list[op_id].kappa);
       g_kappa = operator_list[op_id].kappa; 
+#if defined TM_USE_BSM
       if (operator_list[op_id].type == BSM2f){
         init_D_psi_BSM2f();
+      }
+#endif
       g_mu = operator_list[op_id].mu;
       g_c_sw = operator_list[op_id].c_sw;
       // DFLGCR and DFLFGMRES
@@ -420,6 +427,7 @@ int main(int argc, char *argv[])
       }
      
       /* support multiple inversions for the BSM operator, one for each scalar field */
+#ifdef TM_USE_BSM
       for(int i_pergauge = 0; i_pergauge < operator_list[op_id].npergauge; ++i_pergauge){
         /* set scalar field counter to InitialScalarCounter */
         int iscalar= nscalar+j*operator_list[op_id].nscalarstep*operator_list[op_id].npergauge + i_pergauge*operator_list[op_id].nscalarstep;
@@ -472,6 +480,7 @@ int main(int argc, char *argv[])
           }
         }
       }
+#endif
 
 
       if(use_preconditioning==1 && operator_list[op_id].precWS!=NULL ){
@@ -483,21 +492,26 @@ int main(int argc, char *argv[])
       if(operator_list[op_id].type == OVERLAP){
         free_Dov_WS();
       }
+#if defined TM_USE_BSM
       if (operator_list[op_id].type == BSM2f){
         free_D_psi_BSM2f();
       }
+#endif
 
-    }
-    nstore += Nsave;
+    
   }
+  nstore += Nsave;
 
+ }
 #ifdef TM_USE_OMP
   free_omp_accumulators();
 #endif
   free_blocks();
   free_dfl_subspace();
   free_gauge_field();
+#if defined TM_USE_BSM
   free_scalar_field();
+#endif
   free_gauge_field_32();
   free_geometry_indices();
   free_spinor_field();

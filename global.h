@@ -85,7 +85,7 @@ EXTERN int axialcurrentdensity_BSM;
 EXTERN int pdensityvectordensity_BSM;
 EXTERN int giancarlo_BSM;
 EXTERN int timesmearcorrelator_BSM;
-#endif
+
 #define TUP 0
 #define XUP 1
 #define YUP 2
@@ -96,7 +96,7 @@ EXTERN int timesmearcorrelator_BSM;
 #define XDOWN 6
 #define TDOWN 7
 #define NODIR 8
-
+#endif
 EXTERN int DUM_DERI, DUM_MATRIX;
 EXTERN int NO_OF_SPINORFIELDS;
 EXTERN int NO_OF_SPINORFIELDS_32;
@@ -135,7 +135,9 @@ EXTERN int ** g_iup_eo; /* NEW GIUPDNEO */
 EXTERN int ** g_idn_eo;
 EXTERN int ** g_coord;
 EXTERN int * g_hi;
+#if defined TM_USE_BSM
 EXTERN int * g_bsm_2hop_lookup;
+#endif
 
 
 EXTERN int * g_field_z_ipt_even;
@@ -240,10 +242,11 @@ EXTERN su3 ** g_tempgauge_field;
 EXTERN su3adj ** moment;
 EXTERN su3adj ** df0;
 EXTERN su3adj ** ddummy;
-
+#ifdef TM_USE_BSM
 /* scalar field (BSM toy model) */
 EXTERN scalar ** g_scalar_field;
 EXTERN scalar ** g_smeared_scalar_field;
+#endif
 
 EXTERN int count00,count01,count10,count11,count20,count21;
 EXTERN double g_kappa, g_c_sw, g_beta;

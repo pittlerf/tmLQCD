@@ -40,6 +40,7 @@
 #  define OpSSE3
 #  undef SSE3
 #endif
+#include "buffers/utils.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -49,6 +50,7 @@
 #include "boundary.h"
 #include "gamma.h"
 #include "linalg_eo.h"
+#include "buffers/utils.h"
 #ifdef TM_USE_MPI
 # include "xchange/xchange.h"
 #endif
@@ -57,6 +59,7 @@
 #include "operator/D_psi.h"
 #include "operator/clovertm_operators.h"
 #include "solver/dirac_operator_eigenvectors.h"
+
 
 
 #define _C_TYPE _Complex float
@@ -1490,7 +1493,6 @@ void D_psi(spinor * const P, spinor * const Q){
 
 #endif // SSE
 
-
 void D_psi_bispinor(bispinor * const P, bispinor * const Q){
   if(P==Q){
     printf("Error in D_psi (operator.c):\n");
@@ -1503,9 +1505,9 @@ void D_psi_bispinor(bispinor * const P, bispinor * const Q){
       update_backward_gauge(g_gauge_field);
   }
 #endif
-# if defined TM_USE_MPI
+#if defined TM_USE_MPI
   generic_exchange(Q, sizeof(bispinor));
-# endif
+#endif
 
 #ifdef TM_USE_OMP
 #pragma omp parallel

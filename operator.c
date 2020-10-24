@@ -51,8 +51,10 @@
 #include "invert_doublet_eo.h"
 #include "invert_overlap.h"
 #include "invert_clover_eo.h"
+#if TM_USE_BSM
 #include "init/init_scalar_field.h"
 #include "init/init_bsm_2hop_lookup.h"
+#endif
 #include "boundary.h"
 #include "start.h"
 #include "solver/eigenvalues.h"
@@ -82,7 +84,6 @@ void dummy_Mee(spinor * const, spinor * const, double const);
 void dummy_M(spinor * const, spinor * const, spinor * const, spinor * const);
 void dummy_DbD(spinor * const s, spinor * const r, spinor * const p, spinor * const q);
 void op_invert(const int op_id, const int index_start, const int write_prop);
-
 void op_write_prop(const int op_id, const int index_start, const int append_);
 operator operator_list[max_no_operators];
 
@@ -731,40 +732,64 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
     if (PropInfo.splitted) {
       if(T_global > 99) {
         /* operators with additional external fields require one more index */
+#ifdef TM_USE_BSM
         if( optr->type==BSM || optr->type==BSM2b || optr->type==BSM2m || optr->type==BSM2f || optr->type==BSM3){
           snprintf(filename, strl, "%s.%.4d.%.3d.%.2d.%.8d.%s", PropInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, optr->n, ending);
-        } else  {
+        } 
+#else
+        if (0) {}
+#endif
+        else  {
           snprintf(filename, strl, "%s.%.4d.%.3d.%.2d.%s", PropInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, ending);
         }
       }
     }
     else {
+#ifdef TM_USE_BSM
       if( optr->type==BSM || optr->type == BSM2b || optr->type==BSM2m || optr->type==BSM2f || optr->type==BSM3){
         snprintf(filename, strl, "%s.%.4d.%.2d.%.8d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, optr->n, ending);
-      }else{
+      }
+#else 
+      if (0){}
+#endif 
+      else{
         snprintf(filename, strl, "%s.%.4d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, ending);
       }
     }
   }
   else if (SourceInfo.type == SRC_TYPE_VOL) {
+#if defined TM_USE_BSM
     if(optr->type==BSM || optr->type==BSM2b || optr->type==BSM2m || optr->type==BSM2f || optr->type==BSM3 ){
       snprintf(filename, strl, "%s.%.4d.%.5d.%.8d.%s", PropInfo.basename, SourceInfo.nstore, SourceInfo.sample, optr->n, ending);
-    } else {
+    } 
+#else 
+    if (0){}
+#endif
+    else {
       snprintf(filename, strl, "%s.%.4d.%.5d.%s", PropInfo.basename, SourceInfo.nstore, SourceInfo.sample, ending);
     }
   }
   else if(SourceInfo.type == SRC_TYPE_PION_TS || SourceInfo.type == SRC_TYPE_GEN_PION_TS) {
+#if defined TM_USE_BSM
     if(optr->type==BSM || optr->type==BSM2b || optr->type==BSM2m || optr->type==BSM2f || optr->type==BSM3 ){
       snprintf(filename, strl, "%s.%.4d.%.5d.%.2d.%.8d%s", PropInfo.basename, SourceInfo.nstore, SourceInfo.sample, SourceInfo.t,optr->n, ending);
     }
+#else
+    if (0) {}
+#endif
     else {
       snprintf(filename, strl, "%s.%.4d.%.5d.%.2d.%s", PropInfo.basename, SourceInfo.nstore, SourceInfo.sample, SourceInfo.t, ending);
     }
   }
   else {
+#if defined TM_USE_BSM
     if(optr->type==BSM || optr->type==BSM2b || optr->type==BSM2m || optr->type==BSM2f || optr->type==BSM3 ){
       snprintf(filename, strl, "%s.%.4d.%.5d.%.8d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, optr->n, ending);
-    } else {
+    } 
+#else 
+    if (0){}
+#endif
+    else {
       snprintf(filename, strl, "%s.%.4d.%.5d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, ending);
     }
   }
@@ -791,7 +816,7 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
     if(optr->no_flavours == 2) {
       status = write_spinor(writer, &operator_list[op_id].sr2, &operator_list[op_id].sr3, 
                             1, SourceInfo.precision);
-    } 
+    }
     free(sourceFormat);
   }
   propagatorFormat = construct_paramsPropagatorFormat(optr->prop_precision, optr->no_flavours);

@@ -61,14 +61,18 @@ int read_binary_gauge_data(LemonReader * lemonreader, DML_Checksum * checksum, p
   }
 
   if (g_debug_level > 0) {
+#ifdef TM_USE_MPI
     MPI_Barrier(g_cart_grid);
     tick = MPI_Wtime();
+#endif
   }
 
   status = lemonReadLatticeParallelMapped(lemonreader, filebuffer, bytes, latticeSize, scidacMapping);
 
   if (g_debug_level > 0) {
+#ifdef TM_USE_MPI
     MPI_Barrier(g_cart_grid);
+#endif
     tock = MPI_Wtime();
   }
 

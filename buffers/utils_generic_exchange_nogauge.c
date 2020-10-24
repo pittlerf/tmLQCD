@@ -18,6 +18,7 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 #include "utils_nogauge.h"
+#ifdef TM_USE_BSM
 #ifndef TM_USE_MPI /*Let's deal with this case once and for all*/
 void generic_exchange_nogauge(void *field_in, int bytes_per_site )
 {}
@@ -104,4 +105,4 @@ void generic_exchange_nogauge(void *field_in, int bytes_per_site )
 }
 
 #endif /* MPI */
-
+#endif /* TM_USE_BSM */

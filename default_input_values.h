@@ -88,10 +88,14 @@
 #define _default_write_cp_flag 1
 #define _default_cp_interval 5
 #define _default_nstore 0
+#ifdef TM_USE_BSM
 #define _default_nscalar 0
+#endif
 #define _default_rlxd_input_filename "last_state"
 #define _default_gauge_input_filename "conf"
+#ifdef TM_USE_BSM
 #define _default_scalar_input_filename "scalarconf"
+#endif
 #define _default_read_source_flag 0
 #define _default_source_filename "source"
 #define _default_g_stdio_proc 0
@@ -101,6 +105,7 @@
 #define _default_X1 0.
 #define _default_X2 0.
 #define _default_X3 0.
+#ifdef TM_USE_BSM
 #define _default_kappa_BSM 1.0
 #define _default_csw_BSM 1.0
 #define _default_rho_BSM 1.0
@@ -129,6 +134,7 @@
 #define _default_vectorcurrentcurrent_BSM 0
 #define _default_giancarlo_BSM 0
 #define _default_timesmearcorrelator_BSM 0
+#endif
 #define _default_max_solver_iterations 5000
 #define _default_solver_precision 1.e-15
 #define _default_g_rgi_C1 0.
@@ -153,8 +159,10 @@
 #define _default_gmresdr_nr_ev 0
 #define _default_gauge_precision_read_flag 64
 #define _default_gauge_precision_write_flag 64
+#ifdef TM_USE_BSM
 #define _default_scalar_precision_read_flag 64
 #define _default_scalar_precision_write_flag 64
+#endif
 #define _default_g_disable_IO_checks 0
 #define _default_prop_precision_flag 64
 #define _default_write_prop_flag 1

@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-
+#ifdef TM_USE_BSM
 #ifdef HAVE_CONFIG_H
 # include<tmlqcd_config.h>
 #endif
@@ -1770,3 +1770,4 @@ void vector_axial_current_current_1234( bispinor ** propfields_source_zero, bisp
    free(spinortrace);
    free(colortrace);
 }
+#endif

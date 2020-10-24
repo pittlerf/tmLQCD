@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-
+#ifdef TM_USE_BSM
 #ifndef _SCALARIO_H
 #define _SCALARIO_H
 
@@ -28,4 +28,5 @@ int read_scalar_field_parallel(char * filename, scalar ** const sf);
 void smear_scalar_fields_correlator( scalar ** const sf, scalar ** smearedfield, int timeaverage );
 void smear_scalar_fields( scalar ** const sf, scalar ** smearedfield );
 int unit_scalar_field( scalar **sf);
+#endif
 #endif

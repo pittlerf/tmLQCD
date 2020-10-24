@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
-
+#ifdef TM_USE_BSM
 #include <errno.h>
 #include "global.h"
 #include "scalar.h"
@@ -685,4 +685,4 @@ void smear_scalar_fields_correlator( scalar **smearedfield, scalar ** const sf, 
    free(timeslicesum);
 
 }
-
+#endif

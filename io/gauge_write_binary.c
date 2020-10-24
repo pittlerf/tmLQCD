@@ -45,11 +45,12 @@ int write_binary_gauge_data(LemonWriter * lemonwriter, const int prec, DML_Check
     errno = 0;
     return 1;
   }
-
+#ifdef TM_USE_MPI
   if (g_debug_level > 0) {
     MPI_Barrier(g_cart_grid);
     tick = MPI_Wtime();
   }
+#endif
 
   tG = g_proc_coords[0]*T;
   zG = g_proc_coords[3]*LZ;
@@ -85,7 +86,9 @@ int write_binary_gauge_data(LemonWriter * lemonwriter, const int prec, DML_Check
   }
 
   if (g_debug_level > 0) {
+#ifdef TM_USE_MPI
     MPI_Barrier(g_cart_grid);
+#endif
     tock = MPI_Wtime();
 
     if (g_cart_id == 0) {

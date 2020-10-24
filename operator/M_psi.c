@@ -39,7 +39,7 @@
  *****************************************************************************/
 
 #ifdef HAVE_CONFIG_H
-# include<config.h>
+# include<tmlqcd_config.h>
 #endif
 
 #include <stdlib.h>
@@ -57,7 +57,7 @@
 #include "operator/D_psi.h"
 #include "solver/dirac_operator_eigenvectors.h"
 
-
+#ifdef TM_USE_BSM
 #include "init/init_scalar_field.h"
 
 
@@ -788,3 +788,4 @@ static inline void mm3addandstore(spinor * restrict const r, spinor const * rest
 
 
 
+#endif

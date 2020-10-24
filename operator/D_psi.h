@@ -21,6 +21,8 @@
 #ifndef _D_PSI_H
 #define _D_PSI_H
 
+void generic_exchange(void *field_in, int bytes_per_site);
+
 #include "block.h"
 
 //This works with tm and tm+clover 

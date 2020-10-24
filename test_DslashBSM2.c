@@ -56,19 +56,25 @@
 #include "start.h"
 #include "boundary.h"
 #include "io/gauge.h"
+#ifdef TM_USE_BSM
 #include "io/scalar.h"
+#endif
 #include "global.h"
 #include "getopt.h"
 #include "xchange/xchange.h"
 #include "init/init.h"
+#ifdef TM_USE_BSM
 #include "init/init_scalar_field.h"
 #include "init/init_bsm_2hop_lookup.h"
+#endif
 #include "test/check_geometry.h"
+#ifdef TM_USE_BSM
 #include "operator/D_psi_BSM2b.h"
 #include "operator/D_psi_BSM2m.h"
 #include "operator/D_psi_BSM2f.h"
-#include "solver/eigenvalues_krylov.h"
 #include "operator/M_psi.h"
+#endif
+#include "solver/eigenvalues_krylov.h"
 #include "mpi_init.h"
 #include "measure_gauge_action.h"
 #include "buffers/utils.h"
@@ -99,7 +105,11 @@
 static void usage();
 static void process_args(int argc, char *argv[], char ** input_filename, char ** filename);
 static void set_default_filenames(char ** input_filename, char ** filename);
-
+#ifndef TM_USE_BSM
+int main(int argc,char *argv[]){
+  printf("Works only with BSM operators switched on\n");
+}
+#else
 int main(int argc,char *argv[])
 {
   FILE *parameterfile = NULL;
@@ -134,8 +144,7 @@ int main(int argc,char *argv[])
 #ifdef TM_USE_MPI
 
 	DUM_DERI = 6;
-	DUM_SOLVER = DUM_DERI+2;
-	DUM_MATRIX = DUM_SOLVER+6;
+	DUM_MATRIX = DUM_DERI+2;
 	NO_OF_SPINORFIELDS = DUM_MATRIX+2;
 
 	MPI_Init(&argc, &argv);
@@ -504,4 +513,4 @@ static void set_default_filenames(char ** input_filename, char ** filename) {
     strcpy(*filename,"output");
   }
 }
-
+#endif
