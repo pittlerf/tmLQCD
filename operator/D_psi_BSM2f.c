@@ -26,11 +26,11 @@
  * with a scalar field coupling.
  *
  *******************************************************************************/
-
 #ifdef HAVE_CONFIG_H
 # include<tmlqcd_config.h>
 #endif
 
+#ifdef TM_USE_BSM
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -1089,3 +1089,4 @@ void Q2_psi_BSM2f(bispinor * const P, bispinor * const Q){
   }
 
 }
+#endif

@@ -26,11 +26,11 @@
  * with a scalar field coupling.
  *
  *******************************************************************************/
-#ifdef TM_USE_BSM
+
 #ifdef HAVE_CONFIG_H
 # include<tmlqcd_config.h>
 #endif
-
+#ifdef TM_USE_BSM
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>

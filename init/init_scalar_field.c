@@ -21,7 +21,6 @@
  *
  ***********************************************************************/
 
-#ifdef TM_USE_BSM
 #ifdef HAVE_CONFIG_H
 # include<tmlqcd_config.h>
 #endif
@@ -32,7 +31,7 @@
 #include "su3.h"
 #include "sse.h"
 
-
+#ifdef TM_USE_BSM
 scalar * sca = NULL;
 
 scalar * scasmeared = NULL;

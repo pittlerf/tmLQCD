@@ -25,7 +25,6 @@
  * Action of a Dirac operator (Frezzotti-Rossi BSM toy model) on a bispinor field
  *
  *******************************************************************************/
-#ifdef TM_USE_BSM
 #ifdef HAVE_CONFIG_H
 # include<tmlqcd_config.h>
 #endif
@@ -652,4 +651,3 @@ void Q2_psi_BSM(bispinor * const P, bispinor * const Q){
   /* the use of [3] has to be changed to avoid future conflicts */
 
 }
-#endif

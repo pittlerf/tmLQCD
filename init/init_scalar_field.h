@@ -20,7 +20,6 @@
  * (Following closely the lines of init_spinor_field.)
  *
  ***********************************************************************/
-#ifdef TM_USE_BSM
 #ifndef _INIT_SCALAR_FIELD_H
 #define _INIT_SCALAR_FIELD_H
 
@@ -29,5 +28,4 @@ int init_scalar_field(const int V, const int nr);
 
 void free_scalar_field();
 
-#endif
 #endif

@@ -48,6 +48,7 @@ EQL {SPC}*={SPC}*
 %{
 #ifdef HAVE_CONFIG_H
 #  include<tmlqcd_config.h>
+
 #endif
 #include<stdlib.h>
 #include<stdio.h>
@@ -291,6 +292,8 @@ static inline double fltlist_next_token(int * const list_end){
 %x GAUGEINPUTFILE
 %x SCALARINPUTFILE
 %x GAUGERPREC
+%x SCALARRPREC
+%x SCALARWPREC
 %x GAUGEWPREC
 %x DSBLIOCHECK
 %x DSBLSRCIOCHECK
@@ -487,6 +490,8 @@ static inline double fltlist_next_token(int * const list_end){
 ^GMRESDRNrEv{EQL}                  BEGIN(GMRESDRNEV);
 ^GaugeConfigReadPrecision{EQL}     BEGIN(GAUGERPREC);
 ^GaugeConfigWritePrecision{EQL}    BEGIN(GAUGEWPREC);
+^ScalarConfigReadPrecision{EQL}    BEGIN(SCALARRPREC);
+^ScalarConfigWritePrecision{EQL}   BEGIN(SCALARWPREC);
 ^DisableIOChecks{EQL}              BEGIN(DSBLIOCHECK);
 ^DisableGaugeIOChecks{EQL}         BEGIN(DSBLIOCHECK);
 ^DisableSourceIOChecks{EQL}        BEGIN(DSBLSRCIOCHECK);

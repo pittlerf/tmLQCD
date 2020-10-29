@@ -24,12 +24,10 @@
  * must be called after geometry()! (geometry_eo.h)
  *
  *********************************************************************************/
-#ifdef TM_USE_BSM
 #ifndef _INIT_BSM_2HOP_LOOKUP_H
 #define _INIT_BSM_2HOP_LOOKUP_H
 
 int init_bsm_2hop_lookup(const int V);
 void free_bsm_2hop_lookup();
 
-#endif
 #endif
