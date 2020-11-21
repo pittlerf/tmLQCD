@@ -100,7 +100,7 @@ include ${top_srcdir}/Makefile.global
 
 ${top_srcdir}/read_input.c: ${top_srcdir}/read_input.l
 ifneq (,$(findstring lex,${LEX}))
-	${LEX} -Ptmlqcd -i -t ${top_srcdir}/read_input.l > ${top_srcdir}/read_input.c
+	${LEX} -Ca -Ptmlqcd -i -t ${top_srcdir}/read_input.l > ${top_srcdir}/read_input.c
 else
 	$(error Unable to find (f)lex, read_input.c not built. Please install (f)lex!)
 endif
