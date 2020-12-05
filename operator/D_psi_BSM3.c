@@ -64,8 +64,6 @@ void free_D_psi_BSM3(){
      free(tempor);
 }
 
-
-
 static inline void tm3_add(bispinor * const out, const bispinor * const in, const double sign)
 {
   /*out+=s*i\gamma_5 \tau_3 mu3 *in
@@ -75,14 +73,14 @@ static inline void tm3_add(bispinor * const out, const bispinor * const in, cons
   double s = +1.;
   if(sign < 0) s = -1.;
 
-  // out_up += s * i \gamma_5 \mu3 * in_up
+  /* out_up += s * i \gamma_5 \mu3 * in_up */
   _vector_add_i_mul(out->sp_up.s0,  s*mu03_BSM, in->sp_up.s0);
   _vector_add_i_mul(out->sp_up.s1,  s*mu03_BSM, in->sp_up.s1);
   _vector_add_i_mul(out->sp_up.s2, -s*mu03_BSM, in->sp_up.s2);
   _vector_add_i_mul(out->sp_up.s3, -s*mu03_BSM, in->sp_up.s3);
 
 
-  // out_dn +=- s * i \gamma_5 \mu3 * in_dn
+  /* out_dn +=- s * i \gamma_5 \mu3 * in_dn */
   _vector_add_i_mul(out->sp_dn.s0, -s*mu03_BSM, in->sp_dn.s0);
   _vector_add_i_mul(out->sp_dn.s1, -s*mu03_BSM, in->sp_dn.s1);
   _vector_add_i_mul(out->sp_dn.s2,  s*mu03_BSM, in->sp_dn.s2);
@@ -98,14 +96,14 @@ static inline void tm1_add(bispinor * const out, const bispinor * const in, cons
   double s = +1.;
   if(sign < 0) s = -1.;
 
-  // out_up += s * i \gamma_5 \mu1 * in_dn
+  /* out_up += s * i \gamma_5 \mu1 * in_dn */
   _vector_add_i_mul(out->sp_up.s0,  s*mu01_BSM, in->sp_dn.s0);
   _vector_add_i_mul(out->sp_up.s1,  s*mu01_BSM, in->sp_dn.s1);
   _vector_add_i_mul(out->sp_up.s2, -s*mu01_BSM, in->sp_dn.s2);
   _vector_add_i_mul(out->sp_up.s3, -s*mu01_BSM, in->sp_dn.s3);
 
 
-  // out_dn += s * i \gamma_5 \mu1 * in_up
+  /* out_dn += s * i \gamma_5 \mu1 * in_up */
   _vector_add_i_mul(out->sp_dn.s0,  s*mu01_BSM, in->sp_up.s0);
   _vector_add_i_mul(out->sp_dn.s1,  s*mu01_BSM, in->sp_up.s1);
   _vector_add_i_mul(out->sp_dn.s2, -s*mu01_BSM, in->sp_up.s2);
@@ -665,7 +663,7 @@ static inline void p0add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef TM_USE_OMP
 #define static
 #endif
-  int sign_gamma = (inv==1) ? -sign : sign ;
+  static const int sign_gamma = (inv==1) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
   static su3_vector chi;
@@ -785,7 +783,7 @@ static inline void p1add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef TM_USE_OMP
 #define static
 #endif
-  int sign_gamma = (inv==1) ? -sign : sign ;
+  static const int sign_gamma = (inv==1) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
   static su3_vector chi;
@@ -913,7 +911,7 @@ static inline void p2add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef TM_USE_OMP
 #define static
 #endif
-  int sign_gamma = (inv==1) ? -sign : sign ;
+  static const int sign_gamma = (inv==1) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
   static su3_vector chi;
@@ -1041,7 +1039,7 @@ static inline void p3add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef TM_USE_OMP
 #define static
 #endif
-  int sign_gamma = (inv==1) ? -sign : sign ;
+  static const int sign_gamma = (inv==1) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
   static su3_vector chi;
@@ -1331,7 +1329,7 @@ void D_psi_BSM3_test(bispinor * const P, bispinor * const Q){
 
 
 
-/* D_psi_BSM acts on bispinor fields 
+/* D_psi_BSM3 acts on bispinor fields 
  * version meant for production uses two 
  * different gauge fields: smeared one
  * for the fermionic kinetic term and 
@@ -1369,6 +1367,10 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
     scalar phip[4][4];               /* phi_i(x+mu) = phip[mu][i] */
     scalar phim[4][4];               /* phi_i(x-mu) = phim[mu][i] */
     const su3 *w1,*w2,*w3;
+    _Complex double rho1, rho2;
+    rho1 = 0.5*(1. +  mu03_BSM * I);
+    rho2 = conj(rho1);
+
 
 
 
@@ -1407,16 +1409,33 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
         _spinor_null(rr->sp_up);
         _spinor_null(rr->sp_dn);
 
-        /* tmpr += (-2*r_BSM+m0_BSM)*s */
-        _vector_add_mul(rr->sp_up.s0, 0.5*r0_BSM+m0_BSM, s->sp_up.s0);
-        _vector_add_mul(rr->sp_up.s1, 0.5*r0_BSM+m0_BSM, s->sp_up.s1);
-        _vector_add_mul(rr->sp_up.s2, 0.5*r0_BSM+m0_BSM, s->sp_up.s2);
-        _vector_add_mul(rr->sp_up.s3, 0.5*r0_BSM+m0_BSM, s->sp_up.s3);
+        if(csw_BSM > 0) {
+         (assign_mul_one_sw_pm_imu_site_lexic)(ix, &(rr->sp_up), &(s->sp_up), +mu03_BSM);
+         (assign_mul_one_sw_pm_imu_site_lexic)(ix, &(rr->sp_dn), &(s->sp_dn), -mu03_BSM);
+        }
+        else {
+          _complex_times_vector(rr->sp_up.s0, rho1, s->sp_up.s0);
+          _complex_times_vector(rr->sp_up.s1, rho1, s->sp_up.s1);
+          _complex_times_vector(rr->sp_up.s2, rho2, s->sp_up.s2);
+          _complex_times_vector(rr->sp_up.s3, rho2, s->sp_up.s3);
 
-        _vector_add_mul(rr->sp_dn.s0, 0.5*r0_BSM+m0_BSM, s->sp_dn.s0);
-        _vector_add_mul(rr->sp_dn.s1, 0.5*r0_BSM+m0_BSM, s->sp_dn.s1);
-        _vector_add_mul(rr->sp_dn.s2, 0.5*r0_BSM+m0_BSM, s->sp_dn.s2);
-        _vector_add_mul(rr->sp_dn.s3, 0.5*r0_BSM+m0_BSM, s->sp_dn.s3);
+          _complex_times_vector(rr->sp_dn.s0, rho2, s->sp_dn.s0);
+          _complex_times_vector(rr->sp_dn.s1, rho2, s->sp_dn.s1);
+          _complex_times_vector(rr->sp_dn.s2, rho1, s->sp_dn.s2);
+          _complex_times_vector(rr->sp_dn.s3, rho1, s->sp_dn.s3);
+
+        }
+
+        /* tmpr += (-2*r_BSM+m0_BSM)*s */
+        _vector_add_mul(rr->sp_up.s0, m0_BSM, s->sp_up.s0);
+        _vector_add_mul(rr->sp_up.s1, m0_BSM, s->sp_up.s1);
+        _vector_add_mul(rr->sp_up.s2, m0_BSM, s->sp_up.s2);
+        _vector_add_mul(rr->sp_up.s3, m0_BSM, s->sp_up.s3);
+
+        _vector_add_mul(rr->sp_dn.s0, m0_BSM, s->sp_dn.s0);
+        _vector_add_mul(rr->sp_dn.s1, m0_BSM, s->sp_dn.s1);
+        _vector_add_mul(rr->sp_dn.s2, m0_BSM, s->sp_dn.s2);
+        _vector_add_mul(rr->sp_dn.s3, m0_BSM, s->sp_dn.s3);
 
 
         /* tmpr += (\eta_BSM+2*\rho_BSM) * F(x)*Q(x) */
@@ -1434,8 +1453,8 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
           tm1_add(rr, s, 1);
 
         /* tmpr+=i\gamma_5\tau_3 mu0 *Q */
-        if( fabs(mu03_BSM) > 1.e-10 )
-          tm3_add(rr, s, 1);
+        /* if( fabs(mu03_BSM) > 1.e-10 )
+          tm3_add(rr, s, 1); */
 
         /* the hopping part:
          * tmpr += +1/2 \sum_\mu (1-gamma_\mu - \rho_BSM/2*F(x) - \rho_BSM/2*F(x+-\mu))*U_{+-\mu}(x)*Q(x+-\mu)
@@ -1448,7 +1467,6 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
         padd_chitildebreak(rr, sp, up, 0, 0.5*phase_0, -0.5*rho_BSM, phi, phip[0], +1.);
 
         /******************************* direction -0 *********************************/
-
         iy=g_idn[ix][0];
         sm = (bispinor *) Q +iy;
         um=&g_smeared_gauge_field[iy][0];
@@ -1549,6 +1567,10 @@ void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
     scalar phi[4];                   // phi_i(x)
     scalar phip[4][4];               // phi_i(x+mu) = phip[mu][i]
     scalar phim[4][4];               // phi_i(x-mu) = phim[mu][i] 
+    _Complex double rho1, rho2;
+    rho1 = 0.5*( 1. +  mu03_BSM * I);
+    rho2 = conj(rho1);
+
     
     /************************ loop over all lattice sites *************************/
 
@@ -1578,20 +1600,38 @@ void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
       }
 
       // the local part (not local in phi)
-      
-      _spinor_null(rr->sp_up);
-      _spinor_null(rr->sp_dn);
 
+       _spinor_null(rr->sp_up);
+       _spinor_null(rr->sp_dn);
+
+       if(csw_BSM > 0) {
+         (assign_mul_one_sw_pm_imu_site_lexic)(ix, &(rr->sp_up), &(s->sp_up), -mu03_BSM);
+         (assign_mul_one_sw_pm_imu_site_lexic)(ix, &(rr->sp_dn), &(s->sp_dn), +mu03_BSM);
+        }
+        else {
+          _complex_times_vector(rr->sp_up.s0, rho2, s->sp_up.s0);
+          _complex_times_vector(rr->sp_up.s1, rho2, s->sp_up.s1);
+          _complex_times_vector(rr->sp_up.s2, rho1, s->sp_up.s2);
+          _complex_times_vector(rr->sp_up.s3, rho1, s->sp_up.s3);
+
+          _complex_times_vector(rr->sp_dn.s0, rho1, s->sp_dn.s0);
+          _complex_times_vector(rr->sp_dn.s1, rho1, s->sp_dn.s1);
+          _complex_times_vector(rr->sp_dn.s2, rho2, s->sp_dn.s2);
+          _complex_times_vector(rr->sp_dn.s3, rho2, s->sp_dn.s3);
+
+        }
+
+ 
       // tmpr += (-2*r_BSM+m0_BSM)*s
-      _vector_add_mul(rr->sp_up.s0, -2*r_BSM+m0_BSM, s->sp_up.s0);
-      _vector_add_mul(rr->sp_up.s1, -2*r_BSM+m0_BSM, s->sp_up.s1);
-      _vector_add_mul(rr->sp_up.s2, -2*r_BSM+m0_BSM, s->sp_up.s2);
-      _vector_add_mul(rr->sp_up.s3, -2*r_BSM+m0_BSM, s->sp_up.s3);
+      _vector_add_mul(rr->sp_up.s0, m0_BSM, s->sp_up.s0);
+      _vector_add_mul(rr->sp_up.s1, m0_BSM, s->sp_up.s1);
+      _vector_add_mul(rr->sp_up.s2, m0_BSM, s->sp_up.s2);
+      _vector_add_mul(rr->sp_up.s3, m0_BSM, s->sp_up.s3);
 
-      _vector_add_mul(rr->sp_dn.s0, -2*r_BSM+m0_BSM, s->sp_dn.s0);
-      _vector_add_mul(rr->sp_dn.s1, -2*r_BSM+m0_BSM, s->sp_dn.s1);
-      _vector_add_mul(rr->sp_dn.s2, -2*r_BSM+m0_BSM, s->sp_dn.s2);
-      _vector_add_mul(rr->sp_dn.s3, -2*r_BSM+m0_BSM, s->sp_dn.s3);
+      _vector_add_mul(rr->sp_dn.s0, m0_BSM, s->sp_dn.s0);
+      _vector_add_mul(rr->sp_dn.s1, m0_BSM, s->sp_dn.s1);
+      _vector_add_mul(rr->sp_dn.s2, m0_BSM, s->sp_dn.s2);
+      _vector_add_mul(rr->sp_dn.s3, m0_BSM, s->sp_dn.s3);
       
       // tmpr += (\eta_BSM+2*\rho_BSM) * Fbar(x)*Q(x)
       Fadd(rr, s, phi, eta_BSM+2.0*rho_BSM, -1.);
@@ -1607,13 +1647,12 @@ void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
 
       // tmpr+=i\gamma_5\tau_1 mu0 *Q 
       if( fabs(mu01_BSM) > 1.e-10 )
-        tm1_add(rr, s, 1);
+        tm1_add(rr, s, -1);
 
       // tmpr+=i\gamma_5\tau_3 mu0 *Q 
-      if( fabs(mu03_BSM) > 1.e-10 )
-        tm3_add(rr, s, 1);
+      /*if( fabs(mu03_BSM) > 1.e-10 )
+        tm3_add(rr, s, -1);*/
 
-      
       // the hopping part:
       // tmpr += +1/2 \sum_\mu (1+\gamma_\mu - \rho_BSM/2*Fbar(x) - \rho_BSM/2*Fbar(x+-\mu)*U_{+-\mu}(x)*Q(x+-\mu)
       /******************************* direction +0 *********************************/
@@ -1622,7 +1661,7 @@ void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
       up=&g_smeared_gauge_field[ix][0];
       p0add_wilsonclover(rr, sp, up, 0, 0.5*phase_0, -1);
       up=&g_gauge_field[ix][0];
-      padd_chitildebreak(rr, sp, up, 0, 0.5*phase_0, -0.5*rho_BSM, phi, phip[0], -1.);
+      padd_chitildebreak(rr, sp, up, 0, -0.5*phase_0, 0.5*rho_BSM, phi, phip[0], -1.);
  
       /******************************* direction -0 *********************************/
       iy=g_idn[ix][0];
@@ -1630,16 +1669,14 @@ void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
       um=&g_smeared_gauge_field[iy][0];
       p0add_wilsonclover(rr, sm, um, 1, 0.5*phase_0, -1);
       um=&g_gauge_field[iy][0];
-      padd_chitildebreak(rr, sm, um, 1, -0.5*phase_0, 0.5*rho_BSM, phi, phim[0], -1.);
-
-      
+      padd_chitildebreak(rr, sm, um, 1, 0.5*phase_0, -0.5*rho_BSM, phi, phim[0], -1.);
       /******************************* direction +1 *********************************/
       iy=g_iup[ix][1];
       sp = (bispinor *) Q +iy;
       up=&g_smeared_gauge_field[ix][1];
       p1add_wilsonclover(rr, sp, up, 0, 0.5*phase_1, -1);
       up=&g_gauge_field[ix][1];
-      padd_chitildebreak(rr, sp, up, 0, 0.5*phase_1, -0.5*rho_BSM, phi, phip[1], -1.);
+      padd_chitildebreak(rr, sp, up, 0, -0.5*phase_1, 0.5*rho_BSM, phi, phip[1], -1.);
  
       /******************************* direction -1 *********************************/
       iy=g_idn[ix][1];
@@ -1647,7 +1684,7 @@ void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
       um=&g_smeared_gauge_field[iy][1];
       p1add_wilsonclover(rr, sm, um, 1, 0.5*phase_1, -1);
       um=&g_gauge_field[iy][1];
-      padd_chitildebreak(rr, sm, um, 1, -0.5*phase_1, 0.5*rho_BSM, phi, phim[1], -1.);
+      padd_chitildebreak(rr, sm, um, 1, 0.5*phase_1, -0.5*rho_BSM, phi, phim[1], -1.);
  
       /******************************* direction +2 *********************************/
       iy=g_iup[ix][2];
@@ -1655,7 +1692,7 @@ void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
       up=&g_smeared_gauge_field[ix][2];
       p2add_wilsonclover(rr, sp, up, 0, 0.5*phase_2, -1);
       up=&g_gauge_field[ix][2];
-      padd_chitildebreak(rr, sp, up, 0, 0.5*phase_2, -0.5*rho_BSM, phi, phip[2], -1.);
+      padd_chitildebreak(rr, sp, up, 0, -0.5*phase_2, 0.5*rho_BSM, phi, phip[2], -1.);
 
       /******************************* direction -2 *********************************/
       iy=g_idn[ix][2];
@@ -1663,7 +1700,7 @@ void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
       um=&g_smeared_gauge_field[iy][2]; 
       p2add_wilsonclover(rr, sm, um, 1, 0.5*phase_2, -1);
       um=&g_gauge_field[iy][2]; 
-      padd_chitildebreak(rr, sm, um, 1, -0.5*phase_2, 0.5*rho_BSM, phi, phim[2], -1.);
+      padd_chitildebreak(rr, sm, um, 1, 0.5*phase_2, -0.5*rho_BSM, phi, phim[2], -1.);
  
       /******************************* direction +3 *********************************/
       iy=g_iup[ix][3];
@@ -1671,7 +1708,7 @@ void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
       up=&g_smeared_gauge_field[ix][3];
       p3add_wilsonclover(rr, sp, up, 0, 0.5*phase_3, -1);
       up=&g_gauge_field[ix][3];
-      padd_chitildebreak(rr, sp, up, 0, 0.5*phase_3, -0.5*rho_BSM, phi, phip[3], -1.);
+      padd_chitildebreak(rr, sp, up, 0, -0.5*phase_3, 0.5*rho_BSM, phi, phip[3], -1.);
       
       /******************************* direction -3 *********************************/
       iy=g_idn[ix][3];
@@ -1679,8 +1716,7 @@ void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
       um=&g_smeared_gauge_field[iy][3];
       p3add_wilsonclover(rr, sm, um, 1, 0.5*phase_3, -1);
       um=&g_gauge_field[iy][3];
-      padd_chitildebreak(rr, sm, um, 1, -0.5*phase_3, 0.5*rho_BSM, phi, phim[3], -1.);
-
+      padd_chitildebreak(rr, sm, um, 1, 0.5*phase_3, -0.5*rho_BSM, phi, phim[3], -1.);
     }
 #ifdef TM_USE_OMP
   } /* OpenMP closing brace */
