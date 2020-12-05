@@ -1079,27 +1079,27 @@ static inline double fltlist_next_token(int * const list_end){
     name_caller = YY_START; 
     BEGIN(BSMSOLVER);
   }
-  {SPC}*rho{EQL}{FLT} {
+  {SPC}*rhobsm{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     rho_BSM = c;
     if(myverbose != 0) printf("  BSM parameter rho set to %f\n", rho_BSM);
   }
-  {SPC}*eta{EQL}{FLT} {
+  {SPC}*etabsm{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z] = %lf", name, &c);
     eta_BSM = c;
     if(myverbose != 0) printf("  BSM parameter eta set to %f\n", eta_BSM);
   }
-  {SPC}*m0{EQL}{FLT} {
+  {SPC}*m0bsm{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z0] = %lf", name, &c);
     m0_BSM = c;
     if(myverbose != 0) printf("  BSM parameter m0 set to %f\n", m0_BSM);
   }
-  {SPC}*mu01{EQL}{FLT} {
+  {SPC}*mu01bsm{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z01] = %lf", name, &c);
     mu01_BSM = c;
     if(myverbose != 0) printf("  BSM parameter mu01 set to %f\n", mu01_BSM);
   }
-  {SPC}*mu03{EQL}{FLT} {
+  {SPC}*mu03bsm{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z0123] = %lf", name, &c);
     mu03_BSM = c;
     if(myverbose != 0) printf("  BSM parameter mu03 set to %f\n", mu03_BSM);
@@ -1119,7 +1119,7 @@ static inline double fltlist_next_token(int * const list_end){
     kappa_BSM = c;
     if(myverbose != 0) printf("  BSM parameter kappa_BSM set to %f\n", kappa_BSM);
   }
-  {SPC}*csw{EQL}{FLT} {
+  {SPC}*cswbsm{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z0123] = %lf", name, &c);
     csw_BSM = c;
     if(myverbose != 0) printf("  BSM parameter csw_bsm set to %f\n", csw_BSM);
