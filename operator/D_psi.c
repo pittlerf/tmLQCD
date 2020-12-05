@@ -1538,17 +1538,22 @@ void D_psi_bispinor(bispinor * const P, bispinor * const Q){
 
     _bispinor_null( tmpr);
 
-    _complex_times_vector(tmpr.sp_up.s0, rho1, s->sp_up.s0);
-    _complex_times_vector(tmpr.sp_up.s1, rho1, s->sp_up.s1);
-    _complex_times_vector(tmpr.sp_up.s2, rho2, s->sp_up.s2);
-    _complex_times_vector(tmpr.sp_up.s3, rho2, s->sp_up.s3);
+    if(g_c_sw > 0) {
+      (assign_mul_one_sw_pm_imu_site_lexic)(ix, &(tmpr.sp_up), &(s->sp_up), +g_mu);
+      (assign_mul_one_sw_pm_imu_site_lexic)(ix, &(tmpr.sp_dn), &(s->sp_dn), -g_mu);
+    }
+    else {
+      _complex_times_vector(tmpr.sp_up.s0, rho1, s->sp_up.s0);
+      _complex_times_vector(tmpr.sp_up.s1, rho1, s->sp_up.s1);
+      _complex_times_vector(tmpr.sp_up.s2, rho2, s->sp_up.s2);
+      _complex_times_vector(tmpr.sp_up.s3, rho2, s->sp_up.s3);
 
-    _complex_times_vector(tmpr.sp_dn.s0, rho1, s->sp_dn.s0);
-    _complex_times_vector(tmpr.sp_dn.s1, rho1, s->sp_dn.s1);
-    _complex_times_vector(tmpr.sp_dn.s2, rho2, s->sp_dn.s2);
-    _complex_times_vector(tmpr.sp_dn.s3, rho2, s->sp_dn.s3);
+      _complex_times_vector(tmpr.sp_dn.s0, rho2, s->sp_dn.s0);
+      _complex_times_vector(tmpr.sp_dn.s1, rho2, s->sp_dn.s1);
+      _complex_times_vector(tmpr.sp_dn.s2, rho1, s->sp_dn.s2);
+      _complex_times_vector(tmpr.sp_dn.s3, rho1, s->sp_dn.s3);
 
-
+    }
 
     /******************************* direction +0 *********************************/
     iy=g_iup[ix][0];
