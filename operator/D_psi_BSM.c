@@ -356,6 +356,53 @@ static inline void p3add(bispinor * restrict const tmpr, bispinor const * restri
   return;
 }
 
+static inline void tm3_add(bispinor * const out, const bispinor * const in, const double sign)
+{
+  /*out+=s*i\gamma_5 \tau_3 mu3 *in
+ *    * sign>0 for D+i\gamma_5\tau_3
+ *       * sign<0 for D_dag-i\gamma_5\tau_3
+ *          */
+  double s = +1.;
+  if(sign < 0) s = -1.;
+
+  /* out_up += s * i \gamma_5 \mu3 * in_up */
+  _vector_add_i_mul(out->sp_up.s0,  s*mu03_BSM, in->sp_up.s0);
+  _vector_add_i_mul(out->sp_up.s1,  s*mu03_BSM, in->sp_up.s1);
+  _vector_add_i_mul(out->sp_up.s2, -s*mu03_BSM, in->sp_up.s2);
+  _vector_add_i_mul(out->sp_up.s3, -s*mu03_BSM, in->sp_up.s3);
+
+
+  /* out_dn +=- s * i \gamma_5 \mu3 * in_dn */
+  _vector_add_i_mul(out->sp_dn.s0, -s*mu03_BSM, in->sp_dn.s0);
+  _vector_add_i_mul(out->sp_dn.s1, -s*mu03_BSM, in->sp_dn.s1);
+  _vector_add_i_mul(out->sp_dn.s2,  s*mu03_BSM, in->sp_dn.s2);
+  _vector_add_i_mul(out->sp_dn.s3,  s*mu03_BSM, in->sp_dn.s3);
+
+}
+static inline void tm1_add(bispinor * const out, const bispinor * const in, const double sign)
+{
+  /*out+=s*i\gamma_5 \tau_1 mu1 *in
+ *    * sign>0 for D+i\gamma_5\tau_1
+ *       * sign<0 for D_dag-i\gamma_5\tau_1
+ *          */
+  double s = +1.;
+  if(sign < 0) s = -1.;
+
+  /* out_up += s * i \gamma_5 \mu1 * in_dn */
+  _vector_add_i_mul(out->sp_up.s0,  s*mu01_BSM, in->sp_dn.s0);
+  _vector_add_i_mul(out->sp_up.s1,  s*mu01_BSM, in->sp_dn.s1);
+  _vector_add_i_mul(out->sp_up.s2, -s*mu01_BSM, in->sp_dn.s2);
+  _vector_add_i_mul(out->sp_up.s3, -s*mu01_BSM, in->sp_dn.s3);
+
+
+  /* out_dn += s * i \gamma_5 \mu1 * in_up */
+  _vector_add_i_mul(out->sp_dn.s0,  s*mu01_BSM, in->sp_up.s0);
+  _vector_add_i_mul(out->sp_dn.s1,  s*mu01_BSM, in->sp_up.s1);
+  _vector_add_i_mul(out->sp_dn.s2, -s*mu01_BSM, in->sp_up.s2);
+  _vector_add_i_mul(out->sp_dn.s3, -s*mu01_BSM, in->sp_up.s3);
+
+}
+
 
 /* D_psi_BSM acts on bispinor fields */
 void D_psi_BSM(bispinor * const P, bispinor * const Q){
@@ -443,6 +490,15 @@ void D_psi_BSM(bispinor * const P, bispinor * const Q){
 	  Fadd(rr, s, phip[mu], 0.25*rho_BSM, +1.);
 	  Fadd(rr, s, phim[mu], 0.25*rho_BSM, +1.);
 	}
+
+        /* tmpr+=i\gamma_5\tau_1 mu0 *Q */
+        if( fabs(mu01_BSM) > 1.e-10 )
+          tm1_add(rr, s, 1);
+
+        /* tmpr+=i\gamma_5\tau_3 mu0 *Q */
+        if( fabs(mu03_BSM) > 1.e-10 )
+          tm3_add(rr, s, 1);
+
 
 
 	// the hopping part:
@@ -585,6 +641,15 @@ void D_psi_dagger_BSM(bispinor * const P, bispinor * const Q){
         Fadd(rr, s, phip[mu], 0.25*rho_BSM, -1.);
         Fadd(rr, s, phim[mu], 0.25*rho_BSM, -1.);
       }
+
+      /* tmpr+=i\gamma_5\tau_1 mu0 *Q */
+      if( fabs(mu01_BSM) > 1.e-10 )
+        tm1_add(rr, s, 1);
+
+      /* tmpr+=i\gamma_5\tau_3 mu0 *Q */
+      if( fabs(mu03_BSM) > 1.e-10 )
+        tm3_add(rr, s, 1);
+
       
       // the hopping part:
       // tmpr += +-1/2 \sum_\mu (-\gamma_\mu -+ \rho_BSM/2*Fbar(x) -+ \rho_BSM/2*Fbar(x+-\mu)*U_{+-\mu}(x)*Q(x+-\mu)
