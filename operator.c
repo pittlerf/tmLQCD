@@ -567,11 +567,13 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
   }
 #if defined TM_USE_BSM
   else if( optr->type == BSM || optr->type == BSM2b || optr->type == BSM2m || optr->type == BSM2f || optr->type == BSM3 ) {
-    if (g_cart_id == 0 && g_debug_level > 1) {
-     printf("#\n# csw = %e, computing clover leafs\n", g_c_sw);
+    if (g_cart_id == 0 ) {
+     printf("# csw = %e, computing clover leafs\n", csw_BSM);
     }
-    init_sw_fields(VOLUME);
-    sw_term( (const su3**) g_gauge_field, optr->kappa, optr->c_sw);
+    if (optr->type==BSM3){
+      init_sw_fields(VOLUME);
+      sw_term( (const su3**) g_smeared_gauge_field, 1.,  csw_BSM);
+    }
 
     bispinor *src  = (bispinor *)malloc(sizeof(bispinor)*VOLUMEPLUSRAND );
     bispinor *dest = (bispinor *)malloc(sizeof(bispinor)*VOLUMEPLUSRAND );
