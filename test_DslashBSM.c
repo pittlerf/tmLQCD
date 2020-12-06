@@ -388,7 +388,7 @@ int main(int argc,char *argv[])
   // v
 	random_spinor_field_lexic( (spinor*)(g_bispinor_field[5]), reproduce_randomnumber_flag, RN_GAUSS);
 	random_spinor_field_lexic( (spinor*)(g_bispinor_field[5])+VOLUME, reproduce_randomnumber_flag, RN_GAUSS);
-#if defined MPI
+#if defined TM_USE_MPI
 	generic_exchange(g_bispinor_field[4], sizeof(bispinor));
 #endif
 

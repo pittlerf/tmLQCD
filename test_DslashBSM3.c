@@ -223,7 +223,7 @@ int main(int argc,char *argv[])
 #ifdef _PERSISTENT
      printf("# The code was compiled for persistent MPI calls (halfspinor only)\n");
 #endif
-#ifdef _USE_BSM
+#ifdef TM_USE_BSM
      printf("# The code was compiled for persistent for BSM operators i.e. we are using two gauge fields\n");
 #endif
 #endif
@@ -297,10 +297,10 @@ int main(int argc,char *argv[])
   }
   init_dirac_halfspinor();
   init_D_psi_BSM3();
-#if (defined MPI && !(defined _USE_SHMEM))
+//#if (defined MPI && !(defined _USE_SHMEM))
 // fails, we're not using spinor fields
 //	check_xchange();
-#endif
+//#endif
 
   start_ranlux(1, 123456);
 

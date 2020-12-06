@@ -27,7 +27,7 @@
 #include <math.h>
 #include <errno.h>
 #include <time.h>
-#ifdef MPI
+#ifdef TM_USE_MPI
 #include <mpi.h>
 #endif
 #include "global.h"
@@ -194,7 +194,7 @@ int main(int argc, char *argv[]){
   _Complex double *current1,*current2,*current3;
   _Complex double *pscalar1,*pscalar2,*pscalar3;
   _Complex double *scalar1, *scalar2, *scalar3 ;
-#if defined MPI
+#if defined TM_USE_MPI
 
   MPI_Init(&argc, &argv);
 
@@ -244,7 +244,7 @@ int main(int argc, char *argv[]){
       fprintf(stdout, "#parameter mu01_BSM set to %f\n", mu01_BSM);
   }
 
-#ifdef OMP
+#ifdef TM_USE_OMP
   init_openmp();
 #endif
   tmlqcd_mpi_init(argc, argv);
@@ -295,7 +295,7 @@ int main(int argc, char *argv[]){
 #endif
   for(j = 0; j < no_operators; j++) if(!operator_list[j].even_odd_flag) even_odd_flag = 0;
 
-#ifndef MPI
+#ifndef TM_USE_MPI
   g_dbw2rand = 0;
 #endif
 
@@ -392,7 +392,7 @@ int main(int argc, char *argv[]){
           fflush(stdout);
       }
 
-#ifdef MPI
+#ifdef TM_USE_MPI
       xchange_gauge(g_gauge_field);
 #endif
     /*compute the energy of the gauge field*/
@@ -413,8 +413,15 @@ int main(int argc, char *argv[]){
           fprintf(stdout, "#\n"); /*Indicate starting of the operator part*/
       }
       for (op_id =0; op_id < no_operators; op_id++){
-          if (operator_list[op_id].type== BSM2f){
-              init_D_psi_BSM2f();
+          if ( (operator_list[op_id].type== BSM2f) || (operator_list[op_id].type == BSM3) ){
+              if (operator_list[op_id].type== BSM2f){
+                init_D_psi_BSM2f();
+              }
+              else {
+                init_D_psi_BSM3();
+                init_sw_fields(VOLUME);
+                sw_term( (const su3**) g_smeared_gauge_field, 1.,  csw_BSM);
+              }
               operator_list[op_id].prop_zero=(bispinor  **)malloc(sizeof(bispinor*)*48);
               if (operator_list[op_id].prop_zero == NULL){
                 printf("Error in memory allocation for storing the propagators\n");
@@ -487,7 +494,7 @@ int main(int argc, char *argv[]){
              }//End of reading scalar field
 
 //             unit_scalar_field(g_scalar_field);
-#if defined MPI
+#if defined TM_USE_MPI
              for( int s=0; s<4; s++ )
                 generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
 #endif
@@ -1944,8 +1951,13 @@ int main(int argc, char *argv[]){
              } //End of loop over samples
 
           } //End loop over scalar fields
-          if (operator_list[op_id].type == BSM2f ){
-             free_D_psi_BSM2f();
+          if ( ( operator_list[op_id].type == BSM2f ) || ( operator_list[op_id].type == BSM3 )){
+             if ( operator_list[op_id].type == BSM2f ){
+               free_D_psi_BSM2f();
+             }
+             else {
+               free_D_psi_BSM3();
+             }
              for (int ii=0; ii<48; ++ii)
                free(operator_list[op_id].prop_zero[ii]);
              free(operator_list[op_id].prop_zero);
@@ -1967,7 +1979,7 @@ int main(int argc, char *argv[]){
   free_bispinor_field();
   free_scalar_field();
   free_spinor_field();
-#if defined MPI
+#if defined TM_USE_MPI
   MPI_Barrier(MPI_COMM_WORLD);
   MPI_Finalize();
 #endif

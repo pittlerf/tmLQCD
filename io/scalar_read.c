@@ -86,7 +86,7 @@ int read_scalar_field_parallel( char * filename, scalar ** const sf){
           if ( nread != count ) { printf("Error in reading the scalar fields, exiting ...\n"); exit(1); }
   
       }
-#if defined MPI
+#if defined TM_USE_MPI
       MPI_Barrier(g_cart_grid);
       MPI_Bcast(buffer, count,  scalar_precision_read_flag==64 ? MPI_DOUBLE : MPI_FLOAT ,0, g_cart_grid );
 #endif
@@ -103,7 +103,7 @@ int read_scalar_field_parallel( char * filename, scalar ** const sf){
             }
          }
       }
-#if defined MPI
+#if defined TM_USE_MPI
       MPI_Barrier(g_cart_grid);
 #endif
            
@@ -133,7 +133,7 @@ void smear_scalar_fields( scalar ** smearedfield, scalar ** const sf ) {
    scalar *nearen= (scalar *)malloc(sizeof(scalar)*VOLUMEPLUSRAND );
 
    int neit, neix, neiy, neiz;
-#if defined MPI
+#if defined TM_USE_MPI
    MPI_Status  statuses[8];
    MPI_Request *request;
    request=( MPI_Request *) malloc(sizeof(MPI_Request)*8);
@@ -158,7 +158,7 @@ void smear_scalar_fields( scalar ** smearedfield, scalar ** const sf ) {
             for (neiy=0; neiy<2; ++neiy)
                for (neiz=0; neiz<2; ++neiz){
 
-#if defined MPI
+#if defined TM_USE_MPI
                   count=0;
                   generic_exchange_direction_nonblocking( sf[in], sizeof(scalar), neit ? TDOWN : TUP, request, &count );
                   MPI_Waitall( count, request, statuses);
@@ -166,7 +166,7 @@ void smear_scalar_fields( scalar ** smearedfield, scalar ** const sf ) {
                   for (ix=0; ix<VOLUME; ++ix)
                      tmps1[ix]= sf[in][    neit ? g_idn[ix][TUP] : g_iup[ix][TUP] ];
 
-#if defined_MPI
+#if defined TM_USE_MPI
                   count=0;
                   generic_exchange_direction_nonblocking(  tmps1, sizeof(scalar), neix ? XDOWN : XUP, request, &count );
                   MPI_Waitall( count, request, statuses);
@@ -174,7 +174,7 @@ void smear_scalar_fields( scalar ** smearedfield, scalar ** const sf ) {
                   for (ix=0; ix<VOLUME; ++ix)
                      tmps2[ix]= tmps1[ neix ? g_idn[ix][XUP] : g_iup[ix][XUP] ];
 
-#if defined MPI
+#if defined TM_USE_MPI
                   count=0;
                   generic_exchange_direction_nonblocking(  tmps2, sizeof(scalar), neiy ? YDOWN : YUP, request, &count );
                   MPI_Waitall( count, request, statuses);
@@ -182,7 +182,7 @@ void smear_scalar_fields( scalar ** smearedfield, scalar ** const sf ) {
                   for (ix=0; ix<VOLUME; ++ix)
                      tmps1[ix]= tmps2[ neiy ? g_idn[ix][YUP] : g_iup[ix][YUP] ];
 
-#if defined MPI
+#if defined TM_USE_MPI
                   count=0;
                   generic_exchange_direction_nonblocking(  tmps1, sizeof(scalar), neix ? ZDOWN : ZUP, request, &count );
                   MPI_Waitall( count, request, statuses);
@@ -196,7 +196,7 @@ void smear_scalar_fields( scalar ** smearedfield, scalar ** const sf ) {
       for (ix =0; ix<VOLUME; ++ix){
          hyperc[ix]/=17.0;
       }
-#if defined MPI
+#if defined TM_USE_MPI
       count=0;
       generic_exchange_direction_nonblocking( sf[in], sizeof(scalar), TDOWN, request, &count );
       MPI_Waitall( count, request, statuses);
@@ -206,7 +206,7 @@ void smear_scalar_fields( scalar ** smearedfield, scalar ** const sf ) {
       for (ix=0; ix<VOLUME; ++ix)
          nearen[ix]+= tmps1[ix];
       
-#if defined MPI
+#if defined TM_USE_MPI
       count=0;
       generic_exchange_direction_nonblocking( sf[in], sizeof(scalar), TUP ,  request, &count );
       MPI_Waitall( count, request, statuses);     
@@ -216,7 +216,7 @@ void smear_scalar_fields( scalar ** smearedfield, scalar ** const sf ) {
       for (ix=0; ix<VOLUME; ++ix)
          nearen[ix]+= tmps1[ix];
       
-#if defined MPI
+#if defined TM_USE_MPI
       count=0;
       generic_exchange_direction_nonblocking( sf[in], sizeof(scalar), XDOWN, request, &count );
       MPI_Waitall( count, request, statuses);   
@@ -226,7 +226,7 @@ void smear_scalar_fields( scalar ** smearedfield, scalar ** const sf ) {
       for (ix=0; ix<VOLUME; ++ix)
          nearen[ix]+= tmps1[ix];
 
-#if defined MPI
+#if defined TM_USE_MPI
       count=0;
       generic_exchange_direction_nonblocking( sf[in], sizeof(scalar), XUP , request, &count );
       MPI_Waitall( count, request, statuses);
@@ -236,7 +236,7 @@ void smear_scalar_fields( scalar ** smearedfield, scalar ** const sf ) {
       for (ix=0; ix<VOLUME; ++ix)
          nearen[ix]+= tmps1[ix];
 
-#if defined_MPI
+#if defined TM_USE_MPI
       count=0;    
       generic_exchange_direction_nonblocking( sf[in], sizeof(scalar), YDOWN, request, &count );
       MPI_Waitall( count, request, statuses);
@@ -246,7 +246,7 @@ void smear_scalar_fields( scalar ** smearedfield, scalar ** const sf ) {
       for (ix=0; ix<VOLUME; ++ix)
          nearen[ix]+= tmps1[ix];
     
-#if defined MPI
+#if defined TM_USE_MPI
       count=0;
       generic_exchange_direction_nonblocking( sf[in], sizeof(scalar), YUP, request, &count );
       MPI_Waitall( count, request, statuses);
@@ -256,7 +256,7 @@ void smear_scalar_fields( scalar ** smearedfield, scalar ** const sf ) {
       for (ix=0; ix<VOLUME; ++ix)
          nearen[ix]+= tmps1[ix];
 
-#if defined MPI
+#if defined TM_USE_MPI
       count=0;
       generic_exchange_direction_nonblocking( sf[in], sizeof(scalar), ZDOWN, request, &count );
       MPI_Waitall( count, request, statuses);  
@@ -266,7 +266,7 @@ void smear_scalar_fields( scalar ** smearedfield, scalar ** const sf ) {
       for (ix=0; ix<VOLUME; ++ix)
          nearen[ix]+= tmps1[ix];
 
-#if defined MPI
+#if defined TM_USE_MPI
       count=0;
       generic_exchange_direction_nonblocking( sf[in], sizeof(scalar), ZUP, request, &count );
       MPI_Waitall( count, request, statuses);
@@ -290,7 +290,7 @@ void smear_scalar_fields( scalar ** smearedfield, scalar ** const sf ) {
 
    free(hyperc);
    free(nearen);
-#if defined MPI
+#if defined TM_USE_MPI
    free(request);
 #endif
 }
@@ -299,7 +299,7 @@ void smear_scalar_fields_correlator( scalar **smearedfield, scalar ** const sf, 
    int x0,y0,z0,t0;
    double **timeslicesum;
    double **timeslicesumnew;
-#if defined MPI
+#if defined TM_USE_MPI
    double mpi_res;
 #endif
    int j;
@@ -339,7 +339,7 @@ void smear_scalar_fields_correlator( scalar **smearedfield, scalar ** const sf, 
       timeslicesum[t0][2]+=sf[2][j];
       timeslicesum[t0][3]+=sf[3][j];
    }
-#if defined MPI
+#if defined TM_USE_MPI
    for (j=0; j<T; ++j){
       MPI_Allreduce(&timeslicesum[j][0], &mpi_res, 1, MPI_DOUBLE, MPI_SUM, g_mpi_time_slices);
       timeslicesum[j][0]=mpi_res;
@@ -371,7 +371,7 @@ void smear_scalar_fields_correlator( scalar **smearedfield, scalar ** const sf, 
      }
    }
    if (timeaverage == 1){
-#if defined MPI
+#if defined TM_USE_MPI
      MPI_Status status[108];
      int cntr=0;
      MPI_Request request[108];
@@ -442,7 +442,7 @@ void smear_scalar_fields_correlator( scalar **smearedfield, scalar ** const sf, 
 #endif
    }
    else if (timeaverage == 2){
-#if defined MPI
+#if defined TM_USE_MPI
      MPI_Status status[108];
      int cntr=0;
      MPI_Request request[108];
