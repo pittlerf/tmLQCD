@@ -387,6 +387,19 @@ int main(int argc, char *argv[]){
           exit(-2);
       }
 
+      snprintf(conf_filename, 50, "%s_smeared.%.4d", gauge_input_filename, nstore);
+      if (g_cart_id == 0) {
+        printf("#\n# Trying to read smeared gauge field from file %s in %s precision.\n",
+                conf_filename, (gauge_precision_read_flag == 32 ? "single" : "double"));
+        fflush(stdout);
+      }
+
+      if( (i = read_gauge_field(conf_filename,g_smeared_gauge_field)) !=0) {
+          fprintf(stderr, "Error %d while reading gauge field from %s\n Aborting...\n", i, conf_filename);
+          exit(-2);
+      }
+
+
       if (g_cart_id == 0) {
           printf("# Finished reading gauge field.\n");
           fflush(stdout);
@@ -394,6 +407,8 @@ int main(int argc, char *argv[]){
 
 #ifdef TM_USE_MPI
       xchange_gauge(g_gauge_field);
+      xchange_gauge(g_smeared_gauge_field);
+
 #endif
     /*compute the energy of the gauge field*/
       plaquette_energy = measure_plaquette( (const su3**) g_gauge_field);
@@ -403,6 +418,15 @@ int main(int argc, char *argv[]){
           printf("# The computed plaquette value is %e.\n", plaquette_energy / (6.*VOLUME*g_nproc));
           fflush(stdout);
       }
+
+      plaquette_energy = measure_plaquette( (const su3**) g_smeared_gauge_field);
+
+
+      if (g_cart_id == 0) {
+          printf("# The computed plaquette value for smeared gauge field is %e.\n", plaquette_energy / (6.*VOLUME*g_nproc));
+          fflush(stdout);
+      }
+
       if(SourceInfo.type == 1) {
           index_start = 0;
           index_end = 1;
@@ -462,7 +486,7 @@ int main(int argc, char *argv[]){
              /* set scalar field counter to InitialScalarCounter */
              int iscalar = nscalar+j*operator_list[op_id].nscalarstep*operator_list[op_id].npergauge+i_pergauge*operator_list[op_id].nscalarstep;
              operator_list[op_id].n = iscalar;
-          // read scalar field
+             // read scalar field
              if( strcmp(scalar_input_filename, "create_random_scalarfield") == 0 )
              {
                 for( int s = 0; s < 4; s++) { ranlxd(g_scalar_field[s], VOLUME); }
@@ -496,7 +520,7 @@ int main(int argc, char *argv[]){
 //             unit_scalar_field(g_scalar_field);
 #if defined TM_USE_MPI
              for( int s=0; s<4; s++ )
-                generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
+               generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
 #endif
              for( isample = 0; isample < no_samples; isample++)
              {
