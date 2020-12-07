@@ -401,6 +401,9 @@ int main(int argc, char *argv[])
       if (operator_list[op_id].type == BSM2f){
         init_D_psi_BSM2f();
       }
+      else if (operator_list[op_id].type == BSM3){
+        init_D_psi_BSM3();
+      }
 #endif
       g_mu = operator_list[op_id].mu;
       g_c_sw = operator_list[op_id].c_sw;
@@ -495,6 +498,9 @@ int main(int argc, char *argv[])
 #if defined TM_USE_BSM
       if (operator_list[op_id].type == BSM2f){
         free_D_psi_BSM2f();
+      }
+      if (operator_list[op_id].type == BSM3){
+        free_D_psi_BSM3();
       }
 #endif
 

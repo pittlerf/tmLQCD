@@ -727,73 +727,97 @@ void op_write_prop(const int op_id, const int index_start, const int append_) {
   else {
     strcpy(ending, "inverted");
   }
-  
   // 1 == volume source
   if(SourceInfo.type == SRC_TYPE_POINT || SourceInfo.type == SRC_TYPE_TS) {
     // timeslice soruces are usually used for smearing/fuzzing and dilution, this is tracked via SourceInfo.ix in the filename 
     if (PropInfo.splitted) {
-      if(T_global > 99) {
         /* operators with additional external fields require one more index */
 #ifdef TM_USE_BSM
-        if( optr->type==BSM || optr->type==BSM2b || optr->type==BSM2m || optr->type==BSM2f || optr->type==BSM3){
+      if( optr->type==BSM || optr->type==BSM2b || optr->type==BSM2m || optr->type==BSM2f || optr->type==BSM3){
+        if(T_global > 99) {
           snprintf(filename, strl, "%s.%.4d.%.3d.%.2d.%.8d.%s", PropInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, optr->n, ending);
-        } 
-#else
-        if (0) {}
-#endif
-        else  {
-          snprintf(filename, strl, "%s.%.4d.%.3d.%.2d.%s", PropInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, ending);
         }
+        else{
+          snprintf(filename, strl, "%s.%.4d.%.2d.%.2d.%.8d.%s", PropInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix, optr->n, ending);
+        } 
+      } 
+      else {
+         printf("invalid operator for the BSM project\n");
+         exit(1);
       }
+#else
+      if(T_global > 99) {
+        snprintf(filename, strl, "%s.%.4d.%.3d.%.2d.%s", PropInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix,  ending);
+      }
+      else{
+        snprintf(filename, strl, "%s.%.4d.%.2d.%.2d.%s", PropInfo.basename, SourceInfo.nstore, SourceInfo.t, SourceInfo.ix,  ending);
+      }
+#endif
     }
     else {
 #ifdef TM_USE_BSM
-      if( optr->type==BSM || optr->type == BSM2b || optr->type==BSM2m || optr->type==BSM2f || optr->type==BSM3){
-        snprintf(filename, strl, "%s.%.4d.%.2d.%.8d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, optr->n, ending);
-      }
+     if( optr->type==BSM || optr->type == BSM2b || optr->type==BSM2m || optr->type==BSM2f || optr->type==BSM3){
+       if(T_global > 99) {
+         snprintf(filename, strl, "%s.%.4d.%.3d.%.8d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, optr->n, ending);
+       }
+       else {
+         snprintf(filename, strl, "%s.%.4d.%.2d.%.8d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, optr->n, ending);
+       }
+     }
+     else {
+       printf("invalid operator for the BSM project\n");
+       exit(1);
+     }
 #else 
-      if (0){}
+     if(T_global > 99) {
+         snprintf(filename, strl, "%s.%.4d.%.3d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t,  ending);
+     }
+     else {
+         snprintf(filename, strl, "%s.%.4d.%.3d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t,  ending);
+     }
+
 #endif 
-      else{
-        snprintf(filename, strl, "%s.%.4d.%.2d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.t, ending);
-      }
-    }
+   } 
   }
   else if (SourceInfo.type == SRC_TYPE_VOL) {
 #if defined TM_USE_BSM
     if(optr->type==BSM || optr->type==BSM2b || optr->type==BSM2m || optr->type==BSM2f || optr->type==BSM3 ){
       snprintf(filename, strl, "%s.%.4d.%.5d.%.8d.%s", PropInfo.basename, SourceInfo.nstore, SourceInfo.sample, optr->n, ending);
     } 
-#else 
-    if (0){}
-#endif
     else {
-      snprintf(filename, strl, "%s.%.4d.%.5d.%s", PropInfo.basename, SourceInfo.nstore, SourceInfo.sample, ending);
+      printf("invalid operator for the BSM project\n");
+      exit(1);
     }
+#else 
+    snprintf(filename, strl, "%s.%.4d.%.5d.%s", PropInfo.basename, SourceInfo.nstore, SourceInfo.sample, ending);
+#endif
   }
   else if(SourceInfo.type == SRC_TYPE_PION_TS || SourceInfo.type == SRC_TYPE_GEN_PION_TS) {
 #if defined TM_USE_BSM
     if(optr->type==BSM || optr->type==BSM2b || optr->type==BSM2m || optr->type==BSM2f || optr->type==BSM3 ){
       snprintf(filename, strl, "%s.%.4d.%.5d.%.2d.%.8d%s", PropInfo.basename, SourceInfo.nstore, SourceInfo.sample, SourceInfo.t,optr->n, ending);
     }
-#else
-    if (0) {}
-#endif
     else {
-      snprintf(filename, strl, "%s.%.4d.%.5d.%.2d.%s", PropInfo.basename, SourceInfo.nstore, SourceInfo.sample, SourceInfo.t, ending);
+      printf("invalid operator for the BSM project\n");
+      exit(1);
     }
+#else
+
+    snprintf(filename, strl, "%s.%.4d.%.5d.%.2d.%s", PropInfo.basename, SourceInfo.nstore, SourceInfo.sample, SourceInfo.t, ending);
+#endif
   }
   else {
 #if defined TM_USE_BSM
     if(optr->type==BSM || optr->type==BSM2b || optr->type==BSM2m || optr->type==BSM2f || optr->type==BSM3 ){
       snprintf(filename, strl, "%s.%.4d.%.5d.%.8d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, optr->n, ending);
-    } 
-#else 
-    if (0){}
-#endif
-    else {
-      snprintf(filename, strl, "%s.%.4d.%.5d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, ending);
     }
+    else {
+      printf("invalid operator for the BSM project\n");
+      exit(1);
+    }
+#else 
+    snprintf(filename, strl, "%s.%.4d.%.5d.%s", SourceInfo.basename, SourceInfo.nstore, SourceInfo.sample, ending);
+#endif
   }
   if(!PropInfo.splitted || append_)
     append = 1;
