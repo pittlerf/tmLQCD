@@ -1172,7 +1172,6 @@ void D_psi_BSM3_test(bispinor * const P, bispinor * const Q){
     exit(1);
   }
 
-  clover(0,P, Q, Q, 0.0);
 
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
