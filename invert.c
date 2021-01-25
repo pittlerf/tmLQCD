@@ -53,7 +53,14 @@
 #endif
 #include <io/utils.h>
 #ifdef TM_USE_BSM
+#include "operator/D_psi_BSM3.h"
+#include "operator/D_psi_BSM.h"
+#include "operator/D_psi_BSM2b.h"
+#include "operator/D_psi_BSM2f.h"
+#include "operator/D_psi_BSM2m.h"
 #include <io/scalar.h>
+#include "buffers/utils_nonblocking.h"
+#include "buffers/utils_nogauge.h"
 #endif
 #include "source_generation.h"
 #include "read_input.h"

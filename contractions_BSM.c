@@ -42,6 +42,7 @@
 #include "linalg/assign.h"
 #include "operator/D_psi.h"
 #ifdef TM_USE_BSM
+#include "operator/D_psi_BSM3.h"
 #include "operator/D_psi_BSM.h"
 #include "operator/D_psi_BSM2b.h"
 #include "operator/D_psi_BSM2f.h"
