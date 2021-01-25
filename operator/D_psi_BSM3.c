@@ -1520,9 +1520,7 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
         /******************************* direction -3 *********************************/
         iy=g_idn[ix][3];
         sm = (bispinor *) Q +iy;
-        um=&g_gauge_field[iy][3];
-        bispinor tmptt;
-        _bispinor_null(tmptt);
+        um=&g_smeared_gauge_field[iy][3];
         p3add_wilsonclover(rr, sm, um, 1, 0.5*phase_3, 1);
         um=&g_gauge_field[iy][3];
         padd_chitildebreak(rr, sm, um, 1, -0.5*phase_3, 0.5*rho_BSM, phi, phim[3], +1.);
@@ -1546,6 +1544,7 @@ void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
     update_backward_gauge(g_gauge_field);
+    update_backward_gauge(g_smeared_gauge_field);
   }
 #endif
 #ifdef TM_USE_MPI
