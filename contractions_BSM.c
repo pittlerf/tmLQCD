@@ -492,6 +492,9 @@ int main(int argc, char *argv[]){
              {
                 for( int s = 0; s < 4; s++) { ranlxd(g_scalar_field[s], VOLUME); }
              }
+             else if ( strcmp(scalar_input_filename, "create_unit_scalarfield") == 0 ){             
+                unit_scalar_field(g_scalar_field);
+             }
              else
              {
                 snprintf(scalar_filename, 50, "%s.%.8d", scalar_input_filename, iscalar);
@@ -518,7 +521,6 @@ int main(int argc, char *argv[]){
 
              }//End of reading scalar field
 
-//             unit_scalar_field(g_scalar_field);
 #if defined TM_USE_MPI
              for( int s=0; s<4; s++ )
                generic_exchange_nogauge(g_scalar_field[s], sizeof(scalar));
