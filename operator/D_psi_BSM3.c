@@ -70,7 +70,7 @@ static inline void tm3_add(bispinor * const out, const bispinor * const in, cons
    * sign>0 for D+i\gamma_5\tau_3
    * sign<0 for D_dag-i\gamma_5\tau_3
    */
-  const double s = (sign < 0) ? s = -1. : 1. ;
+  const double s = (sign < 0) ? -1. : 1. ;
 
   /* out_up += s * i \gamma_5 \mu3 * in_up */
   _vector_add_i_mul(out->sp_up.s0,  s*mu03_BSM, in->sp_up.s0);
@@ -92,7 +92,7 @@ static inline void tm1_add(bispinor * const out, const bispinor * const in, cons
    * sign>0 for D+i\gamma_5\tau_1
    * sign<0 for D_dag-i\gamma_5\tau_1
    */
-  const double s = (sign < 0) ? s = -1. : 1.;
+  const double s = (sign < 0) ? -1. : 1.;
 
   /* out_up += s * i \gamma_5 \mu1 * in_dn */
   _vector_add_i_mul(out->sp_up.s0,  s*mu01_BSM, in->sp_dn.s0);
@@ -160,7 +160,7 @@ static inline void Fadd(bispinor * const out, const bispinor * const in, const s
 #undef static
 #endif
   
-  const double s = (sign < 0) ? s = -1. : 1.;
+  const double s = (sign < 0) ? -1. : 1.;
 
   // flavour 1:
   // tmp_up = \phi_0 * in_up
