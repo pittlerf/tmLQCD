@@ -657,7 +657,7 @@ static inline void p0add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef TM_USE_OMP
 #define static
 #endif
-  const int sign_gamma = (inv==1) ? -sign : sign ;
+  const int sign_gamma = (inv==0) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
   static su3_vector chi;
@@ -788,7 +788,7 @@ static inline void p1add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #endif
   _vector_null( halfwilson1 );
   _vector_null( halfwilson2 );
-  if(sign_gamma == 1){
+  if(sign_gamma == 0){
 //Performing the multiplication on the first half of a halfspinor
 //shrink the fermion vector from four spin component to two
 //first component
@@ -905,7 +905,7 @@ static inline void p2add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef TM_USE_OMP
 #define static
 #endif
-  const int sign_gamma = (inv==1) ? -sign : sign ;
+  const int sign_gamma = (inv==0) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
   static su3_vector chi;
@@ -1033,7 +1033,7 @@ static inline void p3add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef TM_USE_OMP
 #define static
 #endif
-  const int sign_gamma = (inv==1) ? -sign : sign ;
+  const int sign_gamma = (inv==0) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
   static su3_vector chi;
