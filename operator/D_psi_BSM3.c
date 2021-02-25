@@ -267,53 +267,6 @@ static inline void bispinor_times_phase_times_u(bispinor * restrict const us, co
   return;
 }
 
-static inline void bispinor_times_real_times_u(bispinor * restrict const us, const double realnum,
-                                                su3 const * restrict const u, bispinor const * restrict const s)
-{
-#ifdef TM_USE_OMP
-#define static
-#endif
-  static su3_vector chi;
-#ifdef TM_USE_OMP
-#undef static
-#endif
-
-  _su3_multiply(chi, (*u), s->sp_up.s0);
-  _vector_null( us->sp_up.s0 );
-  _vector_add_mul( us->sp_up.s0, realnum, chi );
-
-  _su3_multiply(chi, (*u), s->sp_up.s1);
-  _vector_null( us->sp_up.s1 );
-  _vector_add_mul( us->sp_up.s1, realnum, chi );
-
-  _su3_multiply(chi, (*u), s->sp_up.s2);
-  _vector_null( us->sp_up.s2 );
-  _vector_add_mul( us->sp_up.s2, realnum, chi );
-
-  _su3_multiply(chi, (*u), s->sp_up.s3);
-  _vector_null( us->sp_up.s3 );
-  _vector_add_mul( us->sp_up.s3, realnum, chi );
-
-  _su3_multiply(chi, (*u), s->sp_dn.s0);
-  _vector_null( us->sp_dn.s0 );
-  _vector_add_mul( us->sp_dn.s0, realnum, chi );
-
-  _su3_multiply(chi, (*u), s->sp_dn.s1);
-  _vector_null( us->sp_dn.s1 );
-  _vector_add_mul( us->sp_dn.s1, realnum, chi );
-
-  _su3_multiply(chi, (*u), s->sp_dn.s2);
-  _vector_null( us->sp_dn.s2 );
-  _vector_add_mul( us->sp_dn.s2, realnum, chi );
-
-  _su3_multiply(chi, (*u), s->sp_dn.s3);
-  _vector_null( us->sp_dn.s3 );
-  _vector_add_mul( us->sp_dn.s3, realnum, chi );
-  
-  return;
-}
-
-
 
 static inline void bispinor_times_phase_times_inverse_u(bispinor * restrict const us, const _Complex double phase,
 							su3 const * restrict const u, bispinor const * restrict const s)
