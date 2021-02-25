@@ -66,6 +66,8 @@
 #include "getopt.h"
 #include "xchange/xchange.h"
 #include "init/init.h"
+#include "linalg/assign.h"
+#include "operator/D_psi.h"
 #ifdef TM_USE_BSM
 #include "init/init_scalar_field.h"
 #include "init/init_bsm_2hop_lookup.h"
@@ -76,6 +78,9 @@
 #include "operator/D_psi_BSM3.h"
 #include "operator/D_psi_BSM2m.h"
 #include "operator/M_psi.h"
+#include "buffers/utils_nogauge.h"
+#include "operator/clovertm_operators.h"
+#include "operator/clover_leaf.h"
 #endif
 #include "mpi_init.h"
 #include "measure_gauge_action.h"
@@ -509,7 +514,6 @@ int main(int argc,char *argv[])
   eta_BSM=0.5;
   rho_BSM=0.5;
 
-  kappa_BSM=0;/* We set to zero, original BSM operator is naive, without the Wilson term */
   csw_BSM=0;  /* Also original BSM operator is without the clover term */
   r0_BSM=0;
   //sw_term( (const su3**) g_smeared_gauge_field, 1, csw_BSM);

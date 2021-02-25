@@ -102,7 +102,6 @@
 #define _default_X2 0.
 #define _default_X3 0.
 #ifdef TM_USE_BSM
-#define _default_kappa_BSM 1.0
 #define _default_csw_BSM 1.0
 #define _default_rho_BSM 1.0
 #define _default_eta_BSM 1.0

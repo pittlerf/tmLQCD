@@ -66,6 +66,7 @@
 #ifdef TM_USE_BSM
 #include "init/init_scalar_field.h"
 #include "init/init_bsm_2hop_lookup.h"
+#include "buffers/utils_nogauge.h"
 #endif
 #include "test/check_geometry.h"
 #ifdef TM_USE_BSM

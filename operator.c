@@ -163,15 +163,16 @@ int add_operator(const int type) {
     optr->inverter = &op_invert;
   }
   if(optr->type == DBTMWILSON || optr->type == DBCLOVER ){
-#if defined TM_USE_BSM
-    if ( optr->type == BSM || optr->type == BSM2m || optr->type == BSM2b || optr->type == BSM2f || optr->type == BSM3 ) {
-#endif
       optr->no_flavours = 2;
       g_running_phmc = 1;
+  }
+
 #if defined TM_USE_BSM
+    if ( optr->type == BSM || optr->type == BSM2m || optr->type == BSM2b || optr->type == BSM2f || optr->type == BSM3 ) {
+      optr->no_flavours = 2;
+      g_running_phmc = 1;
     }
 #endif
-  }
   
   optr->precWS=NULL;
 

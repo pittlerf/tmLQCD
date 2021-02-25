@@ -1114,11 +1114,6 @@ static inline double fltlist_next_token(int * const list_end){
     r_BSM = c;
     if(myverbose != 0) printf("  BSM parameter r_bsm set to %f\n", r_BSM);
   }
-  {SPC}*kappa{EQL}{FLT} {
-    sscanf(yytext, " %[a-zA-Z0123] = %lf", name, &c);
-    kappa_BSM = c;
-    if(myverbose != 0) printf("  BSM parameter kappa_BSM set to %f\n", kappa_BSM);
-  }
   {SPC}*cswbsm{EQL}{FLT} {
     sscanf(yytext, " %[a-zA-Z0123] = %lf", name, &c);
     csw_BSM = c;
@@ -3444,7 +3439,6 @@ int read_input(char * conf_file){
   mu01_BSM  = _default_mu01_BSM;
   r_BSM = _default_r_BSM ;
   c5phi_BSM  = _default_c5phi_BSM ;
-  kappa_BSM = _default_kappa_BSM;
   csw_BSM = _default_csw_BSM ;
   propagatorsonthefly_BSM = _default_propagatorsonthefly_BSM;
   smearedcorrelator_BSM = _default_smearedcorrelator_BSM;

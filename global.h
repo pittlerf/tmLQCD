@@ -66,7 +66,7 @@
 
 #ifdef TM_USE_BSM
 // for Frezzotti-Rossi model Dirac operator
-EXTERN double eta_BSM, rho_BSM, m0_BSM, c5phi_BSM, r_BSM, mu03_BSM, mu01_BSM, csw_BSM, kappa_BSM, r0_BSM;
+EXTERN double eta_BSM, rho_BSM, m0_BSM, c5phi_BSM, r_BSM, mu03_BSM, mu01_BSM, csw_BSM, r0_BSM;
 EXTERN int propagatorsonthefly_BSM;
 EXTERN int smearedcorrelator_BSM;
 EXTERN int densitydensity_BSM;

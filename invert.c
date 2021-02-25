@@ -46,6 +46,7 @@
 #include "linalg_eo.h"
 #include "geometry_eo.h"
 #include "start.h"
+#include "gettime.h"
 /*#include "eigenvalues.h"*/
 #include "measure_gauge_action.h"
 #ifdef TM_USE_MPI

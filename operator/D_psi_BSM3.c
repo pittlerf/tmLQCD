@@ -70,8 +70,7 @@ static inline void tm3_add(bispinor * const out, const bispinor * const in, cons
    * sign>0 for D+i\gamma_5\tau_3
    * sign<0 for D_dag-i\gamma_5\tau_3
    */
-  double s = +1.;
-  if(sign < 0) s = -1.;
+  const double s = (sign < 0) ? -1. : 1. ;
 
   /* out_up += s * i \gamma_5 \mu3 * in_up */
   _vector_add_i_mul(out->sp_up.s0,  s*mu03_BSM, in->sp_up.s0);
@@ -93,8 +92,7 @@ static inline void tm1_add(bispinor * const out, const bispinor * const in, cons
    * sign>0 for D+i\gamma_5\tau_1
    * sign<0 for D_dag-i\gamma_5\tau_1
    */
-  double s = +1.;
-  if(sign < 0) s = -1.;
+  const double s = (sign < 0) ? -1. : 1.;
 
   /* out_up += s * i \gamma_5 \mu1 * in_dn */
   _vector_add_i_mul(out->sp_up.s0,  s*mu01_BSM, in->sp_dn.s0);
@@ -162,8 +160,7 @@ static inline void Fadd(bispinor * const out, const bispinor * const in, const s
 #undef static
 #endif
   
-  double s = +1.;
-  if(sign < 0) s = -1.;
+  const double s = (sign < 0) ? -1. : 1.;
 
   // flavour 1:
   // tmp_up = \phi_0 * in_up
@@ -595,10 +592,7 @@ static inline void padd_chitildebreak(bispinor * restrict const tmpr , bispinor 
 #endif
 
   // us = phase*u*s
-  if( inv )
-    bispinor_times_phase_times_inverse_u(&us, phase, u, s);
-  else
-    bispinor_times_phase_times_u(&us, phase, u, s);
+  ( inv == 0 ) ? bispinor_times_phase_times_u(&us, phase, u, s) : bispinor_times_phase_times_inverse_u(&us, phase, u, s);
 
   // tmpr += F*us
   Fadd(tmpr, &us, phi,  phaseF, sign);
@@ -616,7 +610,7 @@ static inline void p0add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef TM_USE_OMP
 #define static
 #endif
-  static const int sign_gamma = (inv==1) ? -sign : sign ;
+  const int sign_gamma = (inv==0) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
   static su3_vector chi;
@@ -736,7 +730,7 @@ static inline void p1add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef TM_USE_OMP
 #define static
 #endif
-  static const int sign_gamma = (inv==1) ? -sign : sign ;
+  const int sign_gamma = (inv==1) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
   static su3_vector chi;
@@ -747,7 +741,7 @@ static inline void p1add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #endif
   _vector_null( halfwilson1 );
   _vector_null( halfwilson2 );
-  if(sign_gamma == 1){
+  if(sign_gamma == 0){
 //Performing the multiplication on the first half of a halfspinor
 //shrink the fermion vector from four spin component to two
 //first component
@@ -864,7 +858,7 @@ static inline void p2add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef TM_USE_OMP
 #define static
 #endif
-  static const int sign_gamma = (inv==1) ? -sign : sign ;
+  const int sign_gamma = (inv==0) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
   static su3_vector chi;
@@ -992,7 +986,7 @@ static inline void p3add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef TM_USE_OMP
 #define static
 #endif
-  static const int sign_gamma = (inv==1) ? -sign : sign ;
+  const int sign_gamma = (inv==0) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
   static su3_vector chi;
@@ -1126,12 +1120,6 @@ void D_psi_BSM3_test(bispinor * const P, bispinor * const Q){
   }
 
 
-#ifdef _GAUGE_COPY
-  if(g_update_gauge_copy) {
-    update_backward_gauge(g_gauge_field);
-    update_backward_gauge(g_smeared_gauge_field);
-  }
-#endif
 #ifdef TM_USE_MPI
   generic_exchange(Q, sizeof(bispinor));
 #endif
@@ -1294,12 +1282,6 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
     printf("Program aborted\n");
     exit(1);
   }
-#ifdef _GAUGE_COPY
-  if(g_update_gauge_copy) {
-    update_backward_gauge(g_gauge_field);
-    update_backward_gauge(g_smeared_gauge_field);
-  }
-#endif
 #ifdef TM_USE_MPI
   generic_exchange(Q, sizeof(bispinor));
 #endif
@@ -1494,12 +1476,6 @@ void D_psi_dagger_BSM3(bispinor * const P, bispinor * const Q){
     printf("Program aborted\n");
     exit(1);
   }
-#ifdef _GAUGE_COPY
-  if(g_update_gauge_copy) {
-    update_backward_gauge(g_gauge_field);
-    update_backward_gauge(g_smeared_gauge_field);
-  }
-#endif
 #ifdef TM_USE_MPI
   generic_exchange(Q, sizeof(bispinor));
 #endif
