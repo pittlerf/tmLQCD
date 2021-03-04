@@ -594,6 +594,7 @@ static inline void padd_chitildebreak(bispinor * restrict const tmpr , bispinor 
   // us = phase*u*s
   ( inv == 0 ) ? bispinor_times_phase_times_u(&us, phase, u, s) : bispinor_times_phase_times_inverse_u(&us, phase, u, s);
 
+  // FIXME: signs of terms local and non-local in phi should be different
   // tmpr += F*us
   Fadd(tmpr, &us, phi,  phaseF, sign);
   Fadd(tmpr, &us, phip, phaseF, sign);
@@ -610,6 +611,7 @@ static inline void p0add_wilsonclover( bispinor * restrict const tmpr , bispinor
 #ifdef TM_USE_OMP
 #define static
 #endif
+// FIXME check and fix sign here once and for all ;) 
   const int sign_gamma = (inv==0) ? -sign : sign ;
   static su3_vector halfwilson1;
   static su3_vector halfwilson2;
@@ -1342,7 +1344,8 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
 
         _spinor_null(rr->sp_up);
         _spinor_null(rr->sp_dn);
-
+        
+        // FIXME check normalisation of twisted mass and csw terms
         if(csw_BSM > 0) {
          (assign_mul_one_sw_pm_imu_site_lexic)(ix, &(rr->sp_up), &(s->sp_up), +mu03_BSM);
          (assign_mul_one_sw_pm_imu_site_lexic)(ix, &(rr->sp_dn), &(s->sp_dn), -mu03_BSM);
@@ -1360,6 +1363,7 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
 
         }
 
+        // FIXME split r-term into two pieces (perhaps), apply 3r here, 1r via assign_mul_one_sw_pm_imu_site_lexic
         /* tmpr += (-2*r_BSM+m0_BSM)*s */
         _vector_add_mul(rr->sp_up.s0, m0_BSM, s->sp_up.s0);
         _vector_add_mul(rr->sp_up.s1, m0_BSM, s->sp_up.s1);
