@@ -120,20 +120,21 @@ static inline void tm1_add(bispinor * const out, const bispinor * const in, cons
  */
 
 static inline void Fabsadd(bispinor * const out, const bispinor * const in, const scalar * const phi, const double c) {
+  const double c_phisq = c*(phi[0]*phi[0]+phi[1]*phi[1]+phi[2]*phi[2]+phi[3]*phi[3]);
 
   // flavour 1:
   // out_up += c(\phi_0 \phi_0 + \phi_1 \phi_1 + \phi_2 \phi_2+ \phi_3 \phi_3)* in_up
-  _vector_add_mul(out->sp_up.s0, c*(phi[0]*phi[0]+phi[1]*phi[1]+phi[2]*phi[2]+phi[3]*phi[3]), in->sp_up.s0);
-  _vector_add_mul(out->sp_up.s1, c*(phi[0]*phi[0]+phi[1]*phi[1]+phi[2]*phi[2]+phi[3]*phi[3]), in->sp_up.s1);
-  _vector_add_mul(out->sp_up.s2, c*(phi[0]*phi[0]+phi[1]*phi[1]+phi[2]*phi[2]+phi[3]*phi[3]), in->sp_up.s2);
-  _vector_add_mul(out->sp_up.s3, c*(phi[0]*phi[0]+phi[1]*phi[1]+phi[2]*phi[2]+phi[3]*phi[3]), in->sp_up.s3);
+  _vector_add_mul(out->sp_up.s0, c_phisq, in->sp_up.s0);
+  _vector_add_mul(out->sp_up.s1, c_phisq, in->sp_up.s1);
+  _vector_add_mul(out->sp_up.s2, c_phisq, in->sp_up.s2);
+  _vector_add_mul(out->sp_up.s3, c_phisq, in->sp_up.s3);
 
   // flavour 2:
   // out_dn += c(\phi_0 \phi_0 + \phi_1 \phi_1 + \phi_2 \phi_2+ \phi_3 \phi_3)* in_dn
-  _vector_add_mul(out->sp_dn.s0, c*(phi[0]*phi[0]+phi[1]*phi[1]+phi[2]*phi[2]+phi[3]*phi[3]), in->sp_dn.s0);
-  _vector_add_mul(out->sp_dn.s1, c*(phi[0]*phi[0]+phi[1]*phi[1]+phi[2]*phi[2]+phi[3]*phi[3]), in->sp_dn.s1);
-  _vector_add_mul(out->sp_dn.s2, c*(phi[0]*phi[0]+phi[1]*phi[1]+phi[2]*phi[2]+phi[3]*phi[3]), in->sp_dn.s2);
-  _vector_add_mul(out->sp_dn.s3, c*(phi[0]*phi[0]+phi[1]*phi[1]+phi[2]*phi[2]+phi[3]*phi[3]), in->sp_dn.s3);
+  _vector_add_mul(out->sp_dn.s0, c_phisq, in->sp_dn.s0);
+  _vector_add_mul(out->sp_dn.s1, c_phisq, in->sp_dn.s1);
+  _vector_add_mul(out->sp_dn.s2, c_phisq, in->sp_dn.s2);
+  _vector_add_mul(out->sp_dn.s3, c_phisq, in->sp_dn.s3);
 
 }
 
