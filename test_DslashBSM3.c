@@ -76,6 +76,7 @@
 #ifdef TM_USE_BSM
 #include "operator/D_psi_BSM2b.h"
 #include "operator/D_psi_BSM3.h"
+#include "operator/D_psi_BSM3_test.h"
 #include "operator/D_psi_BSM2m.h"
 #include "operator/M_psi.h"
 #include "buffers/utils_nogauge.h"
@@ -547,6 +548,7 @@ int main(int argc,char *argv[])
 #endif
   t_FP = 0.0;
   t1 = gettime();
+  printf("r0_BSM = %e\n",r0_BSM);
   D_psi_BSM3_test(g_bispinor_field[2], g_bispinor_field[4]);
   t1 = gettime() - t1;
 #ifdef TM_USE_MPI
@@ -565,7 +567,7 @@ int main(int argc,char *argv[])
 #endif
   squarenorm_w = square_norm((spinor*)g_bispinor_field[4], 2*VOLUME, 1);
   if(g_proc_id==0) {
-   printf("# [tmlqcd-BSM test] square norm of the source for D_psi__BSM : ||w||^2 = %e\n", squarenorm_w);
+   printf("# [tmlqcd-BSM test] square norm of the source for D_psi_BSM : ||w||^2 = %e\n", squarenorm_w);
    fflush(stdout);
   }
 
