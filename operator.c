@@ -573,7 +573,10 @@ void op_invert(const int op_id, const int index_start, const int write_prop) {
     }
     if (optr->type==BSM3){
       init_sw_fields(VOLUME);
-      sw_term( (const su3**) g_smeared_gauge_field, 1.,  csw_BSM);
+      //Note here the factor of 1/2. has been applied since
+      //the routine assign_mul_one_sw_pm_imu_site_lexic computes
+      //1+i *csw*\sum_{\mu,nu} \sigma_mu,nuF_mu,nu/2.
+      sw_term( (const su3**) g_smeared_gauge_field, 1.,  csw_BSM/2.);
     }
 
     bispinor *src  = (bispinor *)malloc(sizeof(bispinor)*VOLUMEPLUSRAND );

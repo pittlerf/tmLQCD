@@ -959,6 +959,11 @@ void D_psi_BSM3(bispinor * const P, bispinor * const Q){
         _spinor_null(rr->sp_dn);
         
         // FIXME check normalisation of twisted mass and csw terms
+        // Note that here what is implemented is i*1/2*c_sw*sigma_mu,nu F_mu,nu
+        // thus we need to apply and additional factor of 1/2 preparing the 
+        // clover term, this is done when we initialize the clover term in 
+        // operator.c for executable invert and in contractions_BSM.c for exec
+        // contractions_BSM
         if(csw_BSM > 0) {
          (assign_mul_one_sw_pm_imu_site_lexic)(ix, &(rr->sp_up), &(s->sp_up), +mu03_BSM);
          (assign_mul_one_sw_pm_imu_site_lexic)(ix, &(rr->sp_dn), &(s->sp_dn), -mu03_BSM);

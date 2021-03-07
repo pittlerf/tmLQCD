@@ -681,7 +681,7 @@ int main(int argc,char *argv[])
   }
 
   csw_BSM=1;  /* Also the new BSM operator is with the clover term */
-  sw_term( (const su3**) g_smeared_gauge_field, 1., csw_BSM);
+  sw_term( (const su3**) g_smeared_gauge_field, 1., csw_BSM/2.);
   bispinor_assign(g_bispinor_field[5],g_bispinor_field[4], VOLUME);
  
   printf("# [tmlqcd-BSM test] application of D_psi_BSM3 operator\n");
